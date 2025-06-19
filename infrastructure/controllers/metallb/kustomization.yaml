@@ -4,3 +4,5 @@ resources:
   - helmrepository.yaml
   - helmrelease.yaml
   - namespace.yaml
+  - ipaddresspool.yaml
+  - l2advertisement.yaml
