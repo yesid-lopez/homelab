@@ -6,11 +6,11 @@ metadata:
 spec:
   chart:
     spec:
-      chart: nginx-ingress-controller
+      chart: ingress-nginx
       version: 11.6.25
       sourceRef:
         kind: HelmRepository
-        name: bitnami
+        name: ingress-nginx
         namespace: flux-system
   interval: 15m
   timeout: 5m
