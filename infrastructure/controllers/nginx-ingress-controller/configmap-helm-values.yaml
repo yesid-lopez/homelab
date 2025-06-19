@@ -6,4 +6,11 @@ metadata:
   namespace: nginx-ingress-controller
 data:
   values.yaml: |-
-    # paste chart values.yaml (indented) here and alter as required
+    controller:
+      replicaCount: 2
+      service:
+        type: LoadBalancer
+      metrics:
+        enabled: true
+    defaultBackend:
+      enabled: true
