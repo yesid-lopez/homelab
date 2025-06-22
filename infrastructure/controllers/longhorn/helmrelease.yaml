@@ -4,6 +4,8 @@ kind: HelmRelease
 metadata:
   name: longhorn-release
   namespace: longhorn-system
+  annotations:
+    helm.toolkit.fluxcd.io/upgrade-force: "true"
 spec:
   chart:
     spec:
@@ -15,3 +17,12 @@ spec:
         namespace: flux-system
       version: v1.9.0
   interval: 1m0s
+  install:
+    createNamespace: true
+    replace: true
+  upgrade:
+    force: true
+    cleanupOnFail: true
+  values:
+    defaultSettings:
+      deletingConfirmationFlag: true
