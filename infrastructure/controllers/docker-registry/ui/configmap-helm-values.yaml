@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-registry-ui-helm-chart-value-overrides
+  namespace: registry
+data:
+  values.yaml: |-
+    ui:
+      replicas: 1
+      dockerRegistryUrl: "http://docker-registry:5000"
+      deleteImages: true
+      singleRegistry: true
+      image: "joxit/docker-registry-ui:latest"
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "50m"
+        limits:
+          memory: "128Mi"
+          cpu: "100m"
+      service:
+        type: LoadBalancer
+        port: 80
+        targetPort: 80
+        annotations:
+          metallb.universe.tf/loadBalancerIPs: "192.168.2.101" 
