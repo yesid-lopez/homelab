@@ -13,11 +13,7 @@ spec:
         kind: HelmRepository
         name: twuni
         namespace: flux-system
-  values:
-    persistence:
-      enabled: true
-      storageClass: longhorn
-      accessMode: ReadWriteOnce
-      size: 20Gi
-    service:
-      type: ClusterIP
+  valuesFrom:
+  - kind: ConfigMap
+    name: docker-registry-helm-chart-value-overrides
+    valuesKey: values.yaml
