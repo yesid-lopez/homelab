@@ -4,3 +4,4 @@ resources:
   - repository.yaml
   - docker-registry-ui.yaml
   - helmrepository.yaml
+  - namespace.yaml
