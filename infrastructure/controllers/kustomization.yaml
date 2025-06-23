@@ -4,3 +4,4 @@ resources:
 - metallb
 - nginx-ingress-controller
 - longhorn
+- sealed-secrets
