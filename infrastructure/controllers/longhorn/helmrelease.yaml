@@ -4,18 +4,16 @@ kind: HelmRelease
 metadata:
   name: longhorn-release
   namespace: longhorn-system
-  annotations:
-    helm.toolkit.fluxcd.io/upgrade-force: "true"
-    fluxcd.io/suspend: "true"
 spec:
   chart:
     spec:
       chart: longhorn
-      reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
         name: longhorn-repo
         namespace: flux-system
       version: v1.9.0
-  interval: 1m0s
+  interval: 5m
+  timeout: 5m
+  releaseName: longhorn-release
 

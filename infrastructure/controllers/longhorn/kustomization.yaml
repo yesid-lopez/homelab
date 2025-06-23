@@ -4,4 +4,3 @@ resources:
   - helmrelease.yaml
   - namespace.yaml
   - helmrepository.yaml
-  - longhorn-settings.yaml
