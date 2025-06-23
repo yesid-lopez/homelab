@@ -1,0 +1,181 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+### 2. Secret Management
+- **ALWAYS** use SealedSecrets for sensitive data
+- **NEVER** commit plain Kubernetes secrets to git
+- Reference sealed secrets in Helm values or application configurations
+- Store SealedSecret resources as sealed-resource-name.yaml
+
+### 3. Helm Chart Management
+- **ALWAYS** separate Helm values from HelmRelease definitions
+- Create configmap-helm-values.yaml for complex value overrides
+- Use valuesFrom in HelmRelease to reference ConfigMaps or Secrets
+- Keep simple values inline in HelmRelease spec
+- Use version pinning for production deployments
+
+### 4. Directory Structure
+```
+infrastructure/
+├── configs/          # Infrastructure-level configurations (MetalLB, etc.)
+└── controllers/      # Application deployments
+    └── app-name/
+        ├── namespace.yaml
+        ├── helmrepository.yaml
+        ├── helmrelease.yaml
+        ├── kustomization.yaml
+        ├── configmap-helm-values.yaml (if needed)
+        ├── sealed-resource.yaml (if secrets needed)
+        └── component/    # Sub-components if complex
+```
+
+### 5. Naming Conventions
+- Use kebab-case for all resource names
+- Prefix sealed secrets with sealed-
+- Use descriptive names like docker-registry-helm-chart-value-overrides
+- Match directory names with primary application names
+
+## Implementation Guidelines
+
+### HelmRepository Template
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: repo-name
+  namespace: app-namespace
+spec:
+  interval: 24h
+  url: repository-url
+```
+
+### HelmRelease Template
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: chart-name
+      version: ">=x.x.x"
+      sourceRef:
+        kind: HelmRepository
+        name: repo-name
+        namespace: app-namespace
+      interval: 12h
+  values:
+    key: value
+  valuesFrom:
+  - kind: ConfigMap
+    name: app-name-helm-chart-value-overrides
+    valuesKey: values.yaml
+```
+
+### ConfigMap for Helm Values Template
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-name-helm-chart-value-overrides
+  namespace: app-namespace
+data:
+  values.yaml: |-
+    # Complex YAML values here
+```
+
+### SealedSecret Template
+```yaml
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: secret-name
+  namespace: app-namespace
+spec:
+  encryptedData:
+    key: encrypted-value
+  template:
+    metadata:
+      name: secret-name
+      namespace: app-namespace
+```
+
+### Kustomization Template
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - helmrepository.yaml  
+  - helmrelease.yaml
+  - configmap-helm-values.yaml
+  - sealed-resource.yaml
+  - sub-component/
+```
+
+## Service Exposure Guidelines
+
+### LoadBalancer Services
+- Use MetalLB IP pools defined in infrastructure/configs/metallb/
+- Specify LoadBalancer IPs via annotations:
+```yaml
+service:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "192.168.2.xxx"
+```
+
+### Storage
+- Use Longhorn as default StorageClass
+- Define persistent volume requirements in Helm values
+
+## Development Workflow
+
+1. **Adding New Applications:**
+   - Create directory under infrastructure/controllers/
+   - Start with namespace.yaml
+   - Add HelmRepository if needed
+   - Create HelmRelease with basic values
+   - Separate complex values into ConfigMap
+   - Add sealed secrets if needed
+   - Update kustomization.yaml
+
+2. **Managing Secrets:**
+   - Use kubeseal to encrypt secrets
+   - Store encrypted values in sealed-*.yaml files
+   - Reference in Helm values or application configs
+
+3. **Updates:**
+   - Modify Helm values in ConfigMaps or HelmRelease
+   - Update version constraints in HelmRelease
+   - Commit changes - Flux handles deployment
+
+## Best Practices
+
+- **Resource Limits:** Always define resource requests and limits
+- **Health Checks:** Configure readiness and liveness probes
+- **Monitoring:** Add appropriate labels and annotations for monitoring
+- **Documentation:** Include README.md for complex applications
+- **Testing:** Validate YAML syntax and Kubernetes resources
+- **Rollback:** Use Flux rollback capabilities for failed deployments
+
+## Anti-Patterns to Avoid
+
+- Never commit plain Kubernetes secrets
+- Never use kubectl apply for permanent resources
+- Never hardcode values that should be configurable
+- Never create resources outside of the GitOps workflow
+- Never use latest tags in production without update strategies
+- Never mix Helm charts with plain manifests unnecessarily
+
+## Tools and Commands
+
+- **Flux CLI:** flux get helmreleases --all-namespaces
+- **SealedSecrets:** kubeseal --format yaml < secret.yaml > sealed-secret.yaml
+- **Helm:** helm template for value validation
+- **Kustomize:** kustomize build for manifest preview
