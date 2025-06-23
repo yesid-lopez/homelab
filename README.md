@@ -60,3 +60,29 @@ sudo apt remove --purge dphys-swapfile
 ```
 
 For the raspberry enable the cgroups in the `/boot/firmware/cmdline.txt` file by adding `cgroup_memory=1 cgroup_enable=memory` at the end of the line
+
+## Secrets
+
+This homelab uses [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) for secure secret management in GitOps. The `pub-sealed-secrets.pem` file contains the public key for encryption.
+
+### Usage
+
+Install kubeseal: `brew install kubeseal` (macOS) or download from GitHub releases.
+
+```bash
+# 1. Create and seal a secret
+kubectl create secret generic mysecret --from-literal=password=mypass --dry-run=client -o yaml > secret.yaml
+kubeseal --format=yaml --cert=pub-sealed-secrets.pem < secret.yaml > infrastructure/configs/mysecret-sealed.yaml
+rm secret.yaml
+
+# 2. Add to kustomization and commit
+echo "  - mysecret-sealed.yaml" >> infrastructure/configs/kustomization.yaml
+git add infrastructure/configs/
+git commit -m "Add sealed secret"
+git push
+
+# 3. Flux automatically deploys and decrypts the secret
+```
+
+**Important**: Never commit plain text secrets. Sealed secrets are namespace/name specific and can only be decrypted by the target cluster.
+
