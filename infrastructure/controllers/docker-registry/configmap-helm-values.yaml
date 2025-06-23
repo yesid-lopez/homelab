@@ -11,8 +11,6 @@ data:
       accessMode: ReadWriteOnce
       size: 20Gi
     service:
-      type: ClusterIP 
-    auth:
-      enabled: true
-      htpasswd:
-        secretName: registry-basic-auth
+      type: ClusterIP
+    secrets:
+      htpasswd: registry-basic-auth
