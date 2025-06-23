@@ -5,3 +5,4 @@ resources:
 - nginx-ingress-controller
 - longhorn
 - sealed-secrets
+- docker-registry
