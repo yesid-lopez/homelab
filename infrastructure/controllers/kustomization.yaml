@@ -6,3 +6,4 @@ resources:
 - longhorn
 - sealed-secrets
 - docker-registry
+- external-dns
