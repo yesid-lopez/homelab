@@ -6,7 +6,11 @@ metadata:
 data:
   values.yaml: |-
     # External DNS Provider Configuration
-    provider: porkbun
+    provider: webhook
+
+    sources:
+      - ingress
+      - service
     
     # Logging and Monitoring
     logLevel: debug
@@ -23,17 +27,5 @@ data:
     txtOwnerId: k3s-homelab
     txtPrefix: ""
     txtSuffix: ""
-    
-    # Porkbun API Credentials via Environment Variables
-    env:
-      - name: PORKBUN_API_KEY
-        valueFrom:
-          secretKeyRef:
-            name: porkbun-credentials
-            key: PORKBUN_API_KEY
-      - name: PORKBUN_API_SECRET
-        valueFrom:
-          secretKeyRef:
-            name: porkbun-credentials
-            key: PORKBUN_API_SECRET
+
 
