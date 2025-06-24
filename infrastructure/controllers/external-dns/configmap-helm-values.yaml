@@ -28,6 +28,10 @@ data:
     txtPrefix: ""
     txtSuffix: ""
 
+    # Node Selection - Force AMD64 architecture
+    nodeSelector:
+      kubernetes.io/arch: amd64
+
     # Sidecar container for netcup webhook provider
     sidecars:
       - name: external-dns-webhook-provider
