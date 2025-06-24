@@ -8,3 +8,5 @@ resources:
 - docker-registry
 - external-dns
 - cert-manager
+- cert-manager-porkbun-webhook
+
