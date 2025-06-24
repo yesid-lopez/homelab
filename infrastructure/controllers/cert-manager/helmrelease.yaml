@@ -18,6 +18,3 @@ spec:
   - kind: ConfigMap
     name: porkbun-webhook-helm-chart-value-overrides
     valuesKey: values.yaml
-  - kind: Secret
-    name: porkbun-api-credentials
-    valuesKey: api-credentials.yaml
