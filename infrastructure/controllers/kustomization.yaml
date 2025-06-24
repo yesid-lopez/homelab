@@ -7,3 +7,4 @@ resources:
 - sealed-secrets
 - docker-registry
 - external-dns
+- cert-manager

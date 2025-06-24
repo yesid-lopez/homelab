@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: porkbun-webhook-helm-chart-value-overrides
+  namespace: cert-manager
+data:
+  values.yaml: |-
+    # Resource limits and requests
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    
+    groupName: yesidlopez.de
+
+    nodeSelector:
+      kubernetes.io/arch: amd64
