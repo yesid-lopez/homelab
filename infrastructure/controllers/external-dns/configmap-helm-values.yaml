@@ -35,7 +35,6 @@ data:
         imagePullPolicy: Always
         args:
           - --log-level=debug
-          - --domain-filter=yesidlopez.de
         env:
           - name: PORKBUN_API_KEY
             valueFrom:
@@ -47,6 +46,8 @@ data:
               secretKeyRef:
                 name: porkbun-credentials
                 key: PORKBUN_API_SECRET
+          - name: PORKBUN_DOMAIN_FILTER
+            value: yesidlopez.de
         ports:
           - containerPort: 8888
             name: webhook
