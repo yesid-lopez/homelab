@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-app-helm-chart-value-overrides
+  namespace: test-app
+data:
+  values.yaml: |-
+    service:
+      type: LoadBalancer
+      annotations:
+        metallb.universe.tf/loadBalancerIPs: "192.168.2.112"
+        external-dns.alpha.kubernetes.io/hostname: "test-app.yesidlopez.de"
+      ports:
+        http: 80
+    
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hostname: test-app.yesidlopez.de
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: "test-app.yesidlopez.de"
+        cert-manager.io/cluster-issuer: "letsencrypt"
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      tls: true
+      extraTls:
+      - secretName: test-app-tls
+        hosts:
+        - test-app.yesidlopez.de
+    
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+    
+    containerSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    
+    extraVolumes:
+    - name: custom-html
+      configMap:
+        name: test-app-html
+    
+    extraVolumeMounts:
+    - name: custom-html
+      mountPath: /app
+      readOnly: true 
