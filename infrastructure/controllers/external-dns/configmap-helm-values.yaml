@@ -28,4 +28,28 @@ data:
     txtPrefix: ""
     txtSuffix: ""
 
+    # Sidecar container for netcup webhook provider
+    sidecars:
+      - name: external-dns-webhook-provider
+        image: ghcr.io/fcomuniz/external-dns-porkbun-webhook:main
+        imagePullPolicy: Always
+        args:
+          - --log-level=debug
+          - --domain-filter=yesidlopez.de
+        env:
+          - name: PORKBUN_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: porkbun-credentials
+                key: PORKBUN_API_KEY
+          - name: PORKBUN_API_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: porkbun-credentials
+                key: PORKBUN_API_SECRET
+        ports:
+          - containerPort: 8888
+            name: webhook
+            protocol: TCP
+
 
