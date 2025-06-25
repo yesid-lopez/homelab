@@ -9,4 +9,5 @@ resources:
 - external-dns
 - cert-manager
 - cert-manager-porkbun-webhook
+- ddns-updater
 
