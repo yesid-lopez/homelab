@@ -14,15 +14,6 @@ spec:
         name: podinfo
         namespace: flux-system
       interval: 12h
-  values:
-    replicaCount: 1
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "100m"
-      limits:
-        memory: "128Mi"
-        cpu: "200m"
   valuesFrom:
   - kind: ConfigMap
     name: test-app-helm-chart-value-overrides

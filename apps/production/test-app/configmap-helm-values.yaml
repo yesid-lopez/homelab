@@ -17,7 +17,7 @@ data:
       annotations:
         external-dns.alpha.kubernetes.io/hostname: "test-app.yesidlopez.de"
         external-dns.alpha.kubernetes.io/target: "homelab.yesidlopez.de"
-        cert-manager.io/cluster-issuer: "letsencrypt"
+        cert-manager.io/cluster-issuer: "acme-issuer"
         nginx.ingress.kubernetes.io/ssl-redirect: "false"
       hosts:
         - host: test-app.yesidlopez.de
