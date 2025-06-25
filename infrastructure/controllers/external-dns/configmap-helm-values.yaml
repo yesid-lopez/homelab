@@ -53,7 +53,7 @@ data:
                 name: porkbun-credentials
                 key: PORKBUN_API_SECRET
           - name: DOMAIN_FILTER
-            value: yesidlopez.de,resumelo.me
+            value: "yesidlopez.de,resumelo.me"
           - name: GO_LOG
             value: "debug"
         ports:
