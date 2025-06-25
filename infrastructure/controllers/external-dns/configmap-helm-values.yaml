@@ -25,6 +25,7 @@ data:
     # Domain filtering
     domainFilters:
       - yesidlopez.de
+      - resumelo.me
     
     # Registry Configuration
     registry: txt
