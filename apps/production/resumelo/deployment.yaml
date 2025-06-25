@@ -31,15 +31,15 @@ spec:
           - name: OPENAI_API_KEY
             valueFrom:
               secretKeyRef:
-                name: openai
-                key: key
+                name: openai-secrets
+                key: OPENAI_API_KEY
           envFrom:
             - configMapRef:
                 name: configmap
             - secretRef:
                 name: mongodb-secrets
-            - secretRef:
-                name: langfuse-secrets
+            # - secretRef:
+            #     name: langfuse-secrets
             - secretRef:
                 name: supabase-secrets
           ports:

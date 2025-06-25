@@ -5,6 +5,7 @@ resources:
   - configmap.yaml
   - sealed-supabase-secrets.yaml
   - sealed-registry-secrets.yaml
+  - sealed-openai-secrets.yaml
   - sealed-mongo-secrets.yaml
   - deployment.yaml
   - service.yaml
