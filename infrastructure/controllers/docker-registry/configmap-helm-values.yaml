@@ -18,6 +18,9 @@ data:
     ingress:
       enabled: true
       className: nginx
+      path: /
+      hosts:
+        - registry.yesidlopez.de
       annotations:
         external-dns.alpha.kubernetes.io/hostname: "registry.yesidlopez.de"
         external-dns.alpha.kubernetes.io/target: "homelab.yesidlopez.de"
@@ -26,11 +29,6 @@ data:
         nginx.ingress.kubernetes.io/proxy-body-size: "0"
         nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
         nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-      hosts:
-        - host: registry.yesidlopez.de
-          paths:
-            - path: /
-              pathType: Prefix
       tls:
         - secretName: registry-tls
           hosts:
