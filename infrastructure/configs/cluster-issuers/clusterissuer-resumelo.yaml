@@ -15,7 +15,7 @@ spec:
             - "resumelo.me"
         dns01:
           webhook:
-            groupName: resumelo.me
+            groupName: yesidlopez.de
             solverName: porkbun
             config:
               apiKeySecretRef:

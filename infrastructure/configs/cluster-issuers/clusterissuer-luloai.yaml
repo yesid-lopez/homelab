@@ -15,7 +15,7 @@ spec:
             - "luloai.com"
         dns01:
           webhook:
-            groupName: luloai.com
+            groupName: yesidlopez.de
             solverName: porkbun
             config:
               apiKeySecretRef:
