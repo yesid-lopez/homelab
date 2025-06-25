@@ -4,4 +4,4 @@ resources:
   - namespace.yaml
   - helmrepository.yaml
   - helmrelease.yaml
-  - configmap-helm-values.yaml 
+  - configmap-helm-values.yaml
