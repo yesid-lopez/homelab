@@ -22,6 +22,10 @@ data:
     # DNS Record Management Policy
     policy: sync
     
+    # Domain filtering
+    domainFilters:
+      - yesidlopez.de
+    
     # Registry Configuration
     registry: txt
     txtOwnerId: k3s-homelab

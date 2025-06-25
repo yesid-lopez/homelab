@@ -6,45 +6,53 @@ metadata:
 data:
   values.yaml: |-
     service:
-      type: LoadBalancer
-      annotations:
-        metallb.universe.tf/loadBalancerIPs: "192.168.2.112"
-        external-dns.alpha.kubernetes.io/hostname: "test-app.yesidlopez.de"
-      ports:
-        http: 80
+      enabled: true
+      type: ClusterIP
+      httpPort: 9898
+      grpcPort: 9999
     
     ingress:
       enabled: true
-      ingressClassName: nginx
-      hostname: test-app.yesidlopez.de
+      className: nginx
       annotations:
         external-dns.alpha.kubernetes.io/hostname: "test-app.yesidlopez.de"
+        external-dns.alpha.kubernetes.io/target: "homelab.yesidlopez.de"
         cert-manager.io/cluster-issuer: "letsencrypt"
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
-      tls: true
-      extraTls:
-      - secretName: test-app-tls
-        hosts:
-        - test-app.yesidlopez.de
+      hosts:
+        - host: test-app.yesidlopez.de
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: test-app-tls
+          hosts:
+            - test-app.yesidlopez.de
     
-    podAnnotations:
-      prometheus.io/scrape: "true"
-      prometheus.io/port: "8080"
+    # Podinfo specific settings
+    ui:
+      color: "#34577c"
+      message: "Welcome to Podinfo on yesidlopez.de!"
+      logo: ""
     
-    containerSecurityContext:
+    # Resources and security
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "100m"
+      limits:
+        memory: "128Mi"
+        cpu: "200m"
+    
+    securityContext:
       runAsNonRoot: true
-      runAsUser: 1001
+      runAsUser: 10001
       allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
       capabilities:
         drop:
           - ALL
     
-    extraVolumes:
-    - name: custom-html
-      configMap:
-        name: test-app-html
-    
-    extraVolumeMounts:
-    - name: custom-html
-      mountPath: /app
-      readOnly: true 
+    # Monitoring
+    serviceMonitor:
+      enabled: false 
