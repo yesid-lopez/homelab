@@ -5,5 +5,4 @@ resources:
   - helmrepository.yaml
   - namespace.yaml
   - helmrelease.yaml
-  - sealed-registry-auth.yaml
   - configmap-helm-values.yaml

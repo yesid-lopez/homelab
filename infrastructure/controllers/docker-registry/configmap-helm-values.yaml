@@ -13,7 +13,7 @@ data:
     service:
       type: ClusterIP
     secrets:
-      htpasswd: registry-basic-auth
+      htpasswd: "docker-user:$2y$05$DKlwiGKukfvtnDhAn6n.sOqYgksft0VY6YlCqrw8lHgXXhLfLImwu"
     
     ingress:
       enabled: true
