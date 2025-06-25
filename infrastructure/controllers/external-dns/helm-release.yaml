@@ -4,7 +4,8 @@ metadata:
   name: external-dns
   namespace: external-dns
 spec:
-  interval: 5m
+  interval: 30m
+  timeout: 10m
   chart:
     spec:
       chart: external-dns
@@ -13,6 +14,15 @@ spec:
         kind: HelmRepository
         name: bitnami
         namespace: flux-system
+      interval: 12h
+  install:
+    timeout: 10m
+    remediation:
+      retries: 3
+  upgrade:
+    timeout: 10m
+    remediation:
+      retries: 3
   valuesFrom:
   - kind: ConfigMap
     name: external-dns-helm-chart-value-overrides
