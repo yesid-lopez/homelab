@@ -4,19 +4,18 @@ metadata:
   name: resumelo-ingress
   namespace: resumelo
   annotations:
-    cert-manager.io/cluster-issuer: resumelo-issuer
+    cert-manager.io/cluster-issuer: acme-issuer
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    external-dns.alpha.kubernetes.io/hostname: api.resumelo.me
-    external-dns.alpha.kubernetes.io/target: homelab.resumelo.de
+    external-dns.alpha.kubernetes.io/target: homelab.yesidlopez.de
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - api.resumelo.me
+        - api-resumelo.yesidlopez.de
       secretName: resumelo-tls
   rules:
-    - host: api.resumelo.me
+    - host: api-resumelo.yesidlopez.de
       http:
         paths:
           - path: /
