@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resumelo
+  namespace: resumelo
+  labels:
+    app: resumelo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: resumelo
+  template:
+    metadata:
+      labels:
+        app: resumelo
+        name: resumelo
+    spec:
+      containers:
+        - name: resumelo
+          image: "registry.yesidlopez.de/resumelo:latest"
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          env:
+          - name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: openai
+                key: key
+          envFrom:
+            - configMapRef:
+                name: configmap
+            - secretRef:
+                name: mongodb-secrets
+            - secretRef:
+                name: langfuse-secrets
+            - secretRef:
+                name: supabase-secrets
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+      imagePullSecrets:
+        - name: registry-secret

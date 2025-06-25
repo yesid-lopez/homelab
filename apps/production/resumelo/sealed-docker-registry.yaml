@@ -1,0 +1,16 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: registry-secret
+  namespace: resumelo
+spec:
+  encryptedData:
+    .dockerconfigjson: AgDLo5VvxWdCECFvZ1T7vojpMWbsJSHNanrKrM52h0mo7frmb4qAMNdCgWeKaFi/CPnxVDslOLPftnaXm/3/wKi9hot1RU5HrAnFubeAHnWFUuWPuhoaupr/ISX1JSz+rACT16KLCQIUhn9T66UQZMytizU7kiQzEnKqRZ/b3ScInwRKpUD0lW0w1VB1B5QJmh/CL66cwHE3xg+P2nl6s+eEKpQ5nj7xvaVpfvZuak8aXwtpSqAIZdD2tzWc9kNv3sXt4P5BAgEzZ1009Iqo35QBdFR4C2prB+H3flNaZ0aJaC9ADp6A7aS7TEcaCjKkAIIrESMLVnXTWYrf2DNqF3wmMy4eLlqi7Ddxkcuzar/QyocXHLw5S/9vEhBxDfiiEN6p2XkG1GdlnDur1Qn+q1yIQVDV7SkUt4DtLkASDERksMnCWMXiL296L8hs94TQH2IsOpwj0UKglQO+PK9I9B/d9zvzA8iv0cSAdHawc7h/MeM25GwPktHhhQ1ebuPWVqOc11dMT/VXnhMOnzHsgIz3Vyxlc33a5B374s8OpxskyKzFjNN7kg7bTjT7/5wLYRJ1xsLQp54iyUVdOV6BLPk5DzaWm6Magx4bBMpbXgTitk1PKJw8hX5RSzzF3Ec8VvsDNIbuQqkm5WG30TSA06QJ3QPO0BaOktK7HN2kD9x4pxv0nZ7kZ+alEgraGwte4/H9bxuhsEyXybQTRuYK88zaVpH+K0dYzzQC0gyYzo1RdapZoGnBOQN1wIpC9hqVvf9UsPTBINATr0tnZP2O77E4xAM8ecl0xR+ZN76m3pzrWVNbqn2AMHaOLagBk5hcfn9gQ+5Ftlz9XxMrRPPqjLuQyCgV/9AXvW4t02lfKNQUXvqFdMRgzyxBJz6ZZaxlJCp4seo8++fVnEzo25gl5329H43BHPjlMhXbwAMdvyvghgTyGsVJPJFNqoCcSwdoN5nA3aDYAhd6ClaAhH9nVg5eng0oD7NUxYD6D6JpfyMVtWbq
+  template:
+    metadata:
+      creationTimestamp: null
+      name: registry-secret
+      namespace: resumelo
+    type: kubernetes.io/dockerconfigjson

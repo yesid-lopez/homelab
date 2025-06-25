@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap
+  namespace: resumelo
+  labels:
+    app: resumelo
+data:
+  # Langfuse configuration
+  LANGFUSE_HOST: https://langfuse.resumelo.me
+  LANGFUSE_TRACING_ENVIRONMENT: production
