@@ -7,8 +7,10 @@ data:
   values.yaml: |-
     ui:
       replicas: 1
+      proxy: true
       dockerRegistryUrl: "https://registry.yesidlopez.de"
       deleteImages: true
+      registrySecured: true
       singleRegistry: true
       image: "joxit/docker-registry-ui:latest"
       resources:
