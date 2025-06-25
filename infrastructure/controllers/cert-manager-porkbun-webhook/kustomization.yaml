@@ -4,3 +4,5 @@ resources:
   - helmrepository.yaml
   - helmrelease.yaml
   - configmap-helm-values.yaml
+  - rbac.yaml
+  - sealed-porkbun-secret.yaml
