@@ -2,7 +2,6 @@
 apiVersion: bitnami.com/v1alpha1
 kind: SealedSecret
 metadata:
-  creationTimestamp: null
   name: registry-basic-auth
   namespace: registry
 spec:
@@ -10,6 +9,5 @@ spec:
     htpasswd: AgBalPj050pQgCR1/9rmW8oH7fz84I4YurQSFgIb9EUcuZ2Bb+nIB1CQk02IX6QA7faKAE5LBz0tOn5VkAJjH3WGAvJ0QSpy5Ngq6sbkc/nq5qjJeO8z20TfOcWDXb2dEz/12wDi90BpbIIQSSPP9kKL1fBBZw1qlNu3BwydMq0C1OIDkGyg/ygNn+ix0nkQsGHQ7O9dWk3AP+4JqDWwRm2pEnWwpAFBxPA0gBXw8zyKkB8E6wUfJns2y7bo044c+F626hDBrrhyntPqvQVZJLlUCej0GqyZAePfcRxCrdnD3lM/0RWxfvxff0W5kecHHBKsLqj/+EJvTI4YdVZeEB633j8EanwKx1oTHUd7FwoRKx0zMqw03/4JwJet4wjXcA2zraKgV3Ewmiyy56Yve5+69PWwmM7H/J2aTA5reCvemdKDLY38g+GCeMiXjzZ9nlfipLtzVOHWiVwrjNNezkkIywNYGXE3g+/rZV6YP0LqaLzf6K7P1v70veC1qaqX6fsoCDZ1Grj6RO5QWK+DuSGtA2gOd1rayryBIUIfbzfRyFzJUxBl6PILFWne+IbT4NIkXbIRXUZy0WG9gvOrnRGBlW2hfjkPiF0BiJAkQ4A24I4VFX0MunbzktcePBTd2CSQT3bf2COdL/j/ALtLdbEP8y+wswHKn4Z/RBAjHCzh3tiExsPVB0MPT6ASA2ZDvurhQaY4yIwyQM+Wx2YdfMpEOfUDH8/k9++hyNboicwKGT/EBat/YBQ52QfoDYeHDsZRNAHP6eLug4VgjkcrBIz6GW0/Id7v
   template:
     metadata:
-      creationTimestamp: null
       name: registry-basic-auth
       namespace: registry
