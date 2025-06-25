@@ -9,3 +9,4 @@ resources:
   - sealed-mongo-secrets.yaml
   - deployment.yaml
   - service.yaml
+  - ingress.yaml
