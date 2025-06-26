@@ -25,7 +25,7 @@ data:
     # Domain filtering
     domainFilters:
       - yesidlopez.de
-      # - resumelo.me
+      - resumelo.me
     
     # Registry Configuration
     registry: txt
@@ -42,6 +42,9 @@ data:
       - name: external-dns-webhook-provider
         image: ghcr.io/konnektr-io/external-dns-porkbun-webhook:main
         imagePullPolicy: IfNotPresent
+        args:
+          - --domain-filter=yesidlopez.de
+          - --domain-filter=resumelo.me
         env:
           - name: API_KEY
             valueFrom:
@@ -53,8 +56,8 @@ data:
               secretKeyRef:
                 name: porkbun-credentials
                 key: PORKBUN_API_SECRET
-          - name: DOMAIN_FILTER
-            value: yesidlopez.de
+          # - name: DOMAIN_FILTER
+          #   value: yesidlopez.de
           # - name: DOMAIN_FILTER
           #   value: resumelo.me
           - name: GO_LOG
