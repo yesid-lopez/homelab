@@ -12,10 +12,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - api-resumelo.resumelo.me
+        - api.resumelo.me
       secretName: resumelo-tls
   rules:
-    - host: api-resumelo.resumelo.me
+    - host: api.resumelo.me
       http:
         paths:
           - path: /
