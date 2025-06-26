@@ -25,7 +25,7 @@ data:
     # Domain filtering
     domainFilters:
       - yesidlopez.de
-      - resumelo.me
+      # - resumelo.me
     
     # Registry Configuration
     registry: txt
@@ -55,8 +55,8 @@ data:
                 key: PORKBUN_API_SECRET
           - name: DOMAIN_FILTER
             value: yesidlopez.de
-          - name: DOMAIN_FILTER
-            value: resumelo.me
+          # - name: DOMAIN_FILTER
+          #   value: resumelo.me
           - name: GO_LOG
             value: "debug"
         ports:
