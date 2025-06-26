@@ -63,24 +63,39 @@ For the raspberry enable the cgroups in the `/boot/firmware/cmdline.txt` file by
 
 ## Secrets
 
-This homelab uses [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) for secure secret management in GitOps. The `pub-sealed-secrets.pem` file contains the public key for encryption.
+This homelab uses [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) for secure secret management in GitOps.
 
 ### Usage
 
 Install kubeseal: `brew install kubeseal` (macOS) or download from GitHub releases.
 
+#### Using the Makefile (Recommended)
+
+```bash
+# 1. Create a plain secret file
+kubectl create secret generic mysecret --from-literal=password=mypass --dry-run=client -o yaml > secret.yaml
+
+# 2. Encrypt using the Makefile
+make encrypt INPUT=secret.yaml OUTPUT=infrastructure/configs/sealed-mysecret.yaml
+
+# 3. Clean up the plain secret
+rm secret.yaml
+
+# 4. Validate the sealed secret (optional)
+make validate-sealed INPUT=infrastructure/configs/sealed-mysecret.yaml
+
+# 5. Add to kustomization and commit
+```
+
+#### Manual kubeseal commands
+
 ```bash
 # 1. Create and seal a secret
 kubectl create secret generic mysecret --from-literal=password=mypass --dry-run=client -o yaml > secret.yaml
-kubeseal --format=yaml --cert=pub-sealed-secrets.pem < secret.yaml > infrastructure/configs/mysecret-sealed.yaml
+kubeseal --format yaml --controller-namespace flux-system --controller-name sealed-secrets-controller < secret.yaml > infrastructure/configs/sealed-mysecret.yaml
 rm secret.yaml
 
 # 2. Add to kustomization and commit
-echo "  - mysecret-sealed.yaml" >> infrastructure/configs/kustomization.yaml
-git add infrastructure/configs/
-git commit -m "Add sealed secret"
-git push
-
 # 3. Flux automatically deploys and decrypts the secret
 ```
 
