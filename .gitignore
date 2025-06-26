@@ -2,3 +2,5 @@
 *secret*
 !*sealed*secret*
 *docker-config.json
+private-key.pem
+private.key

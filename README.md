@@ -86,3 +86,21 @@ git push
 
 **Important**: Never commit plain text secrets. Sealed secrets are namespace/name specific and can only be decrypted by the target cluster.
 
+### Decrypting Sealed Secrets
+
+For debugging or recovery purposes, you can decrypt sealed secrets back to plain text:
+
+```bash
+# 1. Extract the private key from the cluster
+kubectl -n flux-system get secret sealed-secrets-keyxs4cs -o go-template='{{ index .data "tls.key" }}' | base64 -d > private.key
+
+# 2. Decrypt the sealed secret
+kubeseal --recovery-unseal --recovery-private-key private.key --format yaml < path/to/sealed-secret.yaml > decrypted-secret.yaml
+
+# 3. Clean up the private key (important for security)
+rm private.key
+```
+
+**Warning**: Handle private keys with extreme care and never commit them to version control.
+
+

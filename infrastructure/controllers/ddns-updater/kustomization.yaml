@@ -3,5 +3,5 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - deployment.yaml
-  - sealed-ddns-updater-config.yaml
+  - sealed-ddns-updater-config-secret.yaml
   - service.yaml
