@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Whenever it is needed to create an ingress controller, use as target homelab.resumelo.me or homelab.resumelo.me depending on the app.

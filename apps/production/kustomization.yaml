@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
 - test-app
 - resumelo
+- gotenberg
