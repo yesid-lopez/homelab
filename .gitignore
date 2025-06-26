@@ -1,2 +1,4 @@
 # Ignore secret files but exclude sealed secrets (which are encrypted)
-(?!.*sealed).*secret.*
+*secret*
+!*sealed*secret*
+*docker-config.json
