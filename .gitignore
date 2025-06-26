@@ -1,0 +1,2 @@
+# Ignore secret files but exclude sealed secrets (which are encrypted)
+(?!.*sealed).*secret.*
