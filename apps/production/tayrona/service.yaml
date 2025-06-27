@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: tayrona
+  name: tayrona
+  namespace: tayrona
+spec:
+  selector:
+    app: tayrona
+  type: ClusterIP
+  ports:
+    - port: 8000
+      protocol: TCP
+      targetPort: 8000 

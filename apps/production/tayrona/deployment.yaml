@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tayrona
+  namespace: tayrona
+  labels:
+    app: tayrona
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tayrona
+  template:
+    metadata:
+      labels:
+        app: tayrona
+        name: tayrona
+    spec:
+      containers:
+      - name: tayrona
+        image: "tayrona:0.1.1"
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      imagePullSecrets:
+        - name: my-registry-secret 

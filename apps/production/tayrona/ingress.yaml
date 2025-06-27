@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tayrona-ingress
+  namespace: tayrona
+  annotations:
+    cert-manager.io/cluster-issuer: acme-issuer
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    external-dns.alpha.kubernetes.io/target: homelab.yesidlopez.de
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - tayrona.yesidlopez.de
+      secretName: tayrona-tls
+  rules:
+    - host: tayrona.yesidlopez.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tayrona
+                port:
+                  number: 8000 
