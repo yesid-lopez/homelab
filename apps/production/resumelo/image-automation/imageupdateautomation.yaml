@@ -2,12 +2,13 @@ apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
 metadata:
   name: resumelo
-  namespace: flux-system
+  namespace: resumelo  # Changed from flux-system to resumelo
 spec:
   interval: 1m
   sourceRef:
     kind: GitRepository
     name: flux-system
+    namespace: flux-system  # Specify the namespace of the GitRepository
   git:
     checkout:
       ref:
@@ -39,4 +40,4 @@ spec:
       branch: main
   update:
     path: "./apps/production/resumelo"
-    strategy: Setters 
+    strategy: Setters
