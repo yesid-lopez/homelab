@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio
+  namespace: portfolio
+  labels:
+    app: portfolio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portfolio
+  template:
+    metadata:
+      labels:
+        app: portfolio
+        name: portfolio
+    spec:
+      containers:
+      - name: portfolio
+        image: "registry.yesidlopez.de/portfolio:1.0"
+        ports:
+        - containerPort: 3000
+        env:
+        - name: SANITY_PROJECT_ID
+          value: "zv6zquub"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      imagePullSecrets:
+        - name: my-registry-secret 

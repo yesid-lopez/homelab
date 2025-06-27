@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portfolio-ingress
+  namespace: portfolio
+  annotations:
+    cert-manager.io/cluster-issuer: acme-issuer
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    external-dns.alpha.kubernetes.io/target: homelab.yesidlopez.de
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - yesidlopez.de
+      secretName: portfolio-tls
+  rules:
+    - host: yesidlopez.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portfolio
+                port:
+                  number: 3000 
