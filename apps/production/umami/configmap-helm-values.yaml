@@ -21,11 +21,12 @@ data:
 
     ingress:
       enabled: true
-      className: "nginx"
+      className: nginx
       annotations:
         external-dns.alpha.kubernetes.io/hostname: "umami.yesidlopez.de"
         external-dns.alpha.kubernetes.io/target: "homelab.yesidlopez.de"
         cert-manager.io/cluster-issuer: "acme-issuer"
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
       hosts:
         - host: umami.yesidlopez.de
           paths:
