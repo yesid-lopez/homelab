@@ -23,9 +23,9 @@ data:
       enabled: true
       className: "nginx"
       annotations:
-        cert-manager.io/cluster-issuer: "acme-issuer"
+        external-dns.alpha.kubernetes.io/hostname: "umami.yesidlopez.de"
         external-dns.alpha.kubernetes.io/target: "homelab.yesidlopez.de"
-        nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+        cert-manager.io/cluster-issuer: "acme-issuer"
       hosts:
         - host: umami.yesidlopez.de
           paths:
@@ -46,4 +46,3 @@ data:
       type: postgresql
       hostname: "umami-postgres-rw.umami.svc.cluster.local"
       port: 5432
- 
