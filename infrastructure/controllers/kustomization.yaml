@@ -10,4 +10,5 @@ resources:
 - cert-manager
 - cert-manager-porkbun-webhook
 - ddns-updater
+- cloudnative-pg
 

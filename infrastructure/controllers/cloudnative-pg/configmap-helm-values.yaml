@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudnative-pg-helm-chart-value-overrides
+  namespace: cnpg-system
+data:
+  values.yaml: |-
+    # CloudNative PG operator configuration
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    
+    monitoring:
+      enabled: true
+      grafanaDashboard:
+        create: true 
