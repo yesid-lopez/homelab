@@ -35,6 +35,9 @@ data:
             - registry.yesidlopez.de
 
     configData:
+      storage:
+        delete:
+          enabled: true
       http:
         headers:
           X-Content-Type-Options: [nosniff]
