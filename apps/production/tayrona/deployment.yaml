@@ -21,6 +21,12 @@ spec:
         image: "registry.yesidlopez.de/tayrona:0.1.1"
         ports:
         - containerPort: 8000
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secrets
+              key: OPENAI_API_KEY
         resources:
           requests:
             memory: "128Mi"

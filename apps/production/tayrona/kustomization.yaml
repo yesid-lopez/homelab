@@ -5,4 +5,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - sealed-registry-secret.yaml 
+  - sealed-registry-secret.yaml
+  - sealed-secret-openai.yaml 
