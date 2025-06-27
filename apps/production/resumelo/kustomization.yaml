@@ -3,10 +3,13 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - configmap.yaml
-  - sealed-supabase-secrets.yaml
-  - sealed-registry-secrets.yaml
-  - sealed-openai-secrets.yaml
-  - sealed-mongo-secrets.yaml
+  - sealed-secrets/sealed-supabase-secrets.yaml
+  - sealed-secrets/sealed-registry-secrets.yaml
+  - sealed-secrets/sealed-openai-secrets.yaml
+  - sealed-secrets/sealed-mongo-secrets.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
+  - image-automation/imagerepository.yaml
+  - image-automation/imagepolicy.yaml
+  - image-automation/imageupdateautomation.yaml
