@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: tayrona
-        image: "tayrona:0.1.1"
+        image: "registry.yesidlopez.de/tayrona:0.1.1"
         ports:
         - containerPort: 8000
         resources:
