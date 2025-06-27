@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+create the values in a separate file and reference to it in the helmrelease, do not include the values in the helmrelease
