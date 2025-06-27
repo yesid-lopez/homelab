@@ -1,0 +1,27 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: umami-postgres
+  namespace: umami
+spec:
+  instances: 1
+      
+  bootstrap:
+    initdb:
+      database: umami
+      owner: umami
+        
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+    
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+      
+  monitoring:
+    enabled: false 

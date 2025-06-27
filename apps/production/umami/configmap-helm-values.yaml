@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: umami-helm-chart-value-overrides
+  namespace: umami
+data:
+  values.yaml: |-
+    replicaCount: 1
+
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+    service:
+      type: ClusterIP
+      port: 3000
+
+    ingress:
+      enabled: true
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: "acme-issuer"
+        external-dns.alpha.kubernetes.io/target: "homelab.yesidlopez.de"
+        nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      hosts:
+        - host: umami.yesidlopez.de
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: umami-tls
+          hosts:
+            - umami.yesidlopez.de
+
+    # Disable built-in PostgreSQL since we're using CloudNativePG
+    postgresql:
+      enabled: false
+
+
+    # Configure external database (CloudNativePG)
+    externalDatabase:
+      type: postgresql
+      hostname: "umami-postgres-rw.umami.svc.cluster.local"
+      port: 5432
+ 
