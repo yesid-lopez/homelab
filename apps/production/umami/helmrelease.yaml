@@ -29,4 +29,4 @@ spec:
   - kind: Secret
     name: umami-postgres-app
     valuesKey: database
-    targetPath: externalDatabase.auth.database
+    targetPath: externalDatabase.auth.dbname
