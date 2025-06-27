@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: resumelo
-          image: "registry.yesidlopez.de/resumelo:0.6.6" # {"$imagepolicy": "resumelo:resumelo"}
+          image: "registry.yesidlopez.de/resumelo:0.6.7" # {"$imagepolicy": "resumelo:resumelo"}
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -28,11 +28,11 @@ spec:
               cpu: "500m"
               memory: "512Mi"
           env:
-          - name: OPENAI_API_KEY
-            valueFrom:
-              secretKeyRef:
-                name: openai-secrets
-                key: OPENAI_API_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-secrets
+                  key: OPENAI_API_KEY
           envFrom:
             - configMapRef:
                 name: configmap
