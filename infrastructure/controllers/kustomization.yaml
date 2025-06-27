@@ -5,10 +5,8 @@ resources:
 - nginx-ingress-controller
 - longhorn
 - sealed-secrets
-- docker-registry
 - external-dns
 - cert-manager
 - cert-manager-porkbun-webhook
-- ddns-updater
 - cloudnative-pg
 
