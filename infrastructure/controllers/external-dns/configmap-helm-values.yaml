@@ -26,6 +26,7 @@ data:
     domainFilters:
       - yesidlopez.de
       - resumelo.me
+      - luloai.com
     
     # Registry Configuration
     registry: txt
@@ -45,6 +46,7 @@ data:
         args:
         - --domain-filter=yesidlopez.de
         - --domain-filter=resumelo.me
+        - --domain-filter=luloai.com
         env:
           - name: API_KEY
             valueFrom:
@@ -56,10 +58,6 @@ data:
               secretKeyRef:
                 name: porkbun-credentials
                 key: PORKBUN_API_SECRET
-          # - name: DOMAIN_FILTER
-          #   value: yesidlopez.de
-          # - name: DOMAIN_FILTER
-          #   value: resumelo.me
           - name: GO_LOG
             value: "debug"
         ports:
