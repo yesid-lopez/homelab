@@ -38,11 +38,11 @@ data:
     nodeSelector:
       kubernetes.io/arch: amd64
 
-    # Sidecar container for netcup webhook provider
+    # Sidecar container for Porkbun webhook provider
     sidecars:
       - name: external-dns-webhook-provider
         image: ghcr.io/konnektr-io/external-dns-porkbun-webhook:main
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         args:
         - --domain-filter=yesidlopez.de
         - --domain-filter=resumelo.me
