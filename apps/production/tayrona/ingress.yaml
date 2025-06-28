@@ -8,6 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     external-dns.alpha.kubernetes.io/target: homelab.yesidlopez.de
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "180"
 spec:
   ingressClassName: nginx
   tls:
