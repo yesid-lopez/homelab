@@ -38,10 +38,10 @@ spec:
                 name: configmap
             - secretRef:
                 name: mongodb-secrets
-            # - secretRef:
-            #     name: langfuse-secrets
             - secretRef:
                 name: supabase-secrets
+            - secretRef:
+                name: stripe-secrets
           ports:
             - name: http
               containerPort: 80
