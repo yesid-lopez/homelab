@@ -7,5 +7,5 @@ resources:
 - resumelo
 - gotenberg
 - umami
-- ml-portfolio
+# - ml-portfolio # Deployed in Vercel
 - tayrona
