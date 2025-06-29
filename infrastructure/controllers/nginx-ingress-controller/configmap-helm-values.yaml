@@ -12,6 +12,11 @@ data:
         # Commented out to until the new router has arrived
         # type: LoadBalancer
         # loadBalancerIP: 192.168.2.100
+        externalTrafficPolicy: Local
+      config:
+        use-forwarded-headers: "true"
+        compute-full-forwarded-for: "true"
+        use-proxy-protocol: "false"
       metrics:
         enabled: true
     defaultBackend:
