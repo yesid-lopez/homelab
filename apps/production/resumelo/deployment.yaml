@@ -42,6 +42,8 @@ spec:
                 name: supabase-secrets
             - secretRef:
                 name: stripe-secrets
+            - secretRef:
+                name: langfuse-secrets
           ports:
             - name: http
               containerPort: 80

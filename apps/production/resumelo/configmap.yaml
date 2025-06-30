@@ -7,5 +7,5 @@ metadata:
     app: resumelo
 data:
   # Langfuse configuration
-  LANGFUSE_HOST: https://langfuse.resumelo.me
+  LANGFUSE_HOST: https://langfuse.yesidlopez.de
   LANGFUSE_TRACING_ENVIRONMENT: production

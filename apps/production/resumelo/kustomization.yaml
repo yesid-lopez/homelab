@@ -8,6 +8,7 @@ resources:
   - sealed-secrets/sealed-openai-secrets.yaml
   - sealed-secrets/sealed-mongo-secrets.yaml
   - sealed-secrets/sealed-stripe-secrets.yaml
+  - sealed-secrets/sealed-langfuse-secrets.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
