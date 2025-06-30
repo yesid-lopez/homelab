@@ -63,4 +63,36 @@ data:
 
     # Global storage class
     global:
-      defaultStorageClass: "longhorn" 
+      defaultStorageClass: "longhorn"
+
+    # S3/MinIO Configuration
+    s3:
+      # Enable MinIO deployment (via Bitnami Helm Chart)
+      deploy: true
+      
+      # Storage provider to use
+      storageProvider: "s3"
+      
+      # S3 bucket to use for all uploads
+      bucket: "langfuse-storage"
+      
+      # S3 region to use for all uploads
+      region: "auto"
+      
+      # S3 endpoint to use for all uploads
+      endpoint: "http://langfuse-minio:9000"
+      
+      # Whether to force path style on requests (required for MinIO)
+      forcePathStyle: true
+      
+      # S3 accessKeyId to use for all uploads
+      accessKeyId:
+        secretKeyRef:
+          name: "langfuse-secrets"
+          key: "minio-access-key"
+      
+      # S3 secretAccessKey to use for all uploads
+      secretAccessKey:
+        secretKeyRef:
+          name: "langfuse-secrets"
+          key: "minio-secret-key" 
