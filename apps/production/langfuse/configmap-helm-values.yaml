@@ -80,7 +80,7 @@ data:
       region: "auto"
       
       # S3 endpoint to use for all uploads
-      endpoint: "http://langfuse-minio:9000"
+      endpoint: "http://langfuse-s3:9000"
       
       # Whether to force path style on requests (required for MinIO)
       forcePathStyle: true
