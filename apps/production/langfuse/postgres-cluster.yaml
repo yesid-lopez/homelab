@@ -1,0 +1,24 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: langfuse-postgres
+  namespace: langfuse
+spec:
+  instances: 1
+      
+  bootstrap:
+    initdb:
+      database: langfuse
+      owner: langfuse
+        
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+    
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m" 
