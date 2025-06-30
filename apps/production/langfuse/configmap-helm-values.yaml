@@ -88,11 +88,11 @@ data:
       # S3 accessKeyId to use for all uploads
       accessKeyId:
         secretKeyRef:
-          name: "langfuse-secrets"
-          key: "minio-access-key"
+          name: "langfuse-s3"
+          key: "root-user"
       
       # S3 secretAccessKey to use for all uploads
       secretAccessKey:
         secretKeyRef:
-          name: "langfuse-secrets"
-          key: "minio-secret-key" 
+          name: "langfuse-s3"
+          key: "root-password" 
