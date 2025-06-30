@@ -17,6 +17,7 @@ data:
       
       ingress:
         enabled: true
+        className: "nginx"
         hosts:
         - host: langfuse.yesidlopez.de
           paths:
