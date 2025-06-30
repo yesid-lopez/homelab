@@ -74,7 +74,7 @@ data:
       storageProvider: "s3"
       
       # S3 bucket to use for all uploads
-      bucket: "langfuse-storage"
+      bucket: "langfuse"
       
       # S3 region to use for all uploads
       region: "auto"
