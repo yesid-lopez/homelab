@@ -20,4 +20,8 @@ patches:
 - path: configmap-patch.yaml
   target:
     kind: ConfigMap
-    name: configmap 
+    name: configmap
+- path: ingress-patch.yaml
+  target:
+    kind: Ingress
+    name: resumelo-ingress
