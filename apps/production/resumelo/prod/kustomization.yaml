@@ -10,3 +10,7 @@ patches:
     target:
       kind: Deployment
       name: resumelo
+  - path: configmap-patch.yaml
+    target:
+      kind: ConfigMap
+      name: configmap

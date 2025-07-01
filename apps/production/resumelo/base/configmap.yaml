@@ -8,4 +8,4 @@ metadata:
 data:
   # Langfuse configuration
   LANGFUSE_HOST: https://langfuse.yesidlopez.de
-  LANGFUSE_TRACING_ENVIRONMENT: production
+  LANGFUSE_TRACING_ENVIRONMENT: CHANGE_ME
