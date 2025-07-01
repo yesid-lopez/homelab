@@ -7,5 +7,15 @@ spec:
   tls:
     - hosts:
         - api-dev.resumelo.me
+      secretName: resumelo-tls
   rules:
     - host: api-dev.resumelo.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: resumelo
+                port:
+                  number: 80
