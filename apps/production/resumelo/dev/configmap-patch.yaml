@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap
+  namespace: resumelo-dev
+data:
+  LANGFUSE_TRACING_ENVIRONMENT: development 

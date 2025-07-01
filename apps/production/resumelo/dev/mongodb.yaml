@@ -1,0 +1,59 @@
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: mongodb
+  namespace: resumelo-dev
+spec:
+  members: 1
+  type: ReplicaSet
+  version: "7.0.5"
+  security:
+    authentication:
+      modes: ["SCRAM"]
+  users:
+    - name: admin
+      db: admin
+      scramCredentialsSecretName: mongodb-admin-password
+      roles:
+        - name: clusterAdmin
+          db: admin
+        - name: userAdminAnyDatabase
+          db: admin
+    - name: resumelo
+      db: resumelo
+      scramCredentialsSecretName: mongodb-resumelo-password
+      roles:
+        - name: dbOwner
+          db: resumelo
+  
+  # Resource limits for dev environment
+  statefulSet:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: mongod
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  cpu: 500m
+                  memory: 1Gi
+            - name: mongodb-agent
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 200Mi
+                limits:
+                  cpu: 200m
+                  memory: 500Mi
+      volumeClaimTemplates:
+        - metadata:
+            name: data-volume
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: 2Gi
+            storageClassName: longhorn 
