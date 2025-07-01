@@ -7,3 +7,4 @@ resources:
   - sealed-supabase-secrets.yaml
   - sealed-registry-secrets.yaml
   - sealed-stripe-secrets.yaml
+  - sealed-openai-secrets.yaml
