@@ -7,6 +7,28 @@ spec:
   members: 1
   type: ReplicaSet
   version: "7.0.5"
+  security:
+    authentication:
+      modes: ["SCRAM"]
+  users:
+    - name: admin
+      db: admin
+      passwordSecretRef:
+        name: mongodb-admin-password
+      scramCredentialsSecretName: mongodb-admin-scram
+      roles:
+        - name: clusterAdmin
+          db: admin
+        - name: userAdminAnyDatabase
+          db: admin
+    - name: resumelo
+      db: resumelo
+      passwordSecretRef:
+        name: mongodb-resumelo-password
+      scramCredentialsSecretName: mongodb-resumelo-scram
+      roles:
+        - name: dbOwner
+          db: resumelo
   
   # Resource limits for dev environment
   statefulSet:
