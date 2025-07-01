@@ -4,7 +4,8 @@ resources:
 - docker-registry
 - ddns-updater
 - test-app
-- resumelo
+- resumelo/dev
+- resumelo/prod
 - gotenberg
 - umami
 - langfuse
