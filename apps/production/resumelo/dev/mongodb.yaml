@@ -11,20 +11,14 @@ spec:
     authentication:
       modes: ["SCRAM"]
   users:
-    - name: admin
-      db: admin
-      scramCredentialsSecretName: mongodb-admin-password
-      roles:
-        - name: clusterAdmin
-          db: admin
-        - name: userAdminAnyDatabase
-          db: admin
     - name: resumelo
       db: resumelo
       scramCredentialsSecretName: mongodb-resumelo-password
       roles:
         - name: dbOwner
           db: resumelo
+        - name: readWrite
+          db: admin
   
   # Resource limits for dev environment
   statefulSet:
