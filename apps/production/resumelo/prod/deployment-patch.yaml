@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resumelo
+  namespace: resumelo
+spec:
+  template:
+    spec:
+      containers:
+        - name: resumelo
+          image: "registry.yesidlopez.de/resumelo:0.6.8" # {"$imagepolicy": "resumelo:resumelo-prod"} 

@@ -1,7 +1,7 @@
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
 metadata:
-  name: resumelo
+  name: resumelo-prod
   namespace: resumelo
 spec:
   imageRepositoryRef:

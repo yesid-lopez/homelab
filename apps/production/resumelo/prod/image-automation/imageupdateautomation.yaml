@@ -1,7 +1,7 @@
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
 metadata:
-  name: resumelo
+  name: resumelo-prod
   namespace: resumelo
 spec:
   interval: 1m
@@ -18,7 +18,7 @@ spec:
         email: fluxcdbot@users.noreply.github.com
         name: fluxcdbot
       messageTemplate: |
-        Automated image update for resumelo
+        Automated image update for resumelo-prod
 
         Automation name: {{ .AutomationObject }}
 
@@ -39,5 +39,5 @@ spec:
     push:
       branch: main
   update:
-    path: "./apps/production/resumelo"
-    strategy: Setters
+    path: ./apps/production/resumelo/prod
+    strategy: Setters 

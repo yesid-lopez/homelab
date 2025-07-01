@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: resumelo
-          image: "registry.yesidlopez.de/resumelo:0.6.8" # {"$imagepolicy": "resumelo:resumelo"}
+          image: "registry.yesidlopez.de/resumelo:0.6.8" # {"$imagepolicy": "REPLACE_WITH_OVERLAY_POLICY"}
           imagePullPolicy: IfNotPresent
           resources:
             requests:

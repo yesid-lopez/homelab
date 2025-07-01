@@ -3,3 +3,10 @@ kind: Kustomization
 resources:
   - ../base
   - sealed-secrets
+  - image-automation
+
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: resumelo
