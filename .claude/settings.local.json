@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flux get:*)",
+      "Bash(kubectl get:*)",
+      "Bash(flux reconcile kustomization:*)",
+      "Bash(kubectl describe:*)"
+    ],
+    "deny": []
+  }
+}
