@@ -16,4 +16,7 @@ spec:
   interval: 5m
   timeout: 5m
   releaseName: longhorn-release
+  valuesFrom:
+    - kind: ConfigMap
+      name: longhorn-values
 
