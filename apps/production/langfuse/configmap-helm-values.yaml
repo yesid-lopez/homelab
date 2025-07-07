@@ -51,6 +51,7 @@ data:
 
     # ClickHouse configuration
     clickhouse:
+      replicaCount: 1
       resources:
         limits:
           cpu: "1"
@@ -61,7 +62,7 @@ data:
       auth:
         enabled: true
       persistence:
-        size: "50Gi"
+        size: "20Gi"
 
     # Global storage class
     global:
