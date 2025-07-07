@@ -61,8 +61,6 @@ data:
           memory: "1Gi"
       auth:
         enabled: true
-      persistence:
-        size: "20Gi"
 
     # Global storage class
     global:
