@@ -5,7 +5,8 @@
       "Bash(kubectl get:*)",
       "Bash(flux reconcile kustomization:*)",
       "Bash(kubectl describe:*)",
-      "Bash(flux reconcile helmrelease:*)"
+      "Bash(flux reconcile helmrelease:*)",
+      "Bash(kubectl logs:*)"
     ],
     "deny": []
   }
