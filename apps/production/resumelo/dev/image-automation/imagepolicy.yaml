@@ -7,6 +7,5 @@ spec:
   imageRepositoryRef:
     name: resumelo
   policy:
-    numericAsc: {}
-  filterTags:
-    pattern: '^latest$' 
+    alphabetical:
+      order: asc 
