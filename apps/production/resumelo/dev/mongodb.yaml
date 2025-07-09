@@ -35,9 +35,21 @@ spec:
             secretKeyRef:
               name: mongodb-secrets
               key: MONGODB_DATABASE
+        - name: MONGODB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secrets
+              key: MONGODB_USERNAME
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secrets
+              key: MONGODB_PASSWORD
         volumeMounts:
         - name: mongodb-data
           mountPath: /data/db
+        - name: mongodb-init
+          mountPath: /docker-entrypoint-initdb.d
         resources:
           requests:
             cpu: 100m
@@ -49,6 +61,44 @@ spec:
       - name: mongodb-data
         persistentVolumeClaim:
           claimName: mongodb-pvc
+      - name: mongodb-init
+        configMap:
+          name: mongodb-init-script
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-init-script
+  namespace: resumelo-dev
+data:
+  init.js: |
+    const dbName = process.env.MONGO_INITDB_DATABASE;
+    const username = process.env.MONGODB_USERNAME;
+    const password = process.env.MONGODB_PASSWORD;
+    
+    if (!dbName) {
+      throw new Error('MONGO_INITDB_DATABASE environment variable is required');
+    }
+    if (!username) {
+      throw new Error('MONGODB_USERNAME environment variable is required');
+    }
+    if (!password) {
+      throw new Error('MONGODB_PASSWORD environment variable is required');
+    }
+    
+    db = db.getSiblingDB(dbName);
+    db.createUser({
+      user: username,
+      pwd: password,
+      roles: [
+        {
+          role: 'readWrite',
+          db: dbName
+        }
+      ]
+    });
+    db.createCollection('init');
+    print(`Database ${dbName} created with user ${username} and initial collection`);
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
