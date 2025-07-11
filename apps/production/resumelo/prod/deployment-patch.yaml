@@ -8,4 +8,4 @@ spec:
     spec:
       containers:
         - name: resumelo
-          image: "registry.yesidlopez.de/resumelo:v0.6.9" # {"$imagepolicy": "resumelo:resumelo-prod"} 
+          image: "registry.yesidlopez.de/resumelo:0.7.0" # {"$imagepolicy": "resumelo:resumelo-prod"} 
