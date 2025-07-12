@@ -4,4 +4,5 @@ metadata:
   name: configmap
   namespace: resumelo-dev
 data:
-  LANGFUSE_TRACING_ENVIRONMENT: development 
+  LANGFUSE_TRACING_ENVIRONMENT: development
+  ENV: development
