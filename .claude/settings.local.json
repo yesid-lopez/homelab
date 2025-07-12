@@ -8,7 +8,9 @@
       "Bash(flux reconcile helmrelease:*)",
       "Bash(kubectl logs:*)",
       "Bash(git fetch:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(flux reconcile image repository:*)",
+      "Bash(flux reconcile image policy:*)"
     ],
     "deny": []
   }

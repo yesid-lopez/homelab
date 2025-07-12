@@ -4,7 +4,7 @@ metadata:
   name: resumelo
   namespace: resumelo-dev
 spec:
-  image: registry.yesidlopez.de/resumelo
+  image: registry.yesidlopez.de/resumelo-dev
   interval: 1m
   secretRef:
     name: registry-secret 
