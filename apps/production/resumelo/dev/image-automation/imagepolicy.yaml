@@ -7,5 +7,5 @@ spec:
   imageRepositoryRef:
     name: resumelo
   policy:
-    semver:
-      range: ">=0.0.0" 
+    alphabetical:
+      order: desc 
