@@ -37,6 +37,14 @@ data:
       extraArgs:
         - -config.expand-env=true
     
+    # Disable SimpleScalable components to avoid conflicts
+    read:
+      replicas: 0
+    write:
+      replicas: 0
+    backend:
+      replicas: 0
+    
     chunksCache:
       enabled: false
     resultsCache:
