@@ -9,3 +9,4 @@ resources:
 - cert-manager
 - cert-manager-porkbun-webhook
 - cloudnative-pg
+- loki
