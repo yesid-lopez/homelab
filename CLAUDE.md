@@ -25,6 +25,17 @@ This is a Kubernetes homelab setup using GitOps principles with Flux CD, running
 - **DNS**: External DNS with Porkbun provider
 - **Certificates**: cert-manager with Let's Encrypt and Porkbun webhook
 
+## Ingress Configuration
+
+### Domain Strategy
+- **Primary domains**: `resumelo.me` and `yesidlopez.de`
+- **Subdomain pattern**: Use `homelab.resumelo.me` or `homelab.yesidlopez.de` depending on the application
+- Choose domain based on application context and ownership
+
+### Certificate Issuers
+- **acme-issuer**: Use for `yesidlopez.de` domains
+- **resumelo-issuer**: Use for `resumelo.me` domains
+
 ## Directory Structure
 
 ```
