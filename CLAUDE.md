@@ -30,11 +30,16 @@ This is a Kubernetes homelab setup using GitOps principles with Flux CD, running
 ### Domain Strategy
 - **Primary domains**: `resumelo.me` and `yesidlopez.de`
 - **Subdomain pattern**: Use `homelab.resumelo.me` or `homelab.yesidlopez.de` depending on the application
+- **Target hosts**: Always use `homelab.yesidlopez.de` for yesidlopez.de domain apps, `homelab.resumelo.me` for resumelo.me domain apps
 - Choose domain based on application context and ownership
 
 ### Certificate Issuers
 - **acme-issuer**: Use for `yesidlopez.de` domains
 - **resumelo-issuer**: Use for `resumelo.me` domains
+
+### Required Ingress Annotations
+- **cert-manager.io/cluster-issuer**: Set to appropriate issuer (acme-issuer or resumelo-issuer)
+- **external-dns.alpha.kubernetes.io/target**: Set to `homelab.yesidlopez.de` or `homelab.resumelo.me` based on domain
 
 ## Directory Structure
 
