@@ -16,9 +16,12 @@ data:
             }
           }
           
-          // Kubernetes logs collection
+          // Kubernetes logs collection - limit to application namespaces
           discovery.kubernetes "pods" {
             role = "pod"
+            namespaces {
+              names = ["resumelo", "resumelo-dev", "langfuse", "umami", "grafana", "loki", "alloy"]
+            }
           }
           
           // Relabel to use pod name as service
