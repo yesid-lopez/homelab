@@ -11,3 +11,4 @@ resources:
 - cloudnative-pg
 - loki
 - grafana
+- alloy

@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-helm-chart-value-overrides
+  namespace: flux-system
+data:
+  values.yaml: |
+    alloy:
+      configMap:
+        content: |
+          // Loki remote write
+          loki.write "default" {
+            endpoint {
+              url = "http://loki-gateway.loki:80/loki/api/v1/push"
+            }
+          }
+          
+          // Kubernetes logs collection
+          discovery.kubernetes "pods" {
+            role = "pod"
+          }
+          
+          loki.source.kubernetes "pods" {
+            targets    = discovery.kubernetes.pods.targets
+            forward_to = [loki.write.default.receiver]
+          }
+    
+    controller:
+      type: daemonset
+      
+    serviceAccount:
+      create: true
