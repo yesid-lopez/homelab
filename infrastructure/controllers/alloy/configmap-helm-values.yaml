@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: alloy-helm-chart-value-overrides
-  namespace: flux-system
+  namespace: alloy
 data:
   values.yaml: |
     alloy:

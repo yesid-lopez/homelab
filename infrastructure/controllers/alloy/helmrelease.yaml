@@ -23,5 +23,4 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: alloy-helm-chart-value-overrides
-      namespace: flux-system
       valuesKey: values.yaml
