@@ -43,7 +43,16 @@ data:
           
           loki.source.kubernetes "pods" {
             targets    = discovery.relabel.kubernetes_pods.output
+            forward_to = [loki.process.filter_health_checks.receiver]
+          }
+          
+          // Filter out health check logs
+          loki.process "filter_health_checks" {
             forward_to = [loki.write.default.receiver]
+            
+            stage.drop {
+              expression = `.*(/health|/healthz|/ping|/status|GET /|HEAD /).*`
+            }
           }
     
     controller:
