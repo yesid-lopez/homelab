@@ -1,0 +1,22 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: grafana
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: grafana
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  interval: 5m0s
+  releaseName: grafana
+  targetNamespace: grafana
+  valuesFrom:
+  - kind: ConfigMap
+    name: grafana-helm-chart-value-overrides
+    valuesKey: values.yaml
