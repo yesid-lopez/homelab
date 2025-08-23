@@ -49,3 +49,10 @@ data:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/default
+    
+    dashboards:
+      default:
+        loki-logs:
+          gnetId: 13639
+          revision: 2
+          datasource: Loki
