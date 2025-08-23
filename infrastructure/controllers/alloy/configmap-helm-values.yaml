@@ -54,7 +54,7 @@ data:
             forward_to = [loki.write.default.receiver]
             
             stage.drop {
-              expression = `.*(/health|/healthz|/ping|/status|GET /|HEAD /).*`
+              expression = `.*(/healthz|/ping|/status|HEAD /).*`
             }
           }
     
