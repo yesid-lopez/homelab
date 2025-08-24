@@ -74,9 +74,8 @@ data:
               metric.counter {
                 name = "http_requests_total"
                 description = "Total HTTP requests by status code"
-                
-                match {
-                  selector = "{status_code=~\".+\"}"
+                source = "status_code"
+                config = {
                   action = "inc"
                 }
               }
