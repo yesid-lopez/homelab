@@ -10,7 +10,12 @@
       "Bash(git fetch:*)",
       "Bash(git pull:*)",
       "Bash(flux reconcile image repository:*)",
-      "Bash(flux reconcile image policy:*)"
+      "Bash(flux reconcile image policy:*)",
+      "Bash(mkdir:*)",
+      "Bash(flux reconcile:*)",
+      "Read(//var/folders/ds/q04jz6tn51ddhzkw8s49p4h00000gn/T/TemporaryItems/NSIRD_screencaptureui_oDeBVG/**)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
