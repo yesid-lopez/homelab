@@ -34,6 +34,11 @@ data:
       datasources.yaml:
         apiVersion: 1
         datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus-server.prometheus:80
+          access: proxy
+          isDefault: false
         - name: Loki
           type: loki
           url: http://loki-gateway.loki:80
@@ -59,3 +64,11 @@ data:
           gnetId: 13639
           revision: 2
           datasource: Loki
+        prometheus-overview:
+          gnetId: 3662
+          revision: 2
+          datasource: Prometheus
+        kubernetes-cluster:
+          gnetId: 7249
+          revision: 1
+          datasource: Prometheus
