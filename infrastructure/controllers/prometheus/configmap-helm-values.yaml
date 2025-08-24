@@ -1,0 +1,94 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-helm-chart-value-overrides
+  namespace: flux-system
+data:
+  values.yaml: |
+    prometheus:
+      prometheusSpec:
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 20Gi
+        retention: 7d
+        retentionSize: 18GB
+        replicas: 1
+        shards: 1
+        resources:
+          limits:
+            memory: 2Gi
+            cpu: 1000m
+          requests:
+            memory: 1Gi
+            cpu: 500m
+      
+      ingress:
+        enabled: true
+        ingressClassName: nginx
+        annotations:
+          cert-manager.io/cluster-issuer: acme-issuer
+          external-dns.alpha.kubernetes.io/target: homelab.yesidlopez.de
+        hosts:
+          - prometheus.homelab.yesidlopez.de
+        tls:
+          - secretName: prometheus-tls
+            hosts:
+              - prometheus.homelab.yesidlopez.de
+    
+    grafana:
+      enabled: false
+    
+    alertmanager:
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 2Gi
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: 200m
+          requests:
+            memory: 256Mi
+            cpu: 100m
+      
+      ingress:
+        enabled: true
+        ingressClassName: nginx
+        annotations:
+          cert-manager.io/cluster-issuer: acme-issuer
+          external-dns.alpha.kubernetes.io/target: homelab.yesidlopez.de
+        hosts:
+          - alertmanager.homelab.yesidlopez.de
+        tls:
+          - secretName: alertmanager-tls
+            hosts:
+              - alertmanager.homelab.yesidlopez.de
+    
+    nodeExporter:
+      enabled: true
+    
+    kubeStateMetrics:
+      enabled: true
+    
+    kubeControllerManager:
+      enabled: true
+    
+    kubeScheduler:
+      enabled: true
+    
+    kubeProxy:
+      enabled: true
+    
+    kubelet:
+      enabled: true
