@@ -36,7 +36,7 @@ data:
         datasources:
         - name: Prometheus
           type: prometheus
-          url: http://prometheus-server.prometheus:80
+          url: http://kube-prometheus-stack-prometheus.prometheus:9090
           access: proxy
           isDefault: false
         - name: Loki
