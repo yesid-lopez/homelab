@@ -64,21 +64,8 @@ data:
               expression = `.*"GET /health[^/]*\s+HTTP.*|.*(/healthz|/ping|/status|HEAD /).*`
             }
             
-            // Parse HTTP status codes from logs
-            stage.regex {
-              expression = `.*(?P<method>[A-Z]+)\s+"?(?P<path>[^"\s]+)"?\s+HTTP/[\d.]+"\s+(?P<status_code>\d{3})`
-            }
-            
-            // Create metrics from HTTP logs
-            stage.metrics {
-              metric.counter {
-                name = "http_requests_total"
-                description = "Total HTTP requests by status code"
-                source = "status_code"
-                config = {
-                  action = "inc"
-                }
-              }
+            stage.drop {
+              expression = `.*failed to create fsnotify watcher.*`
             }
           }
           
