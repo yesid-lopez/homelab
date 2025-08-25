@@ -27,6 +27,8 @@ data:
           requests:
             memory: 1Gi
             cpu: 500m
+        additionalArgs:
+          - --web.enable-remote-write-receiver
       
       ingress:
         enabled: true
