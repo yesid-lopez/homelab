@@ -72,6 +72,9 @@ data:
           // Discover Kubernetes services for metrics scraping
           discovery.kubernetes "services" {
             role = "service"
+            namespaces {
+              names = ["resumelo", "resumelo-dev", "langfuse", "umami"]
+            }
           }
           
           // Scrape metrics from services with prometheus.io annotations
