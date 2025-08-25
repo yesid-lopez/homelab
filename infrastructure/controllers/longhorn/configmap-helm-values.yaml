@@ -8,3 +8,10 @@ data:
   values.yaml: |
     persistence:
       defaultClassReplicaCount: 2
+    defaultSettings:
+      # Disable automatic system snapshot creation
+      autoCleanupSystemGeneratedSnapshot: false
+      # Set minimum snapshot count
+      snapshotMaxCount: 2
+      # Disable snapshot purging temporarily
+      disableSnapshotPurge: true
