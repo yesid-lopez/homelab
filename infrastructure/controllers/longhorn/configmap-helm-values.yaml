@@ -13,5 +13,5 @@ data:
       autoCleanupSystemGeneratedSnapshot: false
       # Set minimum snapshot count
       snapshotMaxCount: 2
-      # Disable snapshot purging temporarily
-      disableSnapshotPurge: true
+      # Enable snapshot purging
+      disableSnapshotPurge: false
