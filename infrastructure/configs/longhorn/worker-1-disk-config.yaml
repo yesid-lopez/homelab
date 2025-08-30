@@ -7,8 +7,8 @@ metadata:
 spec:
   allowScheduling: true
   disks:
-    # Existing default disk (NVMe)
-    worker-1-nvme:
+    # Existing default disk (NVMe) - keep original ID
+    default-disk-9c19114f0501dc61:
       allowScheduling: true
       diskDriver: ""
       diskType: filesystem
