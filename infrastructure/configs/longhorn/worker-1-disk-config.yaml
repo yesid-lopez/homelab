@@ -1,0 +1,31 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: Node
+metadata:
+  name: worker-1
+  namespace: longhorn-system
+spec:
+  allowScheduling: true
+  disks:
+    # Existing default disk (NVMe)
+    worker-1-nvme:
+      allowScheduling: true
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      storageReserved: 75464511897 # 75GB
+      tags: ["nvme", "fast", "worker-1"]
+    # New SSD disk
+    worker-1-ssd:
+      allowScheduling: true
+      diskDriver: ""
+      diskType: block
+      evictionRequested: false
+      path: /dev/sdd
+      storageReserved: 50000000000  # ~50GB reserved
+      tags: ["ssd", "bulk-storage", "worker-1"]
+  evictionRequested: false
+  instanceManagerCPURequest: 0
+  name: worker-1
+  tags: []
