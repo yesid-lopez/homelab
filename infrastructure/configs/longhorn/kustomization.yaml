@@ -2,3 +2,4 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - worker-1-disk-config.yaml
+- storage-classes.yaml
