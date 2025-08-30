@@ -20,9 +20,9 @@ spec:
     worker-1-ssd:
       allowScheduling: true
       diskDriver: ""
-      diskType: block
+      diskType: filesystem
       evictionRequested: false
-      path: /dev/sdd
+      path: /mnt/longhorn-ssd
       storageReserved: 50000000000  # ~50GB reserved
       tags: ["ssd", "bulk-storage", "worker-1"]
   evictionRequested: false
