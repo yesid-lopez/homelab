@@ -16,6 +16,15 @@ spec:
       path: /var/lib/longhorn/
       storageReserved: 75464511897 # 75GB
       tags: ["nvme", "fast", "worker-1"]
+    # Duplicate disk - disable first before removal
+    worker-1-nvme:
+      allowScheduling: false
+      diskDriver: ""
+      diskType: filesystem
+      evictionRequested: false
+      path: /var/lib/longhorn/
+      storageReserved: 75464511897 # 75GB
+      tags: ["nvme", "fast", "worker-1"]
     # New SSD disk
     worker-1-ssd:
       allowScheduling: true
