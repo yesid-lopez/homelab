@@ -5,5 +5,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - sealed-registry-secret.yaml
+  - sealed-registry-secrets.yaml
   - sealed-replicate-secrets.yaml 
