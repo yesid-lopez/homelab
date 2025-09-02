@@ -11,3 +11,4 @@ resources:
 - langfuse
 # - ml-portfolio # Deployed in Vercel
 - tayrona
+- macondo

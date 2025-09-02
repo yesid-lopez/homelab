@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: macondo
+  namespace: macondo
+  labels:
+    app: macondo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: macondo
+  template:
+    metadata:
+      labels:
+        app: macondo
+        name: macondo
+    spec:
+      containers:
+      - name: macondo
+        image: "registry.yesidlopez.de/macondo:1.0.0"
+        ports:
+        - containerPort: 8000
+        env:
+        - name: REPLICATE_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: replicate-secrets
+              key: REPLICATE_API_TOKEN
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      imagePullSecrets:
+        - name: registry-secret 
