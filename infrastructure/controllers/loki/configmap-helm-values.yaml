@@ -34,7 +34,7 @@ data:
       replicas: 1
       persistence:
         enabled: true
-        storageClass: longhorn-ssd
+        storageClass: longhorn
         size: 30Gi
       extraArgs:
         - -config.expand-env=true
