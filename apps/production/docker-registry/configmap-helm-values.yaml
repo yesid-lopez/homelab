@@ -7,7 +7,7 @@ data:
   values.yaml: |-
     persistence:
       enabled: true
-      storageClass: longhorn-ssd
+      storageClass: longhorn
       accessMode: ReadWriteOnce
       size: 20Gi
     service:
