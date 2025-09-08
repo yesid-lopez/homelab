@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: macondo
-        image: "registry.yesidlopez.de/macondo:1.0.1"
+        image: "registry.yesidlopez.de/macondo:1.0.2"
         ports:
         - containerPort: 8000
         env:
