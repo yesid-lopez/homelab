@@ -28,19 +28,7 @@ data:
             memory: 1Gi
             cpu: 500m
         enableRemoteWriteReceiver: true
-        additionalScrapeConfigs:
-          - job_name: 'kubernetes-nodes'
-            kubernetes_sd_configs:
-              - role: node
-            relabel_configs:
-              - source_labels: [__address__]
-                regex: '(.*):10250'
-                target_label: __address__
-                replacement: '${1}:9100'
-              - source_labels: [__meta_kubernetes_node_name]
-                target_label: instance
-              - target_label: __metrics_path__
-                replacement: /metrics
+        additionalScrapeConfigs: []
       
       ingress:
         enabled: true
@@ -92,7 +80,11 @@ data:
     nodeExporter:
       enabled: true
       serviceMonitor:
-        enabled: false
+        relabelings:
+          - sourceLabels: [__meta_kubernetes_pod_node_name]
+            targetLabel: instance
+          - targetLabel: job
+            replacement: node-exporter
     
     kubeStateMetrics:
       enabled: true
