@@ -91,6 +91,8 @@ data:
     
     nodeExporter:
       enabled: true
+      serviceMonitor:
+        enabled: false
     
     kubeStateMetrics:
       enabled: true
