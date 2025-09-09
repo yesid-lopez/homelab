@@ -27,7 +27,7 @@ data:
           discovery.kubernetes "pods" {
             role = "pod"
             namespaces {
-              names = ["resumelo", "resumelo-dev", "langfuse", "umami", "grafana", "loki", "alloy"]
+              names = ["resumelo", "resumelo-dev", "langfuse", "umami", "macondo"]
             }
           }
           
@@ -73,7 +73,7 @@ data:
           discovery.kubernetes "services" {
             role = "service"
             namespaces {
-              names = ["resumelo", "resumelo-dev", "langfuse", "umami"]
+              names = ["resumelo", "resumelo-dev", "langfuse", "umami", "macondo"]
             }
           }
           
