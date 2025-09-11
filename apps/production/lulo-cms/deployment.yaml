@@ -23,12 +23,22 @@ spec:
         - containerPort: 3000
         env:
         - name: DATABASE_URI
-          value: "postgres://lulo_cms:$(POSTGRES_PASSWORD)@lulo-cms-postgres-rw:5432/lulo_cms"
+          value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@lulo-cms-postgres-rw:5432/$(POSTGRES_DB)"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: lulo-cms-postgres-app
+              key: username
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
               name: lulo-cms-postgres-app
               key: password
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: lulo-cms-postgres-app
+              key: dbname
         - name: PAYLOAD_SECRET
           valueFrom:
             secretKeyRef:
