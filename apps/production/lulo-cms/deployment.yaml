@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lulo-cms
+  namespace: lulo
+  labels:
+    app: lulo-cms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lulo-cms
+  template:
+    metadata:
+      labels:
+        app: lulo-cms
+        name: lulo-cms
+    spec:
+      containers:
+      - name: lulo-cms
+        image: "registry.yesidlopez.de/lulo-cms:1.0.0"
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URI
+          value: "postgres://lulo_cms:$(POSTGRES_PASSWORD)@lulo-cms-postgres-rw:5432/lulo_cms"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lulo-cms-postgres-app
+              key: password
+        - name: PAYLOAD_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: payload-secrets
+              key: PAYLOAD_SECRET
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      imagePullSecrets:
+        - name: registry-secret 
