@@ -19,7 +19,7 @@ spec:
       initContainers:
       - name: payload-migrate
         image: "registry.yesidlopez.de/lulo-cms:1.0.0"
-        command: ["pnpm", "payload", "migrate"]
+        command: ["node", "./node_modules/.bin/payload", "migrate"]
         env:
         - name: DATABASE_URI
           valueFrom:
