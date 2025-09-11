@@ -3,12 +3,12 @@ kind: Kustomization
 resources:
 - docker-registry
 - ddns-updater
-- test-app
 - resumelo/dev
 - resumelo/prod
 - gotenberg
 - umami
 - langfuse
+# - test-app
 # - ml-portfolio # Deployed in Vercel
 - tayrona
 - macondo
