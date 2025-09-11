@@ -16,30 +16,6 @@ spec:
         app: lulo-cms
         name: lulo-cms
     spec:
-      initContainers:
-      - name: payload-migrate
-        image: "registry.yesidlopez.de/lulo-cms:1.0.0"
-        command: ["node", "./node_modules/.bin/payload", "migrate"]
-        env:
-        - name: DATABASE_URI
-          valueFrom:
-            secretKeyRef:
-              name: lulo-cms-postgres-app
-              key: uri
-        - name: PAYLOAD_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: payload-secrets
-              key: PAYLOAD_SECRET
-        - name: NODE_ENV
-          value: "production"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
       containers:
       - name: lulo-cms
         image: "registry.yesidlopez.de/lulo-cms:1.0.0"
