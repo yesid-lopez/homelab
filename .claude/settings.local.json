@@ -18,7 +18,9 @@
       "Bash(git commit:*)",
       "Bash(kubectl patch:*)",
       "Bash(kubectl delete:*)",
-      "Bash(kubectl exec:*)"
+      "Bash(kubectl exec:*)",
+      "Bash(bc)",
+      "Bash(python3:*)"
     ],
     "deny": []
   }
