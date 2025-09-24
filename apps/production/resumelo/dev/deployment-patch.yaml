@@ -10,4 +10,4 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: resumelo
-          image: "registry.yesidlopez.de/resumelo-dev:v20250911.135529.2246f42" # {"$imagepolicy": "resumelo-dev:resumelo-dev"} 
+          image: "registry.yesidlopez.de/resumelo-dev:v20250924.175947.1e9bfb8" # {"$imagepolicy": "resumelo-dev:resumelo-dev"} 
