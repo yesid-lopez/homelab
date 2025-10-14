@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: macondo
-        image: "registry.yesidlopez.de/macondo:1.3.2" # {"$imagepolicy": "macondo:macondo-prod"}
+        image: "registry.yesidlopez.de/macondo:1.3.3" # {"$imagepolicy": "macondo:macondo-prod"}
         ports:
         - containerPort: 8000
         env:
@@ -80,4 +80,4 @@ spec:
             memory: "512Mi"
             cpu: "500m"
       imagePullSecrets:
-        - name: registry-secret 
+      - name: registry-secret
