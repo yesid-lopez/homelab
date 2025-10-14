@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: macondo
+  namespace: macondo
+spec:
+  image: registry.yesidlopez.de/macondo
+  interval: 1m
+  secretRef:
+    name: registry-secret 
