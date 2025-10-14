@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: macondo
-        image: "registry.yesidlopez.de/macondo:1.3.1"
+        image: "registry.yesidlopez.de/macondo:1.3.2"
         ports:
         - containerPort: 8000
         env:
@@ -27,6 +27,51 @@ spec:
             secretKeyRef:
               name: replicate-secrets
               key: REPLICATE_API_TOKEN
+        - name: SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: supabase-secrets
+              key: SUPABASE_URL
+        - name: SUPABASE_ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-secrets
+              key: SUPABASE_ANON_KEY
+        - name: SUPABASE_SERVICE_ROLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-secrets
+              key: SUPABASE_SERVICE_ROLE_KEY
+        - name: REVENUECAT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: revenuecat-secrets
+              key: REVENUECAT_API_KEY
+        - name: REVENUECAT_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: revenuecat-secrets
+              key: REVENUECAT_PROJECT_ID
+        - name: R2_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: r2-secrets
+              key: R2_ACCESS_KEY_ID
+        - name: R2_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: r2-secrets
+              key: R2_SECRET_ACCESS_KEY
+        - name: R2_ENDPOINT_URL
+          valueFrom:
+            secretKeyRef:
+              name: r2-secrets
+              key: R2_ENDPOINT_URL
+        - name: R2_BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              name: r2-secrets
+              key: R2_BUCKET_NAME
         resources:
           requests:
             memory: "128Mi"

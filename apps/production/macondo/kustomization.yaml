@@ -6,4 +6,7 @@ resources:
   - service.yaml
   - ingress.yaml
   - sealed-registry-secrets.yaml
-  - sealed-replicate-secrets.yaml 
+  - sealed-replicate-secrets.yaml
+  - sealed-supabase-secrets.yaml
+  - sealed-revenuecat-secrets.yaml
+  - sealed-r2-secrets.yaml 
