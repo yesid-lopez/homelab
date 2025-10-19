@@ -61,6 +61,26 @@ data:
           memory: "2Gi"
       auth:
         enabled: true
+      shards: 1
+      zookeeper:
+        enabled: false
+      extraOverrides: |
+        <!-- Log retention settings to prevent excessive disk usage -->
+        <query_log>
+          <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+        </query_log>
+        <trace_log>
+          <ttl>event_date + INTERVAL 1 DAY DELETE</ttl>
+        </trace_log>
+        <query_thread_log>
+          <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>
+        </query_thread_log>
+        <text_log>
+          <ttl>event_date + INTERVAL 3 DAY DELETE</ttl>
+        </text_log>
+        <!-- Increase drop table size limit to allow cleanup of large logs -->
+        <max_table_size_to_drop>107374182400</max_table_size_to_drop>
+        <max_partition_size_to_drop>107374182400</max_partition_size_to_drop>
 
     # Global storage class
     global:
