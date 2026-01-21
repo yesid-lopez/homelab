@@ -7,6 +7,9 @@ data:
   values.yaml: |-
     replicaCount: 1
 
+    nodeSelector:
+      kubernetes.io/arch: amd64
+
     resources:
       limits:
         cpu: 500m
