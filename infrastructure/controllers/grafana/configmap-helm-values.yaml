@@ -6,8 +6,6 @@ metadata:
   namespace: flux-system
 data:
   values.yaml: |
-    adminPassword: admin
-    
     persistence:
       enabled: true
       storageClassName: longhorn

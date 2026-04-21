@@ -21,3 +21,7 @@ spec:
   - kind: ConfigMap
     name: grafana-helm-chart-value-overrides
     valuesKey: values.yaml
+  - kind: Secret
+    name: grafana-admin-credentials
+    valuesKey: adminPassword
+    targetPath: adminPassword
