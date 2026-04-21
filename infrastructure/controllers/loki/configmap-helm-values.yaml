@@ -76,14 +76,4 @@ data:
       enabled: true
       replicas: 1
       ingress:
-        enabled: true
-        ingressClassName: nginx
-        hosts:
-          - host: loki.yesidlopez.de
-            paths:
-              - path: /
-                pathType: Prefix
-        tls:
-          - secretName: loki-tls
-            hosts:
-              - loki.yesidlopez.de
+        enabled: false
