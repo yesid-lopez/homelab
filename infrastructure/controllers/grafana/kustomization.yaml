@@ -5,3 +5,4 @@ resources:
   - helmrepository.yaml
   - helmrelease.yaml
   - configmap-helm-values.yaml
+  - sealed-grafana-secrets.yaml
