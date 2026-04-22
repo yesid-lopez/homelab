@@ -15,6 +15,7 @@ spec:
         name: grafana
         namespace: flux-system
   interval: 5m0s
+  timeout: 10m0s
   releaseName: grafana
   targetNamespace: grafana
   valuesFrom:
