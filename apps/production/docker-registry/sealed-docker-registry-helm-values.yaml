@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: docker-registry-helm-values
+  namespace: registry
+spec:
+  encryptedData:
+    values.yaml: AgB05OmhLTKtFea3cfeqe63kYP2bNrC6minjnVr8iMcSF5irElfW2+UWRdAg4EI2292Pe3IX+atQYmnIW2g3vx/n4d+mSxEh0RoxnG6H2xRYpISWtvDxd2gTt6S97D/T+nXM2tu1Tult91nKlbYL0ZypGNDhs1QXpkEei4VYx8hARvBrzpY7IbxDP1v8hYAiVzynlDeLivBjMLhG8eY3FrnKSVp9001H5rV8NmkqcqK/SNHp38tIRPnGGokXHAaCLm3KHzytjmSWG+cYpF7vkpxy6E6139D7T2ytB9Z3Su769oPShMjazFAxONF86p47WksxR47C45cJkxJeRYLsyWInB/miM3BaRQIZTncsucGyPVWwOJ23BCAxNrN4vIG/qQSdT0nzSDRKdwk9FSURVqsYWBJj2ovuy2ceJEYyWci961eHzZQmYMCSd9hmgyIUl05wgQPGE8dM3RlBHiEIdsocQk5TFIakPNWS9VXAj1FNfU/h8dQ4SMoHctcoBvVfrYEdunVCYx/UYFOg54xi04q0bomykhhMjiuMWqYIpDuF5q5YLa1O40ju2QTgcVvpGQxhjkhA1h09VHpxviJYhAYY6cIOtsJs6khfbkb5j2oeDd34bSRz9iP0gwNMD7qpYiSiL8sIH3Sz+U6acqtb3eFhnrw3iGGXr65M52Vja6bkJDea0b0Sal7FDxxLeXiht/0GyyKa0BqevObZCCGeFpO4xqKTEyBQKNLtYSdHg4lan0NcmjtmuaeAavhgkCrlyOTepALxdZck5iCz4kLCJTGMGTjyVHQ4oB40y+WYRb/P5yJNvxVqaBpbLuetiOkhhg==
+  template:
+    metadata:
+      name: docker-registry-helm-values
+      namespace: registry
+    type: Opaque

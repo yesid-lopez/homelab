@@ -5,4 +5,5 @@ resources:
   - helmrepository.yaml
   - namespace.yaml
   - helmrelease.yaml
+  - sealed-docker-registry-helm-values.yaml
   - configmap-helm-values.yaml

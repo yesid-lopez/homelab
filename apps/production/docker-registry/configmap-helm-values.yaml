@@ -12,9 +12,6 @@ data:
       size: 20Gi
     service:
       type: ClusterIP
-    secrets:
-      htpasswd: "docker-user:$2y$05$DKlwiGKukfvtnDhAn6n.sOqYgksft0VY6YlCqrw8lHgXXhLfLImwu"
-    
     ingress:
       enabled: true
       className: nginx
