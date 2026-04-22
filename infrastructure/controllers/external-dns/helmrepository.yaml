@@ -1,6 +1,6 @@
 # On hold due to there is no stable webhook provider for porkbun
 
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: bitnami
