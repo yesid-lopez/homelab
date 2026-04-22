@@ -17,3 +17,6 @@ spec:
   - kind: ConfigMap
     name: docker-registry-helm-chart-value-overrides
     valuesKey: values.yaml
+  - kind: Secret
+    name: docker-registry-helm-values
+    valuesKey: values.yaml
