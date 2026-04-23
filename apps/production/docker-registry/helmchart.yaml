@@ -10,4 +10,3 @@ spec:
   sourceRef:
     kind: GitRepository
     name: docker-registry
-    namespace: flux-system
