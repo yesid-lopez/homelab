@@ -14,8 +14,8 @@ data:
         # loadBalancerIP: 192.168.2.100
         externalTrafficPolicy: Local
         nodePorts:
-          http: 32694
-          https: 31612
+          http: 30458
+          https: 30474
       config:
         use-forwarded-headers: "true"
         compute-full-forwarded-for: "true"
