@@ -1,0 +1,13 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+  name: docker-registry
+  namespace: flux-system
+spec:
+  interval: 30m
+  chart: .
+  version: 3.0.0
+  sourceRef:
+    kind: GitRepository
+    name: docker-registry
+    namespace: flux-system

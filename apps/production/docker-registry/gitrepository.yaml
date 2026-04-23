@@ -1,0 +1,10 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: docker-registry
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://github.com/twuni/docker-registry.helm
+  ref:
+    tag: v3.0.0
