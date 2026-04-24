@@ -13,12 +13,12 @@ spec:
         name: longhorn-repo
         namespace: flux-system
       version: 1.10.2
-    install:
-      crds: CreateReplace
-    upgrade:
-      crds: CreateReplace
-      remediation:
-        retries: 3
+  install:
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
   interval: 5m
   timeout: 15m
   releaseName: longhorn-release
