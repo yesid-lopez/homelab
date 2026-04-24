@@ -1,5 +1,7 @@
 ---
 # Server (control-plane) upgrade plan - runs first
+# IMPORTANT: Bump the channel one minor version at a time.
+# Current path: v1.33 -> v1.34 -> stable (once both nodes are aligned)
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
 metadata:
@@ -9,7 +11,7 @@ metadata:
     k3s-upgrade: server
 spec:
   concurrency: 1
-  channel: https://update.k3s.io/v1-release/channels/stable
+  channel: https://update.k3s.io/v1-release/channels/v1.33
   nodeSelector:
     matchExpressions:
       - key: k3s-upgrade
@@ -37,7 +39,7 @@ metadata:
     k3s-upgrade: agent
 spec:
   concurrency: 1
-  channel: https://update.k3s.io/v1-release/channels/stable
+  channel: https://update.k3s.io/v1-release/channels/v1.33
   nodeSelector:
     matchExpressions:
       - key: k3s-upgrade
