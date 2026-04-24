@@ -24,3 +24,5 @@ data:
         enabled: true
     defaultBackend:
       enabled: true
+      nodeSelector:
+        kubernetes.io/arch: amd64
