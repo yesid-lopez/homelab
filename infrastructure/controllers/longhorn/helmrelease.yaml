@@ -12,7 +12,7 @@ spec:
         kind: HelmRepository
         name: longhorn-repo
         namespace: flux-system
-      version: v1.9.0
+      version: 1.10.2
   interval: 5m
   timeout: 5m
   releaseName: longhorn-release
