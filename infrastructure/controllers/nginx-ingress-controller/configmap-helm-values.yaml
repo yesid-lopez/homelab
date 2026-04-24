@@ -6,7 +6,13 @@ metadata:
 data:
   values.yaml: |-
     controller:
-      replicaCount: 2
+      replicaCount: 1
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
       service:
         type: NodePort
         # Commented out to until the new router has arrived
