@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "flux": {
+    "fileMatch": ["\\.yaml$"]
+  },
+  "packageRules": [
+    {
+      "description": "Group infrastructure controller updates",
+      "matchFileNames": ["infrastructure/**"],
+      "groupName": "infrastructure charts",
+      "schedule": ["before 9am on monday"]
+    },
+    {
+      "description": "Group application chart updates",
+      "matchFileNames": ["apps/**"],
+      "groupName": "application charts",
+      "schedule": ["before 9am on monday"]
+    }
+  ]
+}
