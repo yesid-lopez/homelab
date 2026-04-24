@@ -1,0 +1,60 @@
+---
+# Server (control-plane) upgrade plan - runs first
+# IMPORTANT: Bump the channel one minor version at a time.
+# Current path: v1.33 -> v1.34 -> stable (once both nodes are aligned)
+apiVersion: upgrade.cattle.io/v1
+kind: Plan
+metadata:
+  name: k3s-server
+  namespace: system-upgrade
+  labels:
+    k3s-upgrade: server
+spec:
+  concurrency: 1
+  channel: https://update.k3s.io/v1-release/channels/v1.33
+  nodeSelector:
+    matchExpressions:
+      - key: k3s-upgrade
+        operator: Exists
+      - key: k3s-upgrade
+        operator: NotIn
+        values: ["disabled", "false"]
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+  serviceAccountName: system-upgrade
+  cordon: true
+  drain:
+    force: true
+    skipWaitForDeleteTimeout: 60
+  upgrade:
+    image: rancher/k3s-upgrade
+---
+# Agent (worker) upgrade plan - waits for server plan to complete
+apiVersion: upgrade.cattle.io/v1
+kind: Plan
+metadata:
+  name: k3s-agent
+  namespace: system-upgrade
+  labels:
+    k3s-upgrade: agent
+spec:
+  concurrency: 1
+  channel: https://update.k3s.io/v1-release/channels/v1.33
+  nodeSelector:
+    matchExpressions:
+      - key: k3s-upgrade
+        operator: Exists
+      - key: k3s-upgrade
+        operator: NotIn
+        values: ["disabled", "false"]
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist
+  serviceAccountName: system-upgrade
+  prepare:
+    image: rancher/k3s-upgrade
+    args: ["prepare", "k3s-server"]
+  drain:
+    force: true
+    skipWaitForDeleteTimeout: 60
+  upgrade:
+    image: rancher/k3s-upgrade
