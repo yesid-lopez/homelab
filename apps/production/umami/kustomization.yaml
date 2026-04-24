@@ -5,4 +5,6 @@ resources:
   - helmrepository.yaml
   - helmrelease.yaml
   - configmap-helm-values.yaml
-  - postgres-cluster.yaml 
+  - postgres-cluster.yaml
+  - sealed-umami-admin-credentials.yaml
+  - cronjob-sync-admin-password.yaml
