@@ -6,6 +6,9 @@ metadata:
 data:
   values.yaml: |-
     # Use upstream image — Bitnami removed images from docker.io
+    global:
+      security:
+        allowInsecureImages: true
     image:
       registry: registry.k8s.io
       repository: external-dns/external-dns
