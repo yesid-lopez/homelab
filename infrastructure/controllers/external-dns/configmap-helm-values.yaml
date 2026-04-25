@@ -5,6 +5,10 @@ metadata:
   namespace: external-dns
 data:
   values.yaml: |-
+    # Explicit image tag to prevent Helm rollback value pollution
+    image:
+      tag: 0.18.0-debian-12-r1
+
     # External DNS Provider Configuration
     provider: webhook
 
