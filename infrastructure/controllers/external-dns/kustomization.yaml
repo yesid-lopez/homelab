@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - dnsendpoint-crd.yaml
+- dnsendpoint-rbac.yaml
 - helmrepository.yaml
 - helm-release.yaml
 - configmap-helm-values.yaml
