@@ -4,3 +4,5 @@ resources:
   - namespace.yaml
   - deployment.yaml
   - service.yaml
+  - sealed-registry-secret.yaml
+  - image-automation/
