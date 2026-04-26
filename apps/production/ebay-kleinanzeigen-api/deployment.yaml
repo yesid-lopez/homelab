@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: registry.yesidlopez.de/ebay-kleinanzeigen-api:v1.0.0
+          image: registry.yesidlopez.de/ebay-kleinanzeigen-api:v1.0.0 # {"$imagepolicy": "ebay-kleinanzeigen-api:ebay-kleinanzeigen-api"}
           ports:
             - containerPort: 8000
           resources:
