@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ebay-kleinanzeigen-api
+  namespace: ebay-kleinanzeigen-api
+  labels:
+    app: ebay-kleinanzeigen-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ebay-kleinanzeigen-api
+  template:
+    metadata:
+      labels:
+        app: ebay-kleinanzeigen-api
+    spec:
+      containers:
+        - name: api
+          image: registry.yesidlopez.de/ebay-kleinanzeigen-api:v1.0.0
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
