@@ -1,0 +1,11 @@
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: luloclaw
+  namespace: luloclaw
+spec:
+  endpoints:
+    - dnsName: luloclaw.luloai.com
+      recordType: CNAME
+      targets:
+        - luloclaw.tail6c0c29.ts.net

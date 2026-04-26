@@ -20,6 +20,7 @@ data:
     sources:
       - ingress
       - service
+      - crd
     
     # Logging and Monitoring
     logLevel: debug
