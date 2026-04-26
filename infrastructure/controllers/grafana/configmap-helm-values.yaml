@@ -6,6 +6,9 @@ metadata:
   namespace: flux-system
 data:
   values.yaml: |
+    deploymentStrategy:
+      type: Recreate
+
     persistence:
       enabled: true
       storageClassName: longhorn
