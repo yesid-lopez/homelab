@@ -8,6 +8,7 @@ data:
   values.yaml: |
     deploymentStrategy:
       type: Recreate
+      rollingUpdate: null
 
     persistence:
       enabled: true
