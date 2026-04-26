@@ -20,6 +20,11 @@ data:
     sources:
       - ingress
       - service
+      - crd
+    
+    extraArgs:
+      crd-source-apiversion: externaldns.k8s.io/v1alpha1
+      crd-source-kind: DNSEndpoint
     
     # Logging and Monitoring
     logLevel: debug
