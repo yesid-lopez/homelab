@@ -15,6 +15,8 @@ spec:
       labels:
         app: ebay-kleinanzeigen-api
     spec:
+      imagePullSecrets:
+        - name: registry-secret
       containers:
         - name: api
           image: registry.yesidlopez.de/ebay-kleinanzeigen-api:v1.0.0 # {"$imagepolicy": "ebay-kleinanzeigen-api:ebay-kleinanzeigen-api"}
