@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: ebay-kleinanzeigen-api
+  namespace: ebay-kleinanzeigen-api
+spec:
+  image: registry.yesidlopez.de/ebay-kleinanzeigen-api
+  interval: 1m
+  secretRef:
+    name: registry-secret
