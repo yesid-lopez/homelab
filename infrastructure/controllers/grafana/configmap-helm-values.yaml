@@ -53,39 +53,44 @@ data:
       dashboardproviders.yaml:
         apiVersion: 1
         providers:
-        - name: 'default'
+        - name: 'cluster'
           orgId: 1
-          folder: ''
+          folder: 'Cluster'
           type: file
           disableDeletion: false
           editable: true
           options:
-            path: /var/lib/grafana/dashboards/default
-        - name: 'custom'
+            path: /var/lib/grafana/dashboards/cluster
+        - name: 'infrastructure'
           orgId: 1
-          folder: 'Custom'
+          folder: 'Infrastructure'
           type: file
           disableDeletion: false
           editable: true
           options:
-            path: /var/lib/grafana/dashboards/custom
+            path: /var/lib/grafana/dashboards/infrastructure
+        - name: 'logs'
+          orgId: 1
+          folder: 'Logs'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/logs
 
     dashboardsConfigMaps:
-      custom: grafana-dashboard-homelab-k3s
-    
+      cluster: grafana-dashboard-homelab-k3s
+
     dashboards:
-      default:
-        loki-logs:
-          gnetId: 13639
-          revision: 2
-          datasource: Loki
-        prometheus-overview:
-          gnetId: 3662
-          revision: 2
-          datasource: Prometheus
+      cluster:
         kubernetes-cluster:
           gnetId: 7249
           revision: 1
+          datasource: Prometheus
+      infrastructure:
+        prometheus-overview:
+          gnetId: 3662
+          revision: 2
           datasource: Prometheus
         node-exporter-full:
           gnetId: 1860
@@ -97,3 +102,8 @@ data:
           datasource:
             - name: datasource
               value: Prometheus
+      logs:
+        loki-logs:
+          gnetId: 13639
+          revision: 2
+          datasource: Loki
