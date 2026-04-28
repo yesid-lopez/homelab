@@ -74,3 +74,7 @@ data:
           gnetId: 7249
           revision: 1
           datasource: Prometheus
+        k3s-monitoring:
+          gnetId: 19972
+          revision: 1
+          datasource: Prometheus
