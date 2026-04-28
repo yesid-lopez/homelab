@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flux-operator-mcp-helm-chart-value-overrides
+  namespace: flux-system
+data:
+  values.yaml: |-
+    transport: http
+    readonly: true
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
