@@ -61,6 +61,14 @@ data:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/cluster
+        - name: 'custom-cluster'
+          orgId: 1
+          folder: 'Cluster'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/custom-cluster
         - name: 'infrastructure'
           orgId: 1
           folder: 'Infrastructure'
@@ -79,7 +87,7 @@ data:
             path: /var/lib/grafana/dashboards/logs
 
     dashboardsConfigMaps:
-      cluster: grafana-dashboard-homelab-k3s
+      custom-cluster: grafana-dashboard-homelab-k3s
 
     dashboards:
       cluster:
