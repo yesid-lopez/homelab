@@ -79,7 +79,9 @@ data:
         k8s-views-nodes:
           gnetId: 15282
           revision: 1
-          datasource: Prometheus
+          datasource:
+            - name: DS_PROMETHEUS
+              value: Prometheus
         node-exporter-full:
           gnetId: 1860
           revision: 37
