@@ -1,0 +1,56 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: resumelo-prod-alerts
+  namespace: resumelo
+  labels:
+    app: resumelo
+    environment: prod
+spec:
+  groups:
+    - name: resumelo.availability
+      rules:
+        - alert: ResumeloPodNotReady
+          expr: |
+            kube_pod_status_ready{
+              namespace="resumelo",
+              condition="true"
+            } == 0
+          for: 5m
+          labels:
+            severity: critical
+            app: resumelo
+            environment: prod
+          annotations:
+            summary: "Pod {{ $labels.pod }} no está listo"
+            description: "El pod {{ $labels.pod }} en namespace resumelo lleva más de 5 minutos sin estar ready."
+
+        - alert: ResumeloPodCrashLooping
+          expr: |
+            rate(kube_pod_container_status_restarts_total{
+              namespace="resumelo"
+            }[15m]) * 60 * 15 > 1
+          for: 5m
+          labels:
+            severity: critical
+            app: resumelo
+            environment: prod
+          annotations:
+            summary: "Container {{ $labels.container }} en crash loop"
+            description: "El container {{ $labels.container }} del pod {{ $labels.pod }} se ha reiniciado {{ $value | humanize }} veces en 15 minutos."
+
+        - alert: ResumeloDeploymentDown
+          expr: |
+            kube_deployment_status_replicas_available{
+              namespace="resumelo",
+              deployment="resumelo"
+            } == 0
+          for: 2m
+          labels:
+            severity: critical
+            app: resumelo
+            environment: prod
+          annotations:
+            summary: "Deployment resumelo está caído"
+            description: "El deployment resumelo en producción lleva más de 2 minutos sin réplicas disponibles."

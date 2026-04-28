@@ -4,6 +4,7 @@ resources:
   - ../base
   - sealed-secrets
   - image-automation
+  - monitoring
 
 patches:
   - path: deployment-patch.yaml
