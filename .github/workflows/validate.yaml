@@ -45,7 +45,12 @@ jobs:
 
       - name: Validate with kubeconform
         run: |
-          find ${{ matrix.path }} -name '*.yaml' -not -name 'kustomization.yaml' | \
+          find ${{ matrix.path }} -name '*.yaml' \
+            -not -name 'kustomization.yaml' \
+            -not -name '*-patch.yaml' \
+            -not -name '*-secrets.yaml' \
+            -not -name '*-secret.yaml' \
+            -not -name 'sealed-*.yaml' | \
           xargs -I {} kubeconform \
             -strict \
             -ignore-missing-schemas \

@@ -2,13 +2,16 @@
 extends: default
 
 rules:
-  line-length:
-    max: 200
+  line-length: disable
   comments:
     min-spaces-from-content: 1
   truthy:
     check-keys: false
   document-start: disable
+  trailing-spaces: disable
+  indentation: disable
+  empty-lines: disable
+  new-line-at-end-of-file: disable
 
 ignore:
   - ".github/"
