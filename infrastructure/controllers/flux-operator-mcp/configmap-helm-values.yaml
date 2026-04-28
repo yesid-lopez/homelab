@@ -7,8 +7,6 @@ data:
   values.yaml: |-
     transport: http
     readonly: true
-    service:
-      type: LoadBalancer
     resources:
       limits:
         cpu: 500m

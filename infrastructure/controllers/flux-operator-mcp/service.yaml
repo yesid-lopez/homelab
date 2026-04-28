@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flux-operator-mcp-lb
+  namespace: flux-system
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: flux-operator-mcp
+  ports:
+    - name: http
+      port: 9090
+      targetPort: http
+      protocol: TCP

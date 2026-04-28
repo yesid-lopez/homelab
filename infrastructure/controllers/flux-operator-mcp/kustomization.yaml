@@ -4,3 +4,4 @@ resources:
   - ocirepository.yaml
   - helmrelease.yaml
   - configmap-helm-values.yaml
+  - service.yaml
