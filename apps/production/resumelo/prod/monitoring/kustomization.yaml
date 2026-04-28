@@ -3,5 +3,4 @@ kind: Kustomization
 resources:
   - prometheus-rule.yaml
   - alertmanager-config.yaml
-  # Descomenta una vez creado sealed-discord-secret.yaml:
-  # - sealed-discord-secret.yaml
+  - sealed-discord-secret.yaml
