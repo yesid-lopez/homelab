@@ -1,0 +1,21 @@
+# Template para el secret del webhook de Discord.
+# NO commitear este archivo directamente — debe ser sellado primero.
+#
+# Pasos:
+#   1. Reemplaza DISCORD_WEBHOOK_URL con la URL real de tu webhook de Discord
+#      (Ajustes del servidor Discord > Integraciones > Webhooks)
+#   2. Encripta con Sealed Secrets:
+#        make encrypt \
+#          INPUT=apps/production/resumelo/prod/monitoring/discord-webhook-template.yaml \
+#          OUTPUT=apps/production/resumelo/prod/monitoring/sealed-discord-secret.yaml
+#   3. Commitea sealed-discord-secret.yaml
+#   4. Descomenta la línea en monitoring/kustomization.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: discord-resumelo-webhook
+  namespace: resumelo
+type: Opaque
+stringData:
+  apiURL: "DISCORD_WEBHOOK_URL"
