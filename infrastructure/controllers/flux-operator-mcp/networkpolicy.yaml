@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-flux-mcp-external
+  namespace: flux-system
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: flux-operator-mcp
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 9090
+          protocol: TCP

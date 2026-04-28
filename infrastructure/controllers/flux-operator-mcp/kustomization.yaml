@@ -5,3 +5,4 @@ resources:
   - helmrelease.yaml
   - configmap-helm-values.yaml
   - service.yaml
+  - networkpolicy.yaml
