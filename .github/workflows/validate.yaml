@@ -1,0 +1,80 @@
+---
+name: Validate Kubernetes manifests
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  yamllint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run yamllint
+        uses: frenck/action-yamllint@v1
+        with:
+          config: .yamllint.yaml
+
+  kubeconform:
+    name: Kubeconform
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - infrastructure/controllers
+          - infrastructure/configs
+          - apps/production
+          - clusters/production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubeconform
+        run: |
+          curl -fsSL --retry 5 --retry-delay 5 \
+            https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | \
+            tar xzf - -C /usr/local/bin kubeconform
+
+      - name: Download Flux OpenAPI schemas
+        run: |
+          mkdir -p /tmp/flux-crd-schemas/master-standalone-strict
+          curl -fsSL --retry 5 --retry-delay 5 \
+            https://github.com/fluxcd/flux2/releases/latest/download/crd-schemas.tar.gz | \
+            tar xzf - -C /tmp/flux-crd-schemas/master-standalone-strict
+
+      - name: Validate with kubeconform
+        run: |
+          find ${{ matrix.path }} -name '*.yaml' \
+            -not -name 'kustomization.yaml' \
+            -not -name '*-patch.yaml' \
+            -not -name '*-secrets.yaml' \
+            -not -name '*-secret.yaml' \
+            -not -name 'sealed-*.yaml' | \
+          xargs -I {} kubeconform \
+            -strict \
+            -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location '/tmp/flux-crd-schemas/{{ .NormalizedKubernetesVersion }}-{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}.json' \
+            -kubernetes-version 1.31.0 \
+            {}
+
+  kustomize-build:
+    name: Kustomize build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        overlay:
+          - infrastructure/controllers
+          - infrastructure/configs
+          - apps/production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Kustomize
+        uses: fluxcd/pkg/actions/kustomize@main
+
+      - name: Build overlay
+        run: kustomize build ${{ matrix.overlay }}
+
