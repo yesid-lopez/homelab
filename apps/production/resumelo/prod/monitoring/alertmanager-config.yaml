@@ -1,0 +1,26 @@
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: resumelo-discord
+  namespace: resumelo
+  labels:
+    app: resumelo
+spec:
+  route:
+    receiver: discord
+    groupBy:
+      - alertname
+      - pod
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 1h
+  receivers:
+    - name: discord
+      discordConfigs:
+        - apiURL:
+            name: discord-resumelo-webhook
+            key: apiURL
+          sendResolved: true
+          title: '{{ if eq .Status "firing" }}🔴{{ else }}🟢{{ end }} [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] resumelo-prod'
+          message: '{{ range .Alerts }}**{{ .Annotations.summary }}**{{ "\n" }}{{ .Annotations.description }}{{ "\n" }}Severidad: `{{ .Labels.severity }}`{{ "\n\n" }}{{ end }}'
