@@ -7,7 +7,6 @@ resources:
 - resumelo/prod
 - gotenberg
 - umami
-# - langfuse
 # - tayrona
 # - macondo
 # - lulo-cms
