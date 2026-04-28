@@ -76,9 +76,9 @@ data:
           gnetId: 7249
           revision: 1
           datasource: Prometheus
-        k8s-views-nodes:
-          gnetId: 15282
-          revision: 1
+        k3s-cluster:
+          gnetId: 16450
+          revision: 3
           datasource:
             - name: DS_PROMETHEUS
               value: Prometheus
