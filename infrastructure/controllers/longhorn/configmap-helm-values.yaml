@@ -6,6 +6,9 @@ metadata:
   namespace: longhorn-system
 data:
   values.yaml: |
+    metrics:
+      serviceMonitor:
+        enabled: true
     persistence:
       defaultClassReplicaCount: 1
     defaultSettings:

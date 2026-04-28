@@ -86,3 +86,9 @@ data:
           gnetId: 1860
           revision: 37
           datasource: Prometheus
+        longhorn:
+          gnetId: 16888
+          revision: 11
+          datasource:
+            - name: datasource
+              value: Prometheus
