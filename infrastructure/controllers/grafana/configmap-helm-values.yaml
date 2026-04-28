@@ -51,10 +51,6 @@ data:
     
     defaultDashboardsEnabled: false
 
-    grafana.ini:
-      dashboards:
-        default_home_dashboard_path: /var/lib/grafana/dashboards/default/k3s-monitoring.json
-
     dashboardProviders:
       dashboardproviders.yaml:
         apiVersion: 1
