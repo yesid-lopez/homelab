@@ -61,6 +61,17 @@ data:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/default
+        - name: 'custom'
+          orgId: 1
+          folder: 'Custom'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/custom
+
+    dashboardsConfigMaps:
+      custom: grafana-dashboard-homelab-k3s
     
     dashboards:
       default:
@@ -76,12 +87,6 @@ data:
           gnetId: 7249
           revision: 1
           datasource: Prometheus
-        k3s-cluster:
-          gnetId: 16450
-          revision: 3
-          datasource:
-            - name: DS_PROMETHEUS
-              value: Prometheus
         node-exporter-full:
           gnetId: 1860
           revision: 37

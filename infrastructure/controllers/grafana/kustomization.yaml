@@ -6,3 +6,4 @@ resources:
   - helmrelease.yaml
   - configmap-helm-values.yaml
   - sealed-grafana-secrets.yaml
+  - configmap-dashboard-homelab-k3s.yaml
