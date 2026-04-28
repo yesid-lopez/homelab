@@ -15,3 +15,4 @@ resources:
 - grafana
 - alloy
 - prometheus
+- flux-operator-mcp

@@ -1,0 +1,22 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flux-operator-mcp
+  namespace: flux-system
+spec:
+  interval: 30m
+  releaseName: flux-operator-mcp
+  chartRef:
+    kind: OCIRepository
+    name: flux-operator-mcp
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  valuesFrom:
+    - kind: ConfigMap
+      name: flux-operator-mcp-helm-chart-value-overrides
+      valuesKey: values.yaml
