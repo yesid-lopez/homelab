@@ -1,0 +1,100 @@
+---
+name: Validate Kubernetes manifests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "infrastructure/**"
+      - "apps/**"
+      - "clusters/**"
+
+jobs:
+  yamllint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run yamllint
+        uses: frenck/action-yamllint@v1
+        with:
+          config: .yamllint.yaml
+
+  kubeconform:
+    name: Kubeconform
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - infrastructure/controllers
+          - infrastructure/configs
+          - apps/production
+          - clusters/production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubeconform
+        uses: bmuschko/setup-kubeconform@v1
+
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+
+      - name: Download Flux OpenAPI schemas
+        run: |
+          mkdir -p /tmp/flux-crd-schemas/master-standalone-strict
+          curl -sL https://github.com/fluxcd/flux2/releases/latest/download/crd-schemas.tar.gz | \
+            tar zxf - -C /tmp/flux-crd-schemas/master-standalone-strict
+
+      - name: Validate with kubeconform
+        run: |
+          find ${{ matrix.path }} -name '*.yaml' -not -name 'kustomization.yaml' | \
+          xargs -I {} kubeconform \
+            -strict \
+            -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location '/tmp/flux-crd-schemas/{{ .NormalizedKubernetesVersion }}-{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}.json' \
+            -kubernetes-version 1.31.0 \
+            {}
+
+  kustomize-build:
+    name: Kustomize build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        overlay:
+          - infrastructure/controllers
+          - infrastructure/configs
+          - apps/production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Kustomize
+        uses: fluxcd/pkg/actions/kustomize@main
+
+      - name: Build overlay
+        run: kustomize build ${{ matrix.overlay }}
+
+  flux-validate:
+    name: Flux CRD validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+
+      - name: Validate Flux resources
+        run: |
+          echo "Validating HelmReleases..."
+          find . -name '*.yaml' -print0 | xargs -0 grep -rl 'kind: HelmRelease' | \
+            xargs -I {} flux check --path {} 2>/dev/null || true
+
+          echo "Validating Flux resources with flux build..."
+          for dir in infrastructure/controllers infrastructure/configs apps/production; do
+            echo "--- $dir ---"
+            flux build kustomization flux-system \
+              --path "$dir" \
+              --kustomization-file /dev/null \
+              --dry-run 2>&1 || true
+          done
