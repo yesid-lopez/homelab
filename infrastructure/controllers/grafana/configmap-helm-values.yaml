@@ -37,13 +37,11 @@ data:
         apiVersion: 1
         datasources:
         - name: Prometheus
-          uid: prometheus
           type: prometheus
           url: http://kube-prometheus-stack-prometheus.prometheus:9090
           access: proxy
           isDefault: false
         - name: Loki
-          uid: loki
           type: loki
           url: http://loki-gateway.loki:80
           access: proxy
