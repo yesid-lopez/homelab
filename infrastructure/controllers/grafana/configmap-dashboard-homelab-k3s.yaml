@@ -77,7 +77,7 @@ data:
               "showLineNumbers": false,
               "showMiniMap": false
             },
-            "content": "<div class=\"text-center\">\n  <img style=\"height:80px\" src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Kubernetes_logo_without_workmark.svg/1200px-Kubernetes_logo_without_workmark.svg.png\">\n  <h2 style=\"padding-top:15px\">$k8s_version</h2>\n</div>",
+            "content": "<div class=\"text-center\">\n  <img style=\"height:80px\" src=\"https://upload.wikimedia.org/wikipedia/commons/3/39/Kubernetes_logo_without_workmark.svg\">\n  <h2 style=\"padding-top:15px\">$k8s_version</h2>\n</div>",
             "mode": "html"
           },
           "pluginVersion": "9.3.0",
