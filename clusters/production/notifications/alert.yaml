@@ -8,6 +8,8 @@ spec:
   providerRef:
     name: discord
   eventSeverity: error
+  exclusionList:
+    - "kustomization/flux-system"
   eventSources:
     - kind: Kustomization
       name: '*'
@@ -27,6 +29,8 @@ spec:
   providerRef:
     name: discord
   eventSeverity: info
+  exclusionList:
+    - "kustomization/flux-system"
   eventSources:
     - kind: Kustomization
       name: '*'
