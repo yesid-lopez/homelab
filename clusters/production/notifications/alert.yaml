@@ -29,14 +29,31 @@ spec:
   providerRef:
     name: discord
   eventSeverity: info
-  exclusionList:
-    - "kustomization/flux-system"
   eventSources:
-    - kind: Kustomization
-      name: '*'
     - kind: HelmRelease
-      name: '*'
-    - kind: GitRepository
-      name: '*'
+      name: docker-registry
+      namespace: registry
+    - kind: HelmRelease
+      name: docker-registry-ui
+      namespace: registry
+    - kind: HelmRelease
+      name: gotenberg
+      namespace: resumelo
+    - kind: HelmRelease
+      name: umami
+      namespace: umami
     - kind: ImageUpdateAutomation
-      name: '*'
+      name: resumelo-dev
+      namespace: resumelo-dev
+    - kind: ImageUpdateAutomation
+      name: resumelo-prod
+      namespace: resumelo
+    - kind: ImageUpdateAutomation
+      name: macondo-prod
+      namespace: macondo
+    - kind: ImageUpdateAutomation
+      name: ebay-kleinanzeigen-api
+      namespace: ebay-kleinanzeigen-api
+    - kind: GitRepository
+      name: docker-registry
+      namespace: flux-system
