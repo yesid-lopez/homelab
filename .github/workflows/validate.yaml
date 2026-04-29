@@ -63,19 +63,22 @@ jobs:
   kustomize-build:
     name: Kustomize build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        overlay:
-          - infrastructure/controllers
-          - infrastructure/configs
-          - apps/production
-          - clusters/production
     steps:
       - uses: actions/checkout@v6
 
       - name: Setup Kustomize
         uses: fluxcd/pkg/actions/kustomize@main
 
-      - name: Build overlay
-        run: kustomize build ${{ matrix.overlay }}
+      - name: Build all Kustomize overlays
+        run: |
+          find infrastructure apps clusters \
+            \( -name kustomization.yaml -o -name kustomization.yml -o -name Kustomization \) \
+            -print0 |
+          xargs -0 -n1 dirname |
+          sort -u |
+          while IFS= read -r overlay; do
+            echo "::group::kustomize build ${overlay}"
+            kustomize build "${overlay}"
+            echo "::endgroup::"
+          done
 
