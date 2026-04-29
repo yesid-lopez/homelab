@@ -69,6 +69,7 @@ jobs:
           - infrastructure/controllers
           - infrastructure/configs
           - apps/production
+          - clusters/production
     steps:
       - uses: actions/checkout@v6
 
