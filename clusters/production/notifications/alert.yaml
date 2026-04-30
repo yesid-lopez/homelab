@@ -48,6 +48,9 @@ spec:
     - kind: ImageUpdateAutomation
       name: resumelo-prod
       namespace: resumelo
+    - kind: ImagePolicy
+      name: resumelo-prod
+      namespace: resumelo
     - kind: ImageUpdateAutomation
       name: macondo-prod
       namespace: macondo
