@@ -17,6 +17,7 @@ data:
     UMAMI_USERNAME = os.environ['UMAMI_USERNAME']
     UMAMI_PASSWORD = os.environ['UMAMI_PASSWORD']
     DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK_URL']
+    UMAMI_WEBSITE_NAME = os.environ.get('UMAMI_WEBSITE_NAME', '').strip()
 
 
     def api_request(path, method='GET', data=None, token=None):
@@ -61,7 +62,14 @@ data:
         print("Fetching websites...")
         websites_response = api_request('/api/websites', token=token)
         websites = websites_response if isinstance(websites_response, list) else websites_response.get('data', [])
-        print(f"Found {len(websites)} website(s)")
+
+        if UMAMI_WEBSITE_NAME:
+            websites = [w for w in websites if w.get('name', '').lower() == UMAMI_WEBSITE_NAME.lower()]
+            if not websites:
+                print(f"No website found with name '{UMAMI_WEBSITE_NAME}', aborting.", file=sys.stderr)
+                sys.exit(1)
+
+        print(f"Reporting on {len(websites)} website(s)")
 
         if not websites:
             print("No websites found, skipping report.")

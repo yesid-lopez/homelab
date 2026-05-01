@@ -28,6 +28,8 @@ spec:
                     secretKeyRef:
                       name: umami-admin-credentials
                       key: adminPassword
+                - name: UMAMI_WEBSITE_NAME
+                  value: "resúmelo"
                 - name: DISCORD_WEBHOOK_URL
                   valueFrom:
                     secretKeyRef:
