@@ -1,0 +1,23 @@
+# Plantilla para crear el Sealed Secret del webhook de Discord para el reporte semanal de Umami.
+#
+# Pasos:
+# 1. En Discord: ve al canal deseado → Editar canal → Integraciones → Webhooks → Nuevo Webhook
+#    Copia la URL del webhook.
+#
+# 2. Crea el archivo secret.yaml con el contenido siguiente (sin confirmar al repositorio):
+#
+#    apiVersion: v1
+#    kind: Secret
+#    metadata:
+#      name: umami-discord-webhook
+#      namespace: umami
+#    type: Opaque
+#    stringData:
+#      webhookUrl: "https://discord.com/api/webhooks/XXXXXXXXXX/XXXXXXXXXX"
+#
+# 3. Encripta el secreto:
+#    make encrypt INPUT=secret.yaml OUTPUT=apps/production/umami/sealed-discord-webhook.yaml
+#
+# 4. Elimina secret.yaml (nunca lo confirmes al repo).
+#
+# 5. Confirma sealed-discord-webhook.yaml al repositorio.
