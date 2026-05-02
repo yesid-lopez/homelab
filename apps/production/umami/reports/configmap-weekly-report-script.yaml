@@ -46,6 +46,53 @@ data:
         return f" {arrow} {sign}{change}"
 
 
+    def country_flag(code):
+        if not code or len(code) != 2:
+            return "🌐"
+        return chr(0x1F1E6 + ord(code[0]) - ord('A')) + chr(0x1F1E6 + ord(code[1]) - ord('A'))
+
+
+    def fetch_metrics(site_id, start_ms, end_ms, metric_type, token, limit=5):
+        items = api_request(
+            f"/api/websites/{site_id}/metrics?startAt={start_ms}&endAt={end_ms}&type={metric_type}",
+            token=token,
+        )
+        return [i for i in items if i.get('x')][:limit]
+
+
+    def format_top_list(items, formatter=None):
+        if not items:
+            return "_Sin datos_"
+        lines = []
+        for i, item in enumerate(items, 1):
+            label = formatter(item) if formatter else item['x']
+            lines.append(f"`{i}.` {label} — **{item['y']}**")
+        return "\n".join(lines)
+
+
+    def format_devices(items):
+        if not items:
+            return "_Sin datos_"
+        labels = {"mobile": "📱", "laptop": "💻", "desktop": "🖥️", "tablet": "📟"}
+        return "\n".join(
+            f"{labels.get(i['x'], '❓')} {i['x']} — **{i['y']}**" for i in items
+        )
+
+
+    def send_discord(url, payload):
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode(),
+            headers={
+                'Content-Type': 'application/json',
+                'User-Agent': 'UmamiReport/1.0',
+            },
+            method='POST',
+        )
+        with urllib.request.urlopen(req) as response:
+            print(f"Report sent! HTTP {response.status}")
+
+
     def main():
         end_at = datetime.now(timezone.utc)
         start_at = end_at - timedelta(days=7)
@@ -91,12 +138,16 @@ data:
             print("No websites found, skipping report.")
             return
 
-        fields = []
+        start_str = start_at.strftime("%d/%m/%Y")
+        end_str = end_at.strftime("%d/%m/%Y")
+
         for website in websites:
             name = website.get('name', website.get('domain', 'Unknown'))
+            site_id = website['id']
             print(f"Fetching stats for: {name}")
+
             stats = api_request(
-                f"/api/websites/{website['id']}/stats?startAt={start_ms}&endAt={end_ms}",
+                f"/api/websites/{site_id}/stats?startAt={start_ms}&endAt={end_ms}",
                 token=token,
             )
 
@@ -109,43 +160,54 @@ data:
             bounces = stats.get('bounces', {}).get('value', 0)
             bounce_rate = f"{round(bounces / visits * 100)}%" if visits > 0 else "N/A"
 
-            fields.append({
-                "name": f"📊 {name}",
-                "value": (
-                    f"👥 Visitantes: **{visitors}**{format_change(visitors_chg)}\n"
-                    f"👁️ Vistas: **{pageviews}**{format_change(pageviews_chg)}\n"
-                    f"🔄 Sesiones: **{visits}**{format_change(visits_chg)}\n"
-                    f"↩️ Tasa de rebote: **{bounce_rate}**"
-                ),
-                "inline": True,
-            })
+            print("Fetching metrics...")
+            pages = fetch_metrics(site_id, start_ms, end_ms, 'url', token)
+            events = fetch_metrics(site_id, start_ms, end_ms, 'event', token)
+            referrers = fetch_metrics(site_id, start_ms, end_ms, 'referrer', token)
+            countries = fetch_metrics(site_id, start_ms, end_ms, 'country', token)
+            devices = fetch_metrics(site_id, start_ms, end_ms, 'device', token, limit=10)
+            browsers = fetch_metrics(site_id, start_ms, end_ms, 'browser', token)
 
-        start_str = start_at.strftime("%d/%m/%Y")
-        end_str = end_at.strftime("%d/%m/%Y")
+            fields = [
+                {
+                    "name": f"📊 {name}",
+                    "value": (
+                        f"👥 Visitantes: **{visitors}**{format_change(visitors_chg)}\n"
+                        f"👁️ Vistas: **{pageviews}**{format_change(pageviews_chg)}\n"
+                        f"🔄 Sesiones: **{visits}**{format_change(visits_chg)}\n"
+                        f"↩️ Tasa de rebote: **{bounce_rate}**"
+                    ),
+                    "inline": True,
+                },
+                {"name": "📄 Top 5 Páginas", "value": format_top_list(pages), "inline": False},
+                {"name": "⚡ Top 5 Eventos", "value": format_top_list(events), "inline": False},
+                {"name": "🔗 Top 5 Referrers", "value": format_top_list(referrers), "inline": True},
+                {
+                    "name": "🌍 Top 5 Países",
+                    "value": format_top_list(countries, lambda i: f"{country_flag(i['x'])} {i['x']}"),
+                    "inline": True,
+                },
+                {"name": "📱 Dispositivos", "value": format_devices(devices), "inline": True},
+                {
+                    "name": "🌐 Top 5 Navegadores",
+                    "value": format_top_list(browsers),
+                    "inline": True,
+                },
+            ]
 
-        payload = {
-            "embeds": [{
-                "title": "📈 Reporte Semanal de Analytics",
-                "description": f"Resumen del **{start_str}** al **{end_str}**",
-                "color": 5793266,
-                "fields": fields,
-                "footer": {"text": "Umami Analytics • Homelab"},
-                "timestamp": end_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }]
-        }
+            payload = {
+                "embeds": [{
+                    "title": "📈 Reporte Semanal de Analytics",
+                    "description": f"Resumen del **{start_str}** al **{end_str}**",
+                    "color": 5793266,
+                    "fields": fields,
+                    "footer": {"text": "Umami Analytics • Homelab"},
+                    "timestamp": end_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                }]
+            }
 
-        print("Sending report to Discord...")
-        req = urllib.request.Request(
-            DISCORD_WEBHOOK_URL,
-            data=json.dumps(payload).encode(),
-            headers={
-                'Content-Type': 'application/json',
-                'User-Agent': 'UmamiReport/1.0',
-            },
-            method='POST',
-        )
-        with urllib.request.urlopen(req) as response:
-            print(f"Report sent! HTTP {response.status}")
+            print("Sending report to Discord...")
+            send_discord(DISCORD_WEBHOOK_URL, payload)
 
 
     if __name__ == '__main__':
