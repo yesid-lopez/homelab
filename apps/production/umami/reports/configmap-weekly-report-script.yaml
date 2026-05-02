@@ -65,7 +65,7 @@ data:
         user_response = api_request('/api/websites', token=token)
         websites.extend(user_response if isinstance(user_response, list) else user_response.get('data', []))
 
-        teams_response = api_request('/api/teams', token=token)
+        teams_response = api_request('/api/me/teams', token=token)
         teams = teams_response if isinstance(teams_response, list) else teams_response.get('data', [])
         for team in teams:
             team_sites = api_request(f"/api/teams/{team['id']}/websites", token=token)
@@ -138,7 +138,10 @@ data:
         req = urllib.request.Request(
             DISCORD_WEBHOOK_URL,
             data=json.dumps(payload).encode(),
-            headers={'Content-Type': 'application/json'},
+            headers={
+                'Content-Type': 'application/json',
+                'User-Agent': 'UmamiReport/1.0',
+            },
             method='POST',
         )
         with urllib.request.urlopen(req) as response:
