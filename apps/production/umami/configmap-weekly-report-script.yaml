@@ -60,8 +60,24 @@ data:
         token = auth['token']
 
         print("Fetching websites...")
-        websites_response = api_request('/api/websites', token=token)
-        websites = websites_response if isinstance(websites_response, list) else websites_response.get('data', [])
+        websites = []
+
+        user_response = api_request('/api/websites', token=token)
+        websites.extend(user_response if isinstance(user_response, list) else user_response.get('data', []))
+
+        teams_response = api_request('/api/teams', token=token)
+        teams = teams_response if isinstance(teams_response, list) else teams_response.get('data', [])
+        for team in teams:
+            team_sites = api_request(f"/api/teams/{team['id']}/websites", token=token)
+            websites.extend(team_sites if isinstance(team_sites, list) else team_sites.get('data', []))
+
+        seen_ids = set()
+        unique_websites = []
+        for w in websites:
+            if w['id'] not in seen_ids:
+                seen_ids.add(w['id'])
+                unique_websites.append(w)
+        websites = unique_websites
 
         if UMAMI_WEBSITE_NAME:
             websites = [w for w in websites if w.get('name', '').lower() == UMAMI_WEBSITE_NAME.lower()]
