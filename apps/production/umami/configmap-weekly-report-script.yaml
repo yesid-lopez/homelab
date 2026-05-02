@@ -1,0 +1,133 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: umami-weekly-report-script
+  namespace: umami
+data:
+  report.py: |
+    #!/usr/bin/env python3
+    import os
+    import json
+    import sys
+    import urllib.request
+    import urllib.error
+    from datetime import datetime, timezone, timedelta
+
+    UMAMI_URL = os.environ.get('UMAMI_URL', 'http://umami.umami.svc.cluster.local:3000')
+    UMAMI_USERNAME = os.environ['UMAMI_USERNAME']
+    UMAMI_PASSWORD = os.environ['UMAMI_PASSWORD']
+    DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK_URL']
+    UMAMI_WEBSITE_NAME = os.environ.get('UMAMI_WEBSITE_NAME', '').strip()
+
+
+    def api_request(path, method='GET', data=None, token=None):
+        url = f"{UMAMI_URL}{path}"
+        headers = {'Content-Type': 'application/json'}
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        body = json.dumps(data).encode() if data else None
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(req) as response:
+                return json.loads(response.read())
+        except urllib.error.HTTPError as e:
+            print(f"HTTP error {e.code} for {method} {path}: {e.read().decode()}", file=sys.stderr)
+            raise
+        except urllib.error.URLError as e:
+            print(f"URL error for {method} {path}: {e.reason}", file=sys.stderr)
+            raise
+
+
+    def format_change(change):
+        if not change:
+            return ""
+        arrow = "↑" if change > 0 else "↓"
+        sign = "+" if change > 0 else ""
+        return f" {arrow} {sign}{change}"
+
+
+    def main():
+        end_at = datetime.now(timezone.utc)
+        start_at = end_at - timedelta(days=7)
+        end_ms = int(end_at.timestamp() * 1000)
+        start_ms = int(start_at.timestamp() * 1000)
+
+        print("Authenticating with Umami...")
+        auth = api_request('/api/auth/login', 'POST', {
+            'username': UMAMI_USERNAME,
+            'password': UMAMI_PASSWORD,
+        })
+        token = auth['token']
+
+        print("Fetching websites...")
+        websites_response = api_request('/api/websites', token=token)
+        websites = websites_response if isinstance(websites_response, list) else websites_response.get('data', [])
+
+        if UMAMI_WEBSITE_NAME:
+            websites = [w for w in websites if w.get('name', '').lower() == UMAMI_WEBSITE_NAME.lower()]
+            if not websites:
+                print(f"No website found with name '{UMAMI_WEBSITE_NAME}', aborting.", file=sys.stderr)
+                sys.exit(1)
+
+        print(f"Reporting on {len(websites)} website(s)")
+
+        if not websites:
+            print("No websites found, skipping report.")
+            return
+
+        fields = []
+        for website in websites:
+            name = website.get('name', website.get('domain', 'Unknown'))
+            print(f"Fetching stats for: {name}")
+            stats = api_request(
+                f"/api/websites/{website['id']}/stats?startAt={start_ms}&endAt={end_ms}",
+                token=token,
+            )
+
+            pageviews = stats.get('pageviews', {}).get('value', 0)
+            pageviews_chg = stats.get('pageviews', {}).get('change', 0)
+            visitors = stats.get('visitors', {}).get('value', 0)
+            visitors_chg = stats.get('visitors', {}).get('change', 0)
+            visits = stats.get('visits', {}).get('value', 0)
+            visits_chg = stats.get('visits', {}).get('change', 0)
+            bounces = stats.get('bounces', {}).get('value', 0)
+            bounce_rate = f"{round(bounces / visits * 100)}%" if visits > 0 else "N/A"
+
+            fields.append({
+                "name": f"📊 {name}",
+                "value": (
+                    f"👥 Visitantes: **{visitors}**{format_change(visitors_chg)}\n"
+                    f"👁️ Vistas: **{pageviews}**{format_change(pageviews_chg)}\n"
+                    f"🔄 Sesiones: **{visits}**{format_change(visits_chg)}\n"
+                    f"↩️ Tasa de rebote: **{bounce_rate}**"
+                ),
+                "inline": True,
+            })
+
+        start_str = start_at.strftime("%d/%m/%Y")
+        end_str = end_at.strftime("%d/%m/%Y")
+
+        payload = {
+            "embeds": [{
+                "title": "📈 Reporte Semanal de Analytics",
+                "description": f"Resumen del **{start_str}** al **{end_str}**",
+                "color": 5793266,
+                "fields": fields,
+                "footer": {"text": "Umami Analytics • Homelab"},
+                "timestamp": end_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }]
+        }
+
+        print("Sending report to Discord...")
+        req = urllib.request.Request(
+            DISCORD_WEBHOOK_URL,
+            data=json.dumps(payload).encode(),
+            headers={'Content-Type': 'application/json'},
+            method='POST',
+        )
+        with urllib.request.urlopen(req) as response:
+            print(f"Report sent! HTTP {response.status}")
+
+
+    if __name__ == '__main__':
+        main()
