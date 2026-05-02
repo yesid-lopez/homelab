@@ -8,6 +8,4 @@ resources:
   - postgres-cluster.yaml
   - sealed-umami-admin-credentials.yaml
   - cronjob-sync-admin-password.yaml
-  - sealed-discord-webhook.yaml
-  - configmap-weekly-report-script.yaml
-  - cronjob-weekly-report.yaml
+  - reports/
