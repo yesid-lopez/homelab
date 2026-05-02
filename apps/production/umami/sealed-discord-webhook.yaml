@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: umami-discord-webhook
+  namespace: umami
+spec:
+  encryptedData:
+    webhookUrl: AgCaesWidMzDLOjeYYHsxYBiktaPC8mlZnzPEqwgSC5PPCd7EbpOtabDXmto/FpQpOrbyPrMNPHZck2VoW0YZMVZWDbCVOfNrDRf5rXKPTvWKX+lgF1WDPDbTSueD1J1gnKWn9lC9TRgKsYf8DehWPT6sqz2IINJ1cd2zFijdQsZcXabCZRCvC5YRlMzTsm4I7wqAJtGXIMS+qjfklMnR/pVzlKWs5rnycvixc1VTRFF3ViUBQhZtCk9/PrAyjRDyIvyyZ6lNoKsvk93DKVGJAGQKiiPuZkderioHovwPj09V5yXoEqiE6l7Ijn6dASIb5H5E8lYkpcoRbhJq4vvSKcAbM+lytYZ1UR7HtW2wo52rNDMymbBejzWsKIaGas6VYv5qEILFPWTDDun4YOZ9318tN16ARckFN34MR6EtqSNtUR1WhlCVRGv8DVzpnjN/H9g2fYf7/Mh8of/bnc2TrFAeBVsOiEPgCvoicKMQMGSEU9RQ06CcfomBDcXAXbjIyWrWYRimo4AwtEGeZNUueJPonRw+/xWXBRLYeT+FsxIA62yXvdhwoZp9KQ/hmdxwa5frf9bk53+ByOotuErylbSv0WLamrQjVwVNSXNgpZkA96DSpKzw/tvT5m+FyxtOGhvweKv8yfwCkaxCCSENN4R+GuP8d5kH1O9WbFyGxuWYgxkLL+fI8gtfg4W8ciIpmOpfjfFlnCcx/bfU7jdXMJxx2bMup2NrkLct5OSo8scsWk4p3//YeEe/h3hq+eLUdJEoT/uMWwYa6BKenilV2QzY3SvnB/pv7U3g9R047iybn5+vfFRmjKuDJuF9LjJ72aVYOCsskxVruWrs7w+3Ck7eFhSx51atIMP
+  template:
+    metadata:
+      name: umami-discord-webhook
+      namespace: umami
+    type: Opaque
