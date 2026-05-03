@@ -1,195 +1,127 @@
-const stats = [
-  { label: "Kubernetes distro", value: "K3s" },
-  { label: "Control plane", value: "Minisforum UM690" },
-  { label: "Worker", value: "Raspberry Pi 5" },
-  { label: "GitOps", value: "Flux CD" },
-  { label: "Storage", value: "Longhorn" },
-  { label: "Ingress", value: "NGINX + MetalLB" },
+const highlights = [
+  { label: "Platform", value: "Kubernetes" },
+  { label: "Delivery", value: "GitOps" },
+  { label: "Security", value: "Encrypted secrets" },
+  { label: "Signals", value: "Metrics + logs" },
 ];
 
-const hardware = [
-  {
-    name: "Minisforum UM690",
-    role: "Master / control-plane node",
-    details: ["16 GB RAM", "1 TB NVMe", "Ubuntu Server", "K3s server with embedded etcd", "Swap disabled"],
-  },
-  {
-    name: "Raspberry Pi 5",
-    role: "Worker node",
-    details: ["8 GB RAM", "256 GB NVMe", "K3s agent", "Swap disabled", "Memory cgroups enabled via /boot/firmware/cmdline.txt"],
-  },
-  {
-    name: "2.5 Gb unmanaged switch",
-    role: "LAN backbone",
-    details: ["Router connects to the switch", "Both nodes attach to the same local network", "MetalLB advertises services on the LAN"],
-  },
+const platformStats = [
+  ["AI-ready", "Self-hosted runtime for experiments, services, and automation."],
+  ["Declarative", "Infrastructure and workloads are managed as reviewed code."],
+  ["Observable", "Metrics, logs, dashboards, and alerts support operations."],
 ];
 
-const bootstrapCommands = [
+const architectureCards = [
   {
-    title: "Control plane initialization",
-    command: "curl -sfL https://get.k3s.io | sh -s - server --cluster-init --disable=servicelb --disable=traefik",
+    icon: "◈",
+    name: "Compute fabric",
+    role: "Cluster foundation",
+    details: [
+      "Compact machines provide the container runtime layer.",
+      "Workloads are scheduled by Kubernetes with a maintainable topology.",
+      "Hardware identifiers and exact capacity are intentionally omitted.",
+    ],
   },
   {
-    title: "Worker join",
-    command: "curl -sfL https://get.k3s.io | K3S_URL=https://MASTER_IP:6443 K3S_TOKEN=MY_COOL_TOKEN sh -",
+    icon: "⌁",
+    name: "Secure edge",
+    role: "Ingress + TLS",
+    details: [
+      "Selected services are routed through a controlled ingress layer.",
+      "TLS lifecycle is automated for published applications.",
+      "Public hostnames and DNS details are not listed here.",
+    ],
+  },
+  {
+    icon: "◎",
+    name: "State layer",
+    role: "Persistent workloads",
+    details: [
+      "Applications that need data use persistent volumes.",
+      "Storage is declared and maintained with the rest of the platform.",
+      "Operational topology details stay private.",
+    ],
   },
 ];
 
 const controllers = [
-  ["Flux Operator", "Runs Flux as the cluster GitOps control plane and reconciles this repository."],
-  ["Flux Operator MCP", "Provides MCP access around Flux operations for automation/debugging workflows."],
-  ["Sealed Secrets", "Keeps encrypted Kubernetes secrets in Git while avoiding plaintext secret commits."],
-  ["cert-manager", "Automates TLS certificates for public ingress endpoints."],
-  ["cert-manager Porkbun webhook", "DNS-01 ACME integration for Porkbun-hosted zones."],
-  ["external-dns", "Publishes DNS records from ingress annotations to Porkbun."],
-  ["NGINX Ingress Controller", "Primary HTTP ingress controller; Traefik is disabled in K3s."],
-  ["MetalLB", "Bare-metal LoadBalancer implementation for the home LAN."],
-  ["Longhorn", "Distributed persistent volume storage and default storage class."],
-  ["CloudNativePG", "PostgreSQL operator for app databases such as Umami and Lulo CMS."],
-  ["Prometheus", "Metrics collection, alerting rules, and Alertmanager endpoints."],
-  ["Grafana", "Dashboards for cluster and application observability."],
-  ["Loki", "Log aggregation backend."],
-  ["Alloy", "Telemetry collection pipeline for metrics/logs."],
-  ["System Upgrade Controller", "K3s/node upgrade automation using Rancher upgrade plans."],
+  ["GitOps controller", "Reconciles desired state from the repository."],
+  ["Secret encryption", "Keeps sensitive values encrypted before commit."],
+  ["Certificate automation", "Automates TLS certificate lifecycle."],
+  ["Ingress controller", "Routes selected web traffic to services."],
+  ["Storage controller", "Provides persistent volumes for stateful workloads."],
+  ["Database operator", "Manages application databases declaratively."],
+  ["Monitoring stack", "Collects metrics, logs, dashboards, and alerts."],
+  ["Upgrade automation", "Helps keep platform components maintained."],
 ];
 
 const apps = [
   {
-    name: "Resumelo",
-    namespace: "resumelo / resumelo-dev",
-    purpose: "Resume/CV product deployed with separate production and development overlays.",
+    name: "AI/ML experiments",
+    purpose: "A private runtime for model-adjacent tools, automation, and technical experiments.",
     details: [
-      "Base Kubernetes deployment with overlay-specific image patches.",
-      "Production image currently tracks registry.yesidlopez.de/resumelo:0.9.1.",
-      "Development image tracks registry.yesidlopez.de/resumelo-dev with Flux image automation.",
-      "Development environment includes MongoDB 7.0.5 with persistent storage.",
-      "Application resources: 100m CPU / 128Mi requests and 500m CPU / 512Mi limits in the base deployment.",
+      "Designed like a compact platform engineering lab.",
+      "Useful for testing deployment, monitoring, and reliability patterns.",
+      "Sensitive runtime configuration is kept out of the public overview.",
     ],
   },
   {
-    name: "Macondo",
-    namespace: "macondo",
-    purpose: "Application served from the private registry with multiple external integrations.",
+    name: "Product applications",
+    purpose: "Custom applications deployed through the same GitOps platform.",
     details: [
-      "Image: registry.yesidlopez.de/macondo:1.3.3 with Flux image policy comments.",
-      "Ingress-enabled service with TLS and external DNS annotations.",
-      "Uses sealed secrets for R2, Replicate, RevenueCat, Supabase, and registry credentials.",
-      "Resource envelope: 100m CPU / 128Mi requests and 500m CPU / 512Mi limits.",
+      "Built and released through a private delivery workflow.",
+      "Managed with environment-specific Kubernetes manifests.",
+      "Repository internals and image tags are intentionally hidden.",
     ],
   },
   {
-    name: "Tayrona",
-    namespace: "tayrona",
-    purpose: "Custom application deployed from the private registry.",
+    name: "Analytics and telemetry",
+    purpose: "Self-hosted insight layer for owned projects and operations.",
     details: [
-      "Image: registry.yesidlopez.de/tayrona:0.1.1.",
-      "Ingress + service + namespace managed through Kustomize.",
-      "Uses sealed secrets for OpenAI and registry credentials.",
-      "Resource envelope: 100m CPU / 128Mi requests and 500m CPU / 512Mi limits.",
+      "Combines application signals with platform-level observability.",
+      "Supports reporting, debugging, and operational awareness.",
+      "Dashboard URLs and service endpoints are not published.",
     ],
   },
   {
-    name: "Lulo CMS",
-    namespace: "lulo-cms",
-    purpose: "Payload/CMS-style backend with a CloudNativePG PostgreSQL database.",
+    name: "Internal automation",
+    purpose: "Private services for operations, delivery, and maintenance workflows.",
     details: [
-      "Image: registry.yesidlopez.de/lulo-cms:1.0.1.",
-      "CloudNativePG cluster requests 250m CPU / 512Mi and limits 500m CPU / 1Gi.",
-      "Application requests 100m CPU / 128Mi and limits 500m CPU / 512Mi.",
-      "Uses sealed Payload secrets and sealed registry credentials.",
+      "Includes supporting APIs and utility services.",
+      "Access is limited to the required network paths.",
+      "Implementation details are intentionally abstracted.",
     ],
   },
-  {
-    name: "Umami",
-    namespace: "umami",
-    purpose: "Self-hosted analytics stack with Postgres and weekly reporting automation.",
-    details: [
-      "HelmRelease-managed Umami deployment with custom values.",
-      "CloudNativePG PostgreSQL database with 250m CPU / 512Mi requests and 500m CPU / 1Gi limits.",
-      "Ingress host: umami.yesidlopez.de.",
-      "Includes a CronJob to sync the admin password and a Python weekly report CronJob for Discord notifications.",
-      "Application resources: 100m CPU / 128Mi requests and 500m CPU / 512Mi limits.",
-    ],
-  },
-  {
-    name: "Docker Registry + UI",
-    namespace: "registry",
-    purpose: "Private image registry for homelab applications and a web UI for browsing/deleting images.",
-    details: [
-      "Registry is installed from twuni/docker-registry.helm v3.0.0.",
-      "Persistent storage is enabled on Longhorn with a 20Gi volume.",
-      "Registry host: registry.yesidlopez.de.",
-      "UI chart: joxit/docker-registry-ui v1.1.4.",
-      "UI host: registry-ui.yesidlopez.de.",
-      "Registry deletion is enabled and CORS is configured for the UI origin.",
-    ],
-  },
-  {
-    name: "eBay Kleinanzeigen API",
-    namespace: "ebay-kleinanzeigen-api",
-    purpose: "Internal API service used for Kleinanzeigen scraping/search workflows.",
-    details: [
-      "Image: registry.yesidlopez.de/ebay-kleinanzeigen-api:v1.0.1 with Flux image automation.",
-      "ClusterIP service, namespace, deployment, and sealed registry secret managed by Kustomize.",
-      "Resource envelope: 250m CPU / 256Mi requests and 1000m CPU / 512Mi limits.",
-    ],
-  },
-  {
-    name: "Gotenberg",
-    namespace: "gotenberg",
-    purpose: "Document/PDF conversion service deployed by HelmRelease.",
-    details: [
-      "Custom Helm values configure workload resources.",
-      "Resource envelope: 200m CPU / 512Mi requests and 500m CPU / 1Gi limits.",
-    ],
-  },
-  {
-    name: "DDNS Updater",
-    namespace: "ddns-updater",
-    purpose: "Dynamic DNS updater for keeping external DNS targets in sync with the home connection.",
-    details: [
-      "Image: qmcgaw/ddns-updater:latest.",
-      "Config is injected through a SealedSecret-backed Kubernetes Secret.",
-      "ClusterIP service exposes port 80 to container port 8000.",
-      "Resource envelope: 100m CPU / 64Mi requests and 200m CPU / 128Mi limits.",
-    ],
-  },
-];
-
-const ingressHosts = [
-  "homelab.yesidlopez.de",
-  "grafana.yesidlopez.de",
-  "umami.yesidlopez.de",
-  "registry.yesidlopez.de",
-  "registry-ui.yesidlopez.de",
-  "prometheus.homelab.yesidlopez.de",
-  "alertmanager.homelab.yesidlopez.de",
-  "langfuse.yesidlopez.de",
 ];
 
 const gitopsFlow = [
-  "Changes are committed to GitHub in yesid-lopez/homelab.",
-  "Flux watches cluster, infrastructure, and app Kustomizations from clusters/production.",
-  "Infrastructure controllers are reconciled from infrastructure/controllers.",
-  "Cluster configuration such as issuers, Longhorn classes, and MetalLB pools is reconciled from infrastructure/configs.",
-  "Applications are reconciled from apps/production with per-app Kustomize folders and HelmRelease resources.",
-  "Secrets are committed only as SealedSecrets; plaintext secrets are intentionally excluded.",
-  "Validation runs yamllint, kubeconform, and kustomize build on pull requests.",
+  ["01", "Design", "Change is modeled as code."],
+  ["02", "Validate", "Automation checks manifests before deployment."],
+  ["03", "Reconcile", "GitOps applies the approved desired state."],
+  ["04", "Observe", "Metrics, logs, and alerts close the feedback loop."],
 ];
 
-const storageAndData = [
-  ["Longhorn", "Default persistent storage layer for workloads that need volumes."],
-  ["Docker Registry PVC", "20Gi Longhorn-backed ReadWriteOnce volume for image storage."],
-  ["CloudNativePG", "Operator-managed PostgreSQL clusters for apps such as Umami and Lulo CMS."],
-  ["MongoDB", "Resumelo development overlay includes a MongoDB 7.0.5 instance with a persistent volume claim."],
+const securityPractices = [
+  "No plaintext secrets in Git",
+  "No internal hostnames or IP addresses published",
+  "Selected services exposed through a controlled edge",
+  "Configuration changes reviewed before deployment",
+  "Monitoring and alerts for operational visibility",
+  "Sensitive implementation details intentionally redacted",
 ];
 
-const validation = ["yamllint", "kubeconform with Kubernetes 1.31 schemas", "Flux CRD schemas", "kustomize build for infrastructure, apps, and clusters"];
+const validation = ["YAML linting", "Kubernetes schema checks", "Manifest build checks", "Pull request validation"];
+
+const navItems = [
+  ["Architecture", "#architecture"],
+  ["GitOps", "#gitops"],
+  ["Workloads", "#apps"],
+  ["Security", "#security"],
+];
 
 function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="section">
+    <section id={id} className="section reveal">
       <p className="eyebrow">{eyebrow}</p>
       <h2>{title}</h2>
       {children}
@@ -197,61 +129,223 @@ function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string
   );
 }
 
-function CodeBlock({ children }: { children: string }) {
-  return <pre><code>{children}</code></pre>;
+function NeuralArchitecture() {
+  return (
+    <div className="neuralVisual" aria-label="Animated AI homelab architecture overview">
+      <div className="meshLine meshLineA" />
+      <div className="meshLine meshLineB" />
+      <div className="meshLine meshLineC" />
+      <div className="neuron n1" />
+      <div className="neuron n2" />
+      <div className="neuron n3" />
+      <div className="neuron n4" />
+      <div className="neuron n5" />
+      <div className="signal s1" />
+      <div className="signal s2" />
+      <div className="signal s3" />
+
+      <div className="visualTopbar">
+        <span>AI platform view</span>
+        <div><i /><i /><i /></div>
+      </div>
+
+      <div className="brainCore">
+        <span className="brainRing ringOne" />
+        <span className="brainRing ringTwo" />
+        <div className="brainChip">
+          <small>Homelab</small>
+          <strong>K8s</strong>
+        </div>
+      </div>
+
+      <div className="orbitCard orbitCardOne">
+        <span>Edge</span>
+        <strong>Ingress + TLS</strong>
+      </div>
+      <div className="orbitCard orbitCardTwo">
+        <span>Delivery</span>
+        <strong>GitOps</strong>
+      </div>
+      <div className="orbitCard orbitCardThree">
+        <span>Data</span>
+        <strong>Volumes</strong>
+      </div>
+      <div className="orbitCard orbitCardFour">
+        <span>Signals</span>
+        <strong>Observability</strong>
+      </div>
+
+      <div className="terminalCard">
+        <div className="terminalHeader"><span /> platform status</div>
+        <code>
+          <b>desired_state</b>: reconciled{"\n"}
+          <b>secrets</b>: encrypted{"\n"}
+          <b>public_details</b>: redacted
+        </code>
+      </div>
+    </div>
+  );
+}
+
+function ArchitectureSystemMap() {
+  const workloads = ["AI tools", "Apps", "Analytics", "Automation"];
+  const platform = ["GitOps", "Secrets", "TLS", "Storage", "Metrics", "DB operator"];
+
+  return (
+    <div className="systemMap" aria-label="Visual architecture map of the sanitized homelab platform">
+      <div className="mapGlow mapGlowOne" />
+      <div className="mapGlow mapGlowTwo" />
+      <div className="mapSignal mapSignalOne" />
+      <div className="mapSignal mapSignalTwo" />
+      <div className="mapSignal mapSignalThree" />
+
+      <div className="mapHeader">
+        <div>
+          <span>Sanitized architecture</span>
+          <strong>Traffic → Edge → Kubernetes → Workloads</strong>
+        </div>
+        <p>No IPs, hostnames, credentials, or internal paths exposed</p>
+      </div>
+
+      <div className="mapCanvas">
+        <div className="mapColumn outsideZone">
+          <div className="zoneLabel">External</div>
+          <div className="mapNode externalNode">
+            <span>Internet</span>
+            <strong>Requests</strong>
+          </div>
+          <div className="mapNode repoNode">
+            <span>GitHub</span>
+            <strong>Desired state</strong>
+          </div>
+        </div>
+
+        <div className="mapConnector connectorA" />
+
+        <div className="mapColumn edgeZone">
+          <div className="zoneLabel">Secure edge</div>
+          <div className="edgeStack">
+            <div className="mapNode edgeNode primary">
+              <span>Ingress</span>
+              <strong>Controlled routing</strong>
+            </div>
+            <div className="miniPill">TLS automation</div>
+            <div className="miniPill">DNS abstraction</div>
+          </div>
+        </div>
+
+        <div className="mapConnector connectorB" />
+
+        <div className="clusterZone">
+          <div className="zoneLabel">Kubernetes platform</div>
+          <div className="clusterShell">
+            <div className="controlRing">
+              <div className="controlCore">
+                <span>K3s</span>
+                <strong>Control plane</strong>
+              </div>
+            </div>
+
+            <div className="platformGrid">
+              {platform.map((item) => (
+                <div className="platformTile" key={item}>{item}</div>
+              ))}
+            </div>
+
+            <div className="workloadShelf">
+              {workloads.map((item) => (
+                <div className="workloadPod" key={item}>
+                  <i />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mapConnector connectorC" />
+
+        <div className="mapColumn dataZone">
+          <div className="zoneLabel">State + signals</div>
+          <div className="mapNode dataNode">
+            <span>Volumes</span>
+            <strong>Persistent data</strong>
+          </div>
+          <div className="mapNode observeNode">
+            <span>Observability</span>
+            <strong>Metrics + logs</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="mapLegend">
+        <span><i className="legendPublic" /> Public entry</span>
+        <span><i className="legendPrivate" /> Private platform</span>
+        <span><i className="legendData" /> State and telemetry</span>
+      </div>
+    </div>
+  );
 }
 
 export default function Home() {
   return (
     <main>
-      <section className="hero">
+      <nav className="topNav" aria-label="Page navigation">
+        <a className="brand" href="#top"><span>YL</span> Homelab</a>
+        <div>
+          {navItems.map(([label, href]) => (
+            <a key={href} href={href}>{label}</a>
+          ))}
+        </div>
+      </nav>
+
+      <section id="top" className="hero">
         <div className="heroGrid">
-          <div>
-            <p className="eyebrow">K3s · GitOps · Bare metal</p>
-            <h1>Yesid&apos;s Homelab</h1>
+          <div className="heroCopy reveal">
+            <p className="eyebrow">AI engineering · Kubernetes · GitOps</p>
+            <h1><span>AI-ready</span> homelab platform</h1>
             <p className="lead">
-              A production-style Kubernetes homelab running on compact hardware, managed entirely through Flux CD,
-              Kustomize, HelmRelease resources, Sealed Secrets, Longhorn storage, MetalLB networking, automated DNS,
-              TLS certificates, observability, and self-hosted applications.
+              A polished, security-conscious view of my self-hosted Kubernetes lab — built like a compact platform for
+              AI/ML experimentation, product workloads, automation, observability, and production-style GitOps delivery.
             </p>
             <div className="actions">
-              <a href="https://github.com/yesid-lopez/homelab">GitHub repository</a>
-              <a href="#apps" className="secondary">Explore apps</a>
+              <a href="https://github.com/yesid-lopez/homelab">Explore repository</a>
+              <a href="#architecture" className="secondary">View architecture</a>
+            </div>
+            <div className="heroStats" aria-label="Platform highlights">
+              {highlights.map((item) => (
+                <div key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="heroCard" aria-label="Homelab summary stats">
-            {stats.map((item) => (
-              <div key={item.label}>
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-              </div>
-            ))}
-          </div>
+          <NeuralArchitecture />
         </div>
       </section>
 
-      <Section id="architecture" eyebrow="Architecture" title="Two-node K3s cluster behind a home router">
-        <div className="architecture">
-          <div className="node internet">Internet</div>
-          <div className="line" />
-          <div className="node">Router / entry point</div>
-          <div className="line" />
-          <div className="node">2.5 Gb unmanaged switch</div>
-          <div className="split">
-            {hardware.slice(0, 2).map((item) => (
-              <article className="card" key={item.name}>
-                <p className="tag">{item.role}</p>
-                <h3>{item.name}</h3>
-                <ul>
-                  {item.details.map((detail) => <li key={detail}>{detail}</li>)}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </div>
+      <section className="section introBand reveal" aria-label="Platform positioning">
+        {platformStats.map(([title, description]) => (
+          <article key={title}>
+            <span />
+            <h3>{title}</h3>
+            <p>{description}</p>
+          </article>
+        ))}
+      </section>
+
+      <Section id="architecture" eyebrow="Architecture" title="A private cloud lab with an AI-engineering aesthetic">
+        <p>
+          The homelab is a small Kubernetes platform for learning, operating, and deploying real services. It keeps the
+          design visible while omitting sensitive hostnames, network addresses, hardware identifiers, credentials, and
+          exact implementation details.
+        </p>
+        <ArchitectureSystemMap />
         <div className="grid three">
-          {hardware.map((item) => (
-            <article className="card" key={item.name}>
+          {architectureCards.map((item) => (
+            <article className="card featureCard" key={item.name}>
+              <div className="cardIcon">{item.icon}</div>
               <p className="tag">{item.role}</p>
               <h3>{item.name}</h3>
               <ul>{item.details.map((detail) => <li key={detail}>{detail}</li>)}</ul>
@@ -260,35 +354,27 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section id="bootstrap" eyebrow="Bootstrap" title="K3s is installed with the built-in load balancer and Traefik disabled">
-        <p>
-          The cluster keeps K3s lean and delegates load balancing and ingress to dedicated controllers. Swap is disabled
-          on both nodes, and the Raspberry Pi has memory cgroups enabled for Kubernetes compatibility.
-        </p>
-        <div className="grid two">
-          {bootstrapCommands.map((item) => (
-            <article className="card" key={item.title}>
-              <h3>{item.title}</h3>
-              <CodeBlock>{item.command}</CodeBlock>
+      <Section id="gitops" eyebrow="GitOps / MLOps mindset" title="The operating model looks like a production delivery loop">
+        <div className="pipeline">
+          {gitopsFlow.map(([step, title, description]) => (
+            <article key={step}>
+              <span>{step}</span>
+              <h3>{title}</h3>
+              <p>{description}</p>
             </article>
           ))}
         </div>
-      </Section>
-
-      <Section id="gitops" eyebrow="GitOps" title="Everything flows through Git, Flux, Kustomize, and HelmRelease resources">
-        <ol className="timeline">
-          {gitopsFlow.map((item) => <li key={item}>{item}</li>)}
-        </ol>
-        <div className="note">
-          No cluster mutation is required for normal changes. The repository is the source of truth; Flux reconciles the
-          declared state into the cluster.
+        <div className="note statusNote">
+          Repository changes become reviewed infrastructure changes. This public overview explains the workflow without
+          publishing commands, tokens, internal paths, or environment-specific values.
         </div>
       </Section>
 
-      <Section id="controllers" eyebrow="Platform controllers" title="Infrastructure building blocks">
-        <div className="grid two">
+      <Section id="controllers" eyebrow="Platform capabilities" title="Core services presented as clean building blocks">
+        <div className="grid two capabilityGrid">
           {controllers.map(([name, description]) => (
-            <article className="card compact" key={name}>
+            <article className="card compact capabilityCard" key={name}>
+              <span />
               <h3>{name}</h3>
               <p>{description}</p>
             </article>
@@ -296,34 +382,25 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section id="networking" eyebrow="Networking, DNS, TLS" title="Public ingress with NGINX, MetalLB, external-dns, and cert-manager">
+      <Section id="networking" eyebrow="Networking, DNS, TLS" title="A controlled edge without exposing reconnaissance details">
         <p>
-          K3s ServiceLB and Traefik are disabled so the cluster can use MetalLB for LoadBalancer semantics and NGINX for
-          ingress. external-dns publishes records to Porkbun, while cert-manager and the Porkbun webhook handle ACME DNS
-          validation for TLS certificates.
+          Web traffic is routed through a dedicated ingress setup with automated TLS. The public overview avoids listing
+          hostnames, IP ranges, DNS provider configuration, and other details that could make enumeration easier.
         </p>
-        <div className="chips">
-          {ingressHosts.map((host) => <span key={host}>{host}</span>)}
+        <div className="chips fancyChips">
+          <span>Ingress routing</span>
+          <span>Automated TLS</span>
+          <span>DNS automation</span>
+          <span>Sanitized public details</span>
         </div>
       </Section>
 
-      <Section id="storage" eyebrow="Storage and data" title="Persistent data is handled by Longhorn and database operators">
-        <div className="grid two">
-          {storageAndData.map(([name, description]) => (
-            <article className="card compact" key={name}>
-              <h3>{name}</h3>
-              <p>{description}</p>
-            </article>
-          ))}
-        </div>
-      </Section>
-
-      <Section id="apps" eyebrow="Applications" title="Production workloads deployed from apps/production">
+      <Section id="apps" eyebrow="Workloads" title="A self-hosted runtime for products, analytics, automation, and AI-adjacent experiments">
         <div className="appList">
           {apps.map((app) => (
             <article className="appCard" key={app.name}>
               <div>
-                <p className="tag">Namespace: {app.namespace}</p>
+                <p className="tag">Workload class</p>
                 <h3>{app.name}</h3>
                 <p>{app.purpose}</p>
               </div>
@@ -333,48 +410,52 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section id="observability" eyebrow="Observability" title="Metrics, logs, dashboards, alerting, and reports">
-        <div className="grid two">
-          <article className="card">
-            <h3>Metrics and dashboards</h3>
-            <p>
-              Prometheus collects metrics, Alertmanager exposes alerts, and Grafana provides dashboards. Public/internal
-              endpoints include prometheus.homelab.yesidlopez.de, alertmanager.homelab.yesidlopez.de, and grafana.yesidlopez.de.
-            </p>
+      <Section id="observability" eyebrow="Observability" title="Operational signals make the lab feel like a real platform">
+        <div className="dashboardGrid">
+          <article className="signalPanel large">
+            <span>Telemetry</span>
+            <h3>Metrics, logs, dashboards, alerts</h3>
+            <div className="bars"><i /><i /><i /><i /><i /></div>
           </article>
-          <article className="card">
-            <h3>Logs and telemetry</h3>
-            <p>
-              Loki and Alloy provide the logging/telemetry pipeline. Umami adds product analytics, plus a scheduled weekly
-              report workflow that sends summaries through a sealed Discord webhook.
-            </p>
+          <article className="signalPanel">
+            <span>Feedback loop</span>
+            <h3>Detect issues quickly</h3>
+            <p>Signals help understand workload health without exposing internal dashboards or service addresses.</p>
+          </article>
+          <article className="signalPanel">
+            <span>Operations</span>
+            <h3>Traceable changes</h3>
+            <p>Commits and pull requests document what changed and why.</p>
           </article>
         </div>
       </Section>
 
-      <Section id="secrets" eyebrow="Security" title="Secrets stay encrypted in Git">
+      <Section id="security" eyebrow="Security" title="Designed to look good publicly without leaking private internals">
         <p>
-          The repository uses Bitnami Sealed Secrets. Plain Kubernetes Secrets are generated locally, encrypted with the
-          cluster&apos;s public key, committed as SealedSecret resources, and decrypted only by the in-cluster controller.
-          Secret material is intentionally not displayed on this page.
+          This page focuses on the engineering story and visual architecture while intentionally avoiding details that
+          could make the environment easier to enumerate or target.
         </p>
-        <CodeBlock>{`kubectl create secret generic mysecret --from-literal=password=mypass --dry-run=client -o yaml > secret.yaml
-make encrypt INPUT=secret.yaml OUTPUT=infrastructure/configs/sealed-mysecret.yaml
-rm secret.yaml`}</CodeBlock>
+        <div className="securityGrid">
+          {securityPractices.map((item) => (
+            <article className="securityCard" key={item}>
+              <span>✓</span>
+              <h3>{item}</h3>
+            </article>
+          ))}
+        </div>
       </Section>
 
-      <Section id="validation" eyebrow="Quality gates" title="Pull requests validate manifests before merge">
-        <div className="chips">
+      <Section id="validation" eyebrow="Quality gates" title="Validation keeps changes consistent before deployment">
+        <div className="chips fancyChips">
           {validation.map((item) => <span key={item}>{item}</span>)}
         </div>
         <p>
-          The CI workflow validates YAML, Flux CRDs, Kubernetes schemas, and every Kustomize overlay under infrastructure,
-          apps, and clusters.
+          Automated checks reduce the risk of broken manifests reaching the platform and keep the GitOps workflow tidy.
         </p>
       </Section>
 
       <footer>
-        <p>Built with Next.js from the public homelab GitOps repository.</p>
+        <p>Built with Next.js from a sanitized GitOps homelab repository.</p>
         <a href="https://github.com/yesid-lopez/homelab">github.com/yesid-lopez/homelab</a>
       </footer>
     </main>
