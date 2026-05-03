@@ -1,0 +1,22 @@
+{
+  "name": "homelab-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "16.2.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.9.1",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}
