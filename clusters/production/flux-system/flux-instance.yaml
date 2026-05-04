@@ -25,4 +25,13 @@ spec:
     ref: refs/heads/main
     path: clusters/production
     pullSecret: flux-system
+  kustomize:
+    patches:
+      - target:
+          kind: Deployment
+          name: source-controller
+        patch: |
+          - op: replace
+            path: /spec/template/spec/containers/0/args/7
+            value: --helm-cache-max-size=100
   wait: true
