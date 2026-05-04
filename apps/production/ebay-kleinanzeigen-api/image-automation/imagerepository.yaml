@@ -4,7 +4,7 @@ metadata:
   name: ebay-kleinanzeigen-api
   namespace: ebay-kleinanzeigen-api
 spec:
-  image: docker-registry.registry.svc.cluster.local:5000/ebay-kleinanzeigen-api
+  image: registry.yesidlopez.de/ebay-kleinanzeigen-api
   interval: 1m
   secretRef:
     name: registry-secret
