@@ -9,7 +9,7 @@ spec:
   task: snapshot
   groups:
     - backup
-  retain: 3
+  retain: 2
   concurrency: 2
   labels: {}
 ---
