@@ -1,3 +1,17 @@
+## Backup Configuration
+
+The NFS backup target and recurring jobs are managed via `infrastructure/configs/longhorn/`:
+
+- `backup-target.yaml` — BackupTarget CRD pointing to `nfs://192.168.2.10:/ssd-pool/longhorn-backups`
+- `recurring-jobs.yaml` — `snapshot-daily` (1 AM, retain 2) and `backup-daily` (2 AM, retain 14)
+
+Volumes to be backed up must have the label `recurring-job-group.longhorn.io/backup=enabled`.
+
+> **Note:** In Longhorn 1.5+, the backup target is configured via the `BackupTarget` CRD directly, not through `defaultSettings.backupTarget` in the Helm chart values.
+
+---
+
+## Node Preflight
 
 Installing the longhornctl to verify the nodes are ready
 
