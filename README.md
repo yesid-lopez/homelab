@@ -61,6 +61,51 @@ sudo apt remove --purge dphys-swapfile
 
 For the raspberry enable the cgroups in the `/boot/firmware/cmdline.txt` file by adding `cgroup_memory=1 cgroup_enable=memory` at the end of the line
 
+## Backup Strategy
+
+Longhorn volumes are backed up to an NFS server running on the Proxmox host.
+
+### Infrastructure
+
+```
+Proxmox Host (192.168.2.10)
+└── ZFS dataset: ssd-pool/longhorn-backups (500 GB quota, lz4 compression)
+    └── Exposed via NFSv4 to 192.168.2.0/24
+```
+
+### Schedule
+
+| Job | Time | Retention | Storage |
+|---|---|---|---|
+| `snapshot-daily` | 1 AM | 2 snapshots | Local (Longhorn) |
+| `backup-daily` | 2 AM | 14 backups | NFS (Proxmox) |
+
+### Backed up volumes
+
+| Namespace | PVC | App |
+|---|---|---|
+| `grafana` | `grafana` | Grafana dashboards and users |
+| `umami` | `umami-postgres-1` | Umami analytics PostgreSQL |
+| `registry` | `docker-registry` | Private Docker registry |
+| `resumelo-dev` | `mongodb-pvc` | MongoDB (dev environment) |
+
+Volumes are assigned to the `backup` recurring job group via the label `recurring-job-group.longhorn.io/backup=enabled`. Monitoring volumes (Prometheus, Alertmanager, Loki) are intentionally excluded.
+
+### Restore procedure
+
+1. Open Longhorn UI: `kubectl -n longhorn-system port-forward svc/longhorn-frontend 8080:80`
+2. Go to **Backup and Restore → Backups**
+3. Select the volume → three dots → **Restore**
+4. Scale down the affected deployment: `kubectl scale deployment <name> -n <namespace> --replicas=0`
+5. Delete the existing PVC and create a new one pointing to the restored volume
+6. Scale the deployment back up
+
+### Verify backup target
+
+```bash
+kubectl -n longhorn-system get backuptargets default -o jsonpath='{.spec.backupTargetURL} — available: {.status.available}'
+```
+
 ## Secrets
 
 This homelab uses [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) for secure secret management in GitOps.
