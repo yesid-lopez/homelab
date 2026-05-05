@@ -18,5 +18,3 @@ data:
       snapshotMaxCount: 2
       # Enable snapshot purging
       disableSnapshotPurge: false
-      backupTarget: "nfs://192.168.2.10:/ssd-pool/longhorn-backups"
-      backupTargetCredentialSecret: ""
