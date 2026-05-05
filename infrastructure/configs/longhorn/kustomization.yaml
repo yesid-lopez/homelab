@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
 - storage-classes.yaml
 - recurring-jobs.yaml
+- backup-target.yaml
