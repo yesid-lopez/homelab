@@ -455,7 +455,12 @@ export default function Home() {
       </Section>
 
       <footer>
-        <p>Built with Next.js from a sanitized GitOps homelab repository.</p>
+        <div>
+          <p>Built with Next.js from a sanitized GitOps homelab repository.</p>
+          <p className="ownerAttribution">
+            Homelab Owner: <a href="https://www.yesidlopez.de/">Yesid Lopez</a>
+          </p>
+        </div>
         <a href="https://github.com/yesid-lopez/homelab">github.com/yesid-lopez/homelab</a>
       </footer>
     </main>

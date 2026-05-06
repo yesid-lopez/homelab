@@ -674,6 +674,14 @@ footer a {
   text-decoration: none;
 }
 
+.ownerAttribution {
+  margin: 6px 0 0;
+}
+
+.ownerAttribution a {
+  color: var(--text);
+}
+
 .reveal {
   animation: revealUp 720ms ease both;
 }
