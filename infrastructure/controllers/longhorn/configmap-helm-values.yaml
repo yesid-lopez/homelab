@@ -14,7 +14,9 @@ data:
     defaultSettings:
       # Disable automatic system snapshot creation
       autoCleanupSystemGeneratedSnapshot: false
-      # Set minimum snapshot count
-      snapshotMaxCount: 2
+      # Allow enough snapshots for daily snapshots and backup-created snapshots.
+      # This must be higher than the recurring snapshot retention, otherwise
+      # Longhorn refuses new snapshots with "snapshot count usage ... snapshotMaxCount".
+      snapshotMaxCount: 32
       # Enable snapshot purging
       disableSnapshotPurge: false
