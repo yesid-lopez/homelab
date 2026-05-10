@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: lulo-cms
-        image: "registry.yesidlopez.de/lulo-cms:v20260510.164843.cd890e9" # {"$imagepolicy": "lulo:lulo-cms"}
+        image: "registry.yesidlopez.de/lulo-cms:cms-v1.0.1" # {"$imagepolicy": "lulo:lulo-cms"}
         ports:
         - containerPort: 3000
         env:
