@@ -7,5 +7,8 @@ spec:
   imageRepositoryRef:
     name: lulo-cms
   policy:
-    alphabetical:
-      order: asc
+    semver:
+      range: ">=1.0.1"
+  filterTags:
+    pattern: '^cms-v(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
+    extract: '$version'
