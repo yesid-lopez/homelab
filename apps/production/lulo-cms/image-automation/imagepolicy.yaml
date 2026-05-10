@@ -1,0 +1,11 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: lulo-cms
+  namespace: lulo
+spec:
+  imageRepositoryRef:
+    name: lulo-cms
+  policy:
+    alphabetical:
+      order: asc

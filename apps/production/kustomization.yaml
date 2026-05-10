@@ -9,5 +9,5 @@ resources:
 - umami
 # - tayrona
 # - macondo
-# - lulo-cms
+- lulo-cms
 - ebay-kleinanzeigen-api

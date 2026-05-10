@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: lulo-cms
+  namespace: lulo
+spec:
+  image: registry.yesidlopez.de/lulo-cms
+  interval: 1m
+  secretRef:
+    name: registry-secret

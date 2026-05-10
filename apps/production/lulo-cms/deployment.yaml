@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: lulo-cms
-        image: "registry.yesidlopez.de/lulo-cms:1.0.1"
+        image: "registry.yesidlopez.de/lulo-cms:1.0.1" # {"$imagepolicy": "lulo:lulo-cms"}
         ports:
         - containerPort: 3000
         env:
@@ -32,6 +32,24 @@ spec:
             secretKeyRef:
               name: payload-secrets
               key: PAYLOAD_SECRET
+        - name: S3_ENDPOINT
+          value: "http://minio.minio.svc.cluster.local:9000"
+        - name: S3_BUCKET
+          value: "payload-media"
+        - name: S3_REGION
+          value: "us-east-1"
+        - name: S3_FORCE_PATH_STYLE
+          value: "true"
+        - name: S3_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: minio-credentials
+              key: rootUser
+        - name: S3_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-credentials
+              key: rootPassword
         resources:
           requests:
             memory: "128Mi"
