@@ -14,7 +14,9 @@ data:
     defaultSettings:
       # Disable automatic system snapshot creation
       autoCleanupSystemGeneratedSnapshot: false
-      # Set minimum snapshot count
-      snapshotMaxCount: 2
+      # Keep local snapshots bounded while leaving room for Longhorn to create
+      # the next recurring snapshot before pruning older retained snapshots.
+      # Retention is controlled by the recurring jobs; this is only a safety cap.
+      snapshotMaxCount: 4
       # Enable snapshot purging
       disableSnapshotPurge: false
