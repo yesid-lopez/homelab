@@ -1,0 +1,20 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: minio
+  namespace: minio
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: minio
+      version: 5.4.0
+      sourceRef:
+        kind: HelmRepository
+        name: minio
+        namespace: minio
+      interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: minio-helm-chart-value-overrides
+      valuesKey: values.yaml

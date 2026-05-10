@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minio-helm-chart-value-overrides
+  namespace: minio
+data:
+  values.yaml: |
+    mode: standalone
+    replicas: 1
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    existingSecret: minio-credentials
+    persistence:
+      enabled: true
+      storageClass: longhorn
+      size: 10Gi
+      accessMode: ReadWriteOnce
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+    service:
+      type: ClusterIP
+      port: 9000
+    consoleService:
+      type: ClusterIP
+      port: 9001
+    ingress:
+      enabled: false
+    consoleIngress:
+      enabled: false
+    buckets:
+      - name: payload-media
+        policy: none
+        purge: false
+    metrics:
+      serviceMonitor:
+        enabled: false

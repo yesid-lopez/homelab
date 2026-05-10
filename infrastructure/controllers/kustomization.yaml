@@ -11,6 +11,7 @@ resources:
 - cert-manager
 - cert-manager-porkbun-webhook
 - cloudnative-pg
+- minio
 - loki
 - grafana
 - alloy
