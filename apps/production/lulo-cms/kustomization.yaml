@@ -7,6 +7,7 @@ resources:
   - service.yaml
   - ingress.yaml
   - image-automation/
+  - monitoring/
   - sealed-registry-secrets.yaml
   - sealed-payload-secrets.yaml
   - sealed-minio-credentials.yaml

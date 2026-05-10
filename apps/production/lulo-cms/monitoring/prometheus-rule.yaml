@@ -1,0 +1,53 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lulo-cms-alerts
+  namespace: lulo
+  labels:
+    app: lulo-cms
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: lulo-cms.availability
+      rules:
+        - alert: LuloCmsPodNotReady
+          expr: |
+            kube_pod_status_ready{
+              namespace="lulo",
+              condition="true"
+            } == 0
+          for: 5m
+          labels:
+            severity: critical
+            app: lulo-cms
+          annotations:
+            summary: "Pod {{ $labels.pod }} no está listo"
+            description: "El pod {{ $labels.pod }} en namespace lulo lleva más de 5 minutos sin estar ready."
+
+        - alert: LuloCmsPodCrashLooping
+          expr: |
+            rate(kube_pod_container_status_restarts_total{
+              namespace="lulo"
+            }[15m]) * 60 * 15 > 1
+          for: 5m
+          labels:
+            severity: critical
+            app: lulo-cms
+          annotations:
+            summary: "Container {{ $labels.container }} en crash loop"
+            description: "El container {{ $labels.container }} del pod {{ $labels.pod }} se ha reiniciado {{ $value | humanize }} veces en 15 minutos."
+
+        - alert: LuloCmsDeploymentDown
+          expr: |
+            kube_deployment_status_replicas_available{
+              namespace="lulo",
+              deployment="lulo-cms"
+            } == 0
+          for: 2m
+          labels:
+            severity: critical
+            app: lulo-cms
+          annotations:
+            summary: "Deployment lulo-cms está caído"
+            description: "El deployment lulo-cms lleva más de 2 minutos sin réplicas disponibles."
