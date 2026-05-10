@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: lulo-cms
-        image: "registry.yesidlopez.de/lulo-cms:1.0.1" # {"$imagepolicy": "lulo:lulo-cms"}
+        image: "registry.yesidlopez.de/lulo-cms:v20260510.154206.f5ff4f6" # {"$imagepolicy": "lulo:lulo-cms"}
         ports:
         - containerPort: 3000
         env:
@@ -58,4 +58,4 @@ spec:
             memory: "512Mi"
             cpu: "500m"
       imagePullSecrets:
-        - name: registry-secret 
+      - name: registry-secret
