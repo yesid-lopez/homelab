@@ -1,0 +1,38 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: volume-usage-alerts
+  namespace: prometheus
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: volume.usage
+      rules:
+        - alert: PersistentVolumeUsageHigh
+          expr: |
+            (
+              kubelet_volume_stats_used_bytes
+              / kubelet_volume_stats_capacity_bytes
+            ) * 100 >= 80
+          for: 10m
+          labels:
+            severity: warning
+            scope: storage
+          annotations:
+            summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} sobre 80%"
+            description: "El PVC {{ $labels.persistentvolumeclaim }} en el namespace {{ $labels.namespace }} está al {{ $value | printf \"%.1f\" }}% de uso."
+
+        - alert: PersistentVolumeUsageCritical
+          expr: |
+            (
+              kubelet_volume_stats_used_bytes
+              / kubelet_volume_stats_capacity_bytes
+            ) * 100 >= 90
+          for: 5m
+          labels:
+            severity: critical
+            scope: storage
+          annotations:
+            summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} sobre 90%"
+            description: "El PVC {{ $labels.persistentvolumeclaim }} en el namespace {{ $labels.namespace }} está al {{ $value | printf \"%.1f\" }}% de uso. Riesgo inminente de llenarse."

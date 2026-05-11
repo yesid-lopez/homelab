@@ -15,9 +15,9 @@ data:
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
-                  storage: 20Gi
-        retention: 7d
-        retentionSize: 18GB
+                  storage: 30Gi
+        retention: 14d
+        retentionSize: 24GB
         replicas: 1
         shards: 1
         resources:
@@ -48,6 +48,10 @@ data:
     
     alertmanager:
       alertmanagerSpec:
+        # Allow cross-namespace AlertmanagerConfigs (e.g. prometheus/homelab-discord)
+        # to match alerts from any namespace, not only the one they live in.
+        alertmanagerConfigMatcherStrategy:
+          type: None
         storage:
           volumeClaimTemplate:
             spec:

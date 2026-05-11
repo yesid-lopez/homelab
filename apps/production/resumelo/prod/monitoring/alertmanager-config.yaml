@@ -15,6 +15,9 @@ spec:
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 1h
+    matchers:
+      - name: namespace
+        value: resumelo
   receivers:
     - name: discord
       discordConfigs:
