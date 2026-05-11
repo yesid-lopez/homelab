@@ -36,6 +36,9 @@ data:
       - name: payload-media
         policy: none
         purge: false
+      - name: postgres-backups
+        policy: none
+        purge: false
     metrics:
       serviceMonitor:
         enabled: false

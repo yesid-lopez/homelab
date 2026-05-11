@@ -5,16 +5,16 @@ metadata:
   namespace: umami
 spec:
   instances: 1
-      
+
   bootstrap:
     initdb:
       database: umami
       owner: umami
-        
+
   storage:
     size: 5Gi
     storageClass: longhorn
-    
+
   resources:
     requests:
       memory: "512Mi"
@@ -22,3 +22,32 @@ spec:
     limits:
       memory: "1Gi"
       cpu: "500m"
+
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://postgres-backups/umami-postgres
+      endpointURL: http://minio.minio.svc.cluster.local:9000
+      s3Credentials:
+        accessKeyId:
+          name: minio-backup-credentials
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: minio-backup-credentials
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+    retentionPolicy: "14d"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: umami-postgres-daily
+  namespace: umami
+spec:
+  schedule: "0 30 3 * * *"
+  backupOwnerReference: self
+  cluster:
+    name: umami-postgres
+  immediate: true

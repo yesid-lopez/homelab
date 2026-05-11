@@ -7,5 +7,6 @@ resources:
   - configmap-helm-values.yaml
   - postgres-cluster.yaml
   - sealed-umami-admin-credentials.yaml
+  - sealed-minio-backup-credentials.yaml
   - cronjob-sync-admin-password.yaml
   - reports/

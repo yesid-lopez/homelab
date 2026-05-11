@@ -11,3 +11,4 @@ resources:
   - sealed-registry-secrets.yaml
   - sealed-payload-secrets.yaml
   - sealed-minio-credentials.yaml
+  - sealed-minio-backup-credentials.yaml
