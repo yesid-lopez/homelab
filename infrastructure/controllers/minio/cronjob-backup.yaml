@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: minio-mirror-backup
+  namespace: minio
+spec:
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: mc
+              image: quay.io/minio/mc:RELEASE.2025-04-08T15-39-49Z
+              env:
+                - name: MINIO_ROOT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: rootUser
+                - name: MINIO_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: minio-credentials
+                      key: rootPassword
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+                  mc alias set local http://minio.minio.svc.cluster.local:9000 \
+                    "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+                  mkdir -p /mnt/mc-mirror
+                  for bucket in payload-media postgres-backups; do
+                    echo "[$(date -Iseconds)] mirroring $bucket"
+                    mc mirror --overwrite --remove \
+                      "local/$bucket" "/mnt/mc-mirror/$bucket"
+                  done
+                  echo "[$(date -Iseconds)] done"
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+              volumeMounts:
+                - name: nfs-mirror
+                  mountPath: /mnt
+          volumes:
+            - name: nfs-mirror
+              nfs:
+                server: 192.168.2.10
+                path: /ssd-pool/longhorn-backups
