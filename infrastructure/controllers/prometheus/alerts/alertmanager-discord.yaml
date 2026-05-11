@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: homelab-discord
+  namespace: prometheus
+  labels:
+    scope: storage
+spec:
+  route:
+    receiver: discord
+    groupBy:
+      - alertname
+      - namespace
+      - persistentvolumeclaim
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 6h
+    matchers:
+      - name: scope
+        value: storage
+  receivers:
+    - name: discord
+      discordConfigs:
+        - apiURL:
+            name: discord-homelab-webhook
+            key: apiURL
+          sendResolved: true
+          title: '{{ if eq .Status "firing" }}🔴{{ else }}🟢{{ end }} [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] homelab storage'
+          message: |
+            {{ range .Alerts -}}
+            **{{ .Annotations.summary }}**
+            {{ .Annotations.description }}
+            Severidad: `{{ .Labels.severity }}`
+
+            {{ end }}

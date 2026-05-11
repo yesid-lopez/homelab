@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: discord-homelab-webhook
+  namespace: prometheus
+spec:
+  encryptedData:
+    apiURL: AgCaNP0a0oIavNXM9K2Icokl8Z+HO3G3zWG6NhY2r7Kb+mI01hSznngimxYA2NTSFyOWIYrK3QkA+v4glcj3wVYWF1DifllZyLJs2SoW/+GMm3yvHAFT8pIWxu2+XrZ/QmFXmzFqiXv4Ms0IFu4A1PBfthg5ltcDsgfvyJqhAsqA8NjP8i/NhSHwh1MMQWAWaYtQWLRdzdi9iRm0hqUBT6H2YhwjAyklLe0lxOfQSG7o7WCe4F+XZg5rS0GYXw0Ykp1RvpbBU7yKK0x+u2Z93XggzTYH3GyAXAEcfTBgWP2gIZS9qPBrnm8vZXIZlomKjciKvbl4aJTjNoQUrrxamizi8Q/U9QLsr68ejWjMOkjc7mhwrZi2bvYwc6fE1ngo/b46AKjtCgrScUcfFCCeJlI6TxxQTSxFE9sArZnGYV1FeDk2BvietDuczwKdQhBoNPbJCgZrRoKVCHeD4xdGyILemOUZAE18Gnfbr9Vk8WjF26leH7wdaZeGzwRQqAvrtgPs+e3VnQAomZ4d4ZUjweuJaQaydhfEqzSSjoxr//EXGVe2T9xqpljf+yQSR1rytoLDHP+Jo/TyLvQQSC6tLfOwDD8RRN931NXb8dU7L6tPk0+0ae4XgLAUmv0nAZ78KB0CPaCKrjQWoaYlDwK6Id8WStoIhBsnbq98JoVIE233OuNXHayLoF6UEW84r6HWx7cKLC41ayHCsKvTKqCm3RA4D12N93LcNGKkbUjB1qUr2BbvRUTiUrhLkRTYKs43J4WcTmP67T3pvka12taNAcq/nFUMDiUMJ+hZ/fJgrdzNQ7w2svzwwBkPzrcwvDNFuwFfKPHgOUjyGnj6k+Cy3WL6eN7yQHzcF7Z2
+  template:
+    metadata:
+      name: discord-homelab-webhook
+      namespace: prometheus
