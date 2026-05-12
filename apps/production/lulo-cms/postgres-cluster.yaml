@@ -6,6 +6,10 @@ metadata:
 spec:
   instances: 1
 
+  inheritedMetadata:
+    labels:
+      recurring-job-group.longhorn.io/backup: enabled
+
   bootstrap:
     initdb:
       database: lulo_cms
