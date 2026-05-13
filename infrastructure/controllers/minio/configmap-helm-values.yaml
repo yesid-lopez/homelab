@@ -33,8 +33,11 @@ data:
     consoleIngress:
       enabled: false
     buckets:
+      # payload-media is fronted by the media.luloai.com ingress and serves
+      # public assets (case-study mockups, etc.) directly to the landing site.
+      # Only this bucket is public — postgres-backups stays private.
       - name: payload-media
-        policy: none
+        policy: download
         purge: false
       - name: postgres-backups
         policy: none

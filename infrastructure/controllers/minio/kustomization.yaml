@@ -7,3 +7,4 @@ resources:
   - configmap-helm-values.yaml
   - sealed-minio-credentials.yaml
   - cronjob-backup.yaml
+  - ingress.yaml
