@@ -1,0 +1,37 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: multica
+  namespace: multica
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: multica
+      version: 0.2.29
+      sourceRef:
+        kind: HelmRepository
+        name: sshine-charts
+        namespace: multica
+      interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: multica-helm-chart-value-overrides
+      valuesKey: values.yaml
+    - kind: Secret
+      name: multica-postgres-app
+      valuesKey: uri
+      targetPath: config.databaseUrl
+    - kind: Secret
+      name: multica-app-secrets
+      valuesKey: jwtSecret
+      targetPath: config.jwtSecret
+    - kind: Secret
+      name: multica-app-secrets
+      valuesKey: resendApiKey
+      targetPath: config.resendApiKey
+    - kind: Secret
+      name: multica-app-secrets
+      valuesKey: googleClientSecret
+      targetPath: config.googleClientSecret
+      optional: true
