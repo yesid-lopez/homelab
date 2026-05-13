@@ -18,7 +18,7 @@ spec:
     spec:
       initContainers:
       - name: migrate
-        image: "registry.yesidlopez.de/lulo-cms:cms-v1.3.2" # {"$imagepolicy": "lulo:lulo-cms"}
+        image: "registry.yesidlopez.de/lulo-cms:cms-v1.3.1" # {"$imagepolicy": "lulo:lulo-cms"}
         command: ["node", "./node_modules/.bin/payload"]
         args: ["migrate"]
         env:
@@ -43,7 +43,7 @@ spec:
             cpu: "500m"
       containers:
       - name: lulo-cms
-        image: "registry.yesidlopez.de/lulo-cms:cms-v1.3.2" # {"$imagepolicy": "lulo:lulo-cms"}
+        image: "registry.yesidlopez.de/lulo-cms:cms-v1.3.1" # {"$imagepolicy": "lulo:lulo-cms"}
         ports:
         - containerPort: 3000
         env:
