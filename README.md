@@ -78,7 +78,7 @@ Proxmox Host (192.168.2.10)
 | Job | Time | Retention | Storage |
 |---|---|---|---|
 | `snapshot-daily` | 1 AM | 2 snapshots | Local (Longhorn) |
-| `backup-daily` | 2 AM | 14 backups | NFS (Proxmox) |
+| `backup-daily` | 2 AM | 7 backups | NFS (Proxmox) |
 
 ### Backed up volumes
 
