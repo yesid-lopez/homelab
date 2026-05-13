@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multica-helm-chart-value-overrides
+  namespace: multica
+data:
+  values.yaml: |
+    backend:
+      replicaCount: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 512Mi
+
+    frontend:
+      replicaCount: 1
+      resources:
+        requests:
+          cpu: 50m
+          memory: 256Mi
+        limits:
+          memory: 1Gi
+
+    config:
+      appEnv: production
+      appUrl: https://multica.yesidlopez.de
+      frontendOrigin: https://multica.yesidlopez.de
+      cookieDomain: ""
+      allowSignup: "false"
+      allowedEmails: "yesid.leonardo.lopez@hotmail.com"
+      resendFromEmail: noreply@luloai.com
+
+    secret:
+      create: true
+
+    persistence:
+      enabled: true
+      storageClass: longhorn
+      size: 10Gi
+      accessModes:
+        - ReadWriteOnce
+
+    ingress:
+      enabled: true
+      className: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: acme-issuer
+        external-dns.alpha.kubernetes.io/target: homelab.yesidlopez.de
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+        nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      hosts:
+        - host: multica.yesidlopez.de
+          paths:
+            - path: /
+              pathType: Prefix
+              service: frontend
+      tls:
+        - hosts:
+            - multica.yesidlopez.de
+          secretName: multica-tls
