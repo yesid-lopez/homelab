@@ -23,6 +23,6 @@ spec:
   task: backup
   groups:
     - backup
-  retain: 14
+  retain: 7
   concurrency: 2
   labels: {}

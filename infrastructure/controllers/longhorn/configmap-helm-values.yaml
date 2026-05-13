@@ -12,11 +12,12 @@ data:
     persistence:
       defaultClassReplicaCount: 1
     defaultSettings:
-      # Disable automatic system snapshot creation
-      autoCleanupSystemGeneratedSnapshot: false
-      # Keep local snapshots bounded while leaving room for Longhorn to create
-      # new recurring backup snapshots even when retained/manual snapshots exist.
-      # Retention is controlled by the recurring jobs; this is only a safety cap.
-      snapshotMaxCount: 8
+      # Clean up snapshots Longhorn creates itself (e.g. failed recurring-job
+      # attempts), so stuck ghost CRs don't permanently consume cap slots.
+      autoCleanupSystemGeneratedSnapshot: true
+      # Cap must exceed (backup-daily.retain + snapshot-daily.retain + manual)
+      # plus headroom for the create-before-prune transient peak.
+      # Sized for backup-daily.retain=7 + snap-daily.retain=2 + 1 manual + 2 margin.
+      snapshotMaxCount: 12
       # Enable snapshot purging
       disableSnapshotPurge: false
