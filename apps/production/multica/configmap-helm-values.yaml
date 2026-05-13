@@ -54,6 +54,27 @@ data:
       hosts:
         - host: multica.yesidlopez.de
           paths:
+            - path: /api
+              pathType: Prefix
+              service: backend
+            - path: /auth
+              pathType: Prefix
+              service: backend
+            - path: /uploads
+              pathType: Prefix
+              service: backend
+            - path: /ws
+              pathType: Prefix
+              service: backend
+            - path: /health
+              pathType: Prefix
+              service: backend
+            - path: /healthz
+              pathType: Prefix
+              service: backend
+            - path: /readyz
+              pathType: Prefix
+              service: backend
             - path: /
               pathType: Prefix
               service: frontend
