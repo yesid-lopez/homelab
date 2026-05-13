@@ -40,6 +40,8 @@ spec:
           value: "us-east-1"
         - name: S3_FORCE_PATH_STYLE
           value: "true"
+        - name: S3_PUBLIC_URL
+          value: "https://media.luloai.com"
         - name: S3_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
