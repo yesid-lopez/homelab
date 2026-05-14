@@ -5,6 +5,7 @@ resources:
 - ddns-updater
 - resumelo/dev
 - resumelo/prod
+- resumelo-ui/dev
 - gotenberg
 - umami
 # - tayrona

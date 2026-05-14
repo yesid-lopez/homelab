@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: resumelo-ui-ingress
+  namespace: resumelo-ui-dev
+spec:
+  tls:
+    - hosts:
+        - ui-dev.resumelo.me
+      secretName: resumelo-ui-tls
+  rules:
+    - host: ui-dev.resumelo.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: resumelo-ui
+                port:
+                  number: 80

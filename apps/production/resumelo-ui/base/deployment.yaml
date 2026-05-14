@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resumelo-ui
+  namespace: resumelo-ui
+  labels:
+    app: resumelo-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resumelo-ui
+  template:
+    metadata:
+      labels:
+        app: resumelo-ui
+        name: resumelo-ui
+    spec:
+      containers:
+        - name: resumelo-ui
+          image: "registry.yesidlopez.de/resumelo-ui:latest" # {"$imagepolicy": "REPLACE_WITH_OVERLAY_POLICY"}
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          envFrom:
+            - configMapRef:
+                name: configmap
+            - secretRef:
+                name: supabase-secrets
+            - secretRef:
+                name: stripe-secrets
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      imagePullSecrets:
+        - name: registry-secret

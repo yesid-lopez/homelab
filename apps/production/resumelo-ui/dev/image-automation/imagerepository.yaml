@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: resumelo-ui
+  namespace: resumelo-ui-dev
+spec:
+  image: registry.yesidlopez.de/resumelo-ui-dev
+  interval: 1m
+  secretRef:
+    name: registry-secret

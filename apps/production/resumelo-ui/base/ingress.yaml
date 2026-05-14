@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: resumelo-ui-ingress
+  namespace: resumelo-ui
+  annotations:
+    cert-manager.io/cluster-issuer: resumelo-issuer
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    external-dns.alpha.kubernetes.io/target: homelab.resumelo.me
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - ui.resumelo.me
+      secretName: resumelo-ui-tls
+  rules:
+    - host: ui.resumelo.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: resumelo-ui
+                port:
+                  number: 80

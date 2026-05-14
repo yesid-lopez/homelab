@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../base
+  - image-automation
+  - sealed-secrets
+
+namespace: resumelo-ui-dev
+
+patches:
+  - path: namespace-patch.yaml
+    target:
+      kind: Namespace
+      name: resumelo-ui
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: resumelo-ui
+  - path: configmap-patch.yaml
+    target:
+      kind: ConfigMap
+      name: configmap
+  - path: ingress-patch.yaml
+    target:
+      kind: Ingress
+      name: resumelo-ui-ingress
