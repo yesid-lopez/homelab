@@ -84,12 +84,15 @@ Proxmox Host (192.168.2.10)
 
 | Namespace | PVC | App |
 |---|---|---|
-| `grafana` | `grafana` | Grafana dashboards and users |
-| `umami` | `umami-postgres-1` | Umami analytics PostgreSQL |
-| `registry` | `docker-registry` | Private Docker registry |
-| `resumelo-dev` | `mongodb-pvc` | MongoDB (dev environment) |
+| `multica` | `multica-uploads` | Multica user-uploaded files |
+| `multica` | `multica-postgres-1` (CNPG) | Multica PostgreSQL data dir |
+| `lulo` | `lulo-cms-postgres-1` (CNPG) | Lulo CMS PostgreSQL data dir |
 
-Volumes are assigned to the `backup` recurring job group via the label `recurring-job-group.longhorn.io/backup=enabled`. Monitoring volumes (Prometheus, Alertmanager, Loki) are intentionally excluded.
+Volumes are assigned to the `backup` recurring job group via the label `recurring-job-group.longhorn.io/backup=enabled`. CNPG clusters propagate the label to their PVCs through `spec.inheritedMetadata`, paired with `recurring-job.longhorn.io/source=enabled` so Longhorn syncs the group label from PVC → Volume. Monitoring volumes (Prometheus, Alertmanager, Loki) are intentionally excluded.
+
+### PostgreSQL logical backups (CNPG → MinIO → NFS)
+
+CloudNativePG clusters (`multica-postgres`, `lulo-cms-postgres`, `umami-postgres`) ship base backups and WAL to an in-cluster MinIO bucket (`s3://postgres-backups/…`) via the Barman Cloud plugin, with a `14d` retention policy. MinIO buckets are mirrored to the Proxmox NFS share every 6 hours so there is an off-cluster copy independent of the Longhorn flow above.
 
 ### Restore procedure
 
