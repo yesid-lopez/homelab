@@ -20,26 +20,28 @@ This is a Kubernetes homelab setup using GitOps principles with Flux CD, running
 - **Package Management**: Helm charts for complex applications
 - **Secret Management**: Sealed Secrets for secure secret storage
 - **Ingress**: NGINX Ingress Controller (currently NodePort, planned LoadBalancer)
-- **Storage**: Longhorn for persistent volumes
+- **Storage**: Longhorn for persistent volumes; MinIO for in-cluster S3 (shared object storage and Postgres backups)
+- **Databases**: CloudNativePG for managed Postgres clusters
 - **Load Balancing**: MetalLB (disabled K3s servicelb)
-- **DNS**: External DNS with Porkbun provider
-- **Certificates**: cert-manager with Let's Encrypt and Porkbun webhook
+- **DNS**: External DNS with the konnektr-io Porkbun webhook (serves `yesidlopez.de`, `resumelo.me`, `luloai.com`)
+- **Certificates**: cert-manager with Let's Encrypt and the Porkbun webhook
 
 ## Ingress Configuration
 
 ### Domain Strategy
-- **Primary domains**: `resumelo.me` and `yesidlopez.de`
-- **Subdomain pattern**: Use `homelab.resumelo.me` or `homelab.yesidlopez.de` depending on the application
-- **Target hosts**: Always use `homelab.yesidlopez.de` for yesidlopez.de domain apps, `homelab.resumelo.me` for resumelo.me domain apps
+- **Primary domains**: `yesidlopez.de`, `resumelo.me`, and `luloai.com`
+- **Subdomain pattern**: Use `homelab.<domain>` (e.g. `homelab.yesidlopez.de`, `homelab.resumelo.me`, `homelab.luloai.com`)
+- **Target hosts**: Pick the `homelab.*` target that matches the app's domain
 - Choose domain based on application context and ownership
 
 ### Certificate Issuers
 - **acme-issuer**: Use for `yesidlopez.de` domains
 - **resumelo-issuer**: Use for `resumelo.me` domains
+- **luloai-issuer**: Use for `luloai.com` domains
 
 ### Required Ingress Annotations
-- **cert-manager.io/cluster-issuer**: Set to appropriate issuer (acme-issuer or resumelo-issuer)
-- **external-dns.alpha.kubernetes.io/target**: Set to `homelab.yesidlopez.de` or `homelab.resumelo.me` based on domain
+- **cert-manager.io/cluster-issuer**: Set to the issuer that matches the domain (`acme-issuer`, `resumelo-issuer`, or `luloai-issuer`)
+- **external-dns.alpha.kubernetes.io/target**: Set to the matching `homelab.<domain>` host
 
 ## Directory Structure
 
@@ -47,7 +49,8 @@ This is a Kubernetes homelab setup using GitOps principles with Flux CD, running
 homelab/
 ├── apps/production/          # Application deployments
 │   ├── resumelo/            # Multi-environment app (dev/prod)
-│   ├── langfuse/            # AI observability platform
+│   ├── multica/             # Multica platform (postgres + uploads)
+│   ├── lulo-cms/            # Lulo CMS (Payload + Postgres)
 │   ├── umami/               # Web analytics
 │   └── ...                  # Other applications
 ├── infrastructure/
@@ -113,10 +116,6 @@ Applications using Helm charts follow this pattern:
 
 ## Current Limitations
 
-### External DNS
-- Porkbun webhook only supports single domain (yesidlopez.de)
-- Multiple domains (resumelo.me, luloai.com) planned but blocked by webhook limitation
-
 ### Ingress Controller
 - Currently using NodePort due to router limitations
 - Planned migration to LoadBalancer when new FritzBox router arrives
@@ -139,8 +138,10 @@ Applications using Helm charts follow this pattern:
 ## Key Applications
 
 - **resumelo**: Multi-environment Node.js application with MongoDB
-- **langfuse**: AI observability platform with PostgreSQL
-- **umami**: Web analytics with PostgreSQL
+- **multica**: Multica agent platform (CNPG Postgres + Longhorn-backed uploads PVC)
+- **lulo-cms**: Payload CMS for `luloai.com` (CNPG Postgres, media in MinIO)
+- **ebay-kleinanzeigen-api**: Reverse-proxy API for Kleinanzeigen listings
+- **umami**: Web analytics with CNPG Postgres
 - **docker-registry**: Private Docker registry with UI
 - **ddns-updater**: Dynamic DNS updates
 - **gotenberg**: PDF generation service
