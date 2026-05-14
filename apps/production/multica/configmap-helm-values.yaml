@@ -29,7 +29,7 @@ data:
       frontendOrigin: https://multica.yesidlopez.de
       cookieDomain: ""
       allowSignup: "false"
-      allowedEmails: "yesid.leonardo.lopez@hotmail.com"
+      allowedEmails: "yesid.leonardo.lopez@hotmail.com,saraodrada@gmail.com"
       resendFromEmail: noreply@luloai.com
 
     secret:
