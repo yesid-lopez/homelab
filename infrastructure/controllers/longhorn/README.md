@@ -5,7 +5,28 @@ The NFS backup target and recurring jobs are managed via `infrastructure/configs
 - `backup-target.yaml` — BackupTarget CRD pointing to `nfs://192.168.2.10:/ssd-pool/longhorn-backups`
 - `recurring-jobs.yaml` — `snapshot-daily` (1 AM, retain 2) and `backup-daily` (2 AM, retain 14)
 
-Volumes to be backed up must have the label `recurring-job-group.longhorn.io/backup=enabled`.
+Volumes are opted into the daily backup job by labels on the **Longhorn Volume CR**. Longhorn can sync those labels from the PVC, but only when the PVC is marked as a "source" — so you need **both** labels on the PVC:
+
+```yaml
+metadata:
+  labels:
+    recurring-job.longhorn.io/source: enabled              # activates PVC → Volume sync
+    recurring-job-group.longhorn.io/backup: enabled        # joins the `backup` group
+```
+
+The group label without the source label is a no-op — Longhorn ignores it. Verify after Flux reconciles:
+
+```bash
+# Volume CR should carry the group label after the periodic sync
+kubectl get volume <pvc-uid> -n longhorn-system \
+  -o jsonpath='{.metadata.labels.recurring-job-group\.longhorn\.io/backup}'
+# A new Backup CR for the volume appears in longhorn-system after 02:00 UTC
+kubectl get backup -n longhorn-system
+```
+
+For CNPG-managed PVCs, set both under `spec.inheritedMetadata.labels` on the Cluster. For Helm charts, set both wherever the chart exposes PVC labels (or use a Flux `postRenderers` patch as a workaround if it doesn't).
+
+Alternative for "every volume from this StorageClass": Longhorn supports a `recurringJobSelector` parameter on the StorageClass. Not used here — we prefer per-app opt-in so the intent is visible in the app's own manifest.
 
 > **Note:** In Longhorn 1.5+, the backup target is configured via the `BackupTarget` CRD directly, not through `defaultSettings.backupTarget` in the Helm chart values.
 
