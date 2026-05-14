@@ -7,6 +7,8 @@ data:
   values.yaml: |
     backend:
       replicaCount: 1
+      image:
+        tag: v0.3.0
       resources:
         requests:
           cpu: 100m
@@ -16,6 +18,8 @@ data:
 
     frontend:
       replicaCount: 1
+      image:
+        tag: v0.3.0
       resources:
         requests:
           cpu: 50m
