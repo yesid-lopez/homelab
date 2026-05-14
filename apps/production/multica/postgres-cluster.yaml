@@ -7,6 +7,13 @@ spec:
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:17.6-standard-trixie
 
+  inheritedMetadata:
+    labels:
+      # Pair required: `source` activates PVC→Volume label sync in Longhorn,
+      # and the group label is what the RecurringJob actually matches on.
+      recurring-job.longhorn.io/source: enabled
+      recurring-job-group.longhorn.io/backup: enabled
+
   bootstrap:
     initdb:
       database: multica
