@@ -35,3 +35,17 @@ spec:
       valuesKey: googleClientSecret
       targetPath: config.googleClientSecret
       optional: true
+  postRenderers:
+    # TODO: remove once sshine/multica-helm exposes persistence.labels and we
+    # bump to a chart version that includes it. Then move the label into
+    # configmap-helm-values.yaml under persistence.labels.
+    - kustomize:
+        patches:
+          - target:
+              version: v1
+              kind: PersistentVolumeClaim
+              name: multica-uploads
+            patch: |
+              - op: add
+                path: /metadata/labels/recurring-job-group.longhorn.io~1backup
+                value: enabled
