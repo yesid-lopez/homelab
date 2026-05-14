@@ -57,6 +57,12 @@ spec:
       name: macondo-prod
       namespace: macondo
     - kind: ImageUpdateAutomation
+      name: lulo-cms
+      namespace: lulo
+    - kind: ImagePolicy
+      name: lulo-cms
+      namespace: lulo
+    - kind: ImageUpdateAutomation
       name: ebay-kleinanzeigen-api
       namespace: ebay-kleinanzeigen-api
     - kind: GitRepository
