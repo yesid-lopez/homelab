@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plugin-barman-cloud-helm-chart-value-overrides
+  namespace: cnpg-system
+data:
+  values.yaml: |
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
