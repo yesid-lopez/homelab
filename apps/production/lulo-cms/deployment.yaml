@@ -42,7 +42,7 @@ spec:
             memory: "512Mi"
             cpu: "500m"
       - name: seed
-        image: "registry.yesidlopez.de/lulo-cms:cms-v1.4.0" # {"$imagepolicy": "lulo:lulo-cms"}
+        image: "registry.yesidlopez.de/lulo-cms:cms-v1.5.0" # {"$imagepolicy": "lulo:lulo-cms"}
         command: ["./node_modules/.bin/payload"]
         args: ["run", "src/seed/index.ts"]
         env:
