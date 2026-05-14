@@ -92,15 +92,30 @@ data:
     
     kubeStateMetrics:
       enabled: true
-    
+
+    kubeApiServer:
+      serviceMonitor:
+        metricRelabelings:
+          # Drop high-cardinality histogram buckets — dominant TSDB cost, rarely queried here.
+          - sourceLabels: [__name__]
+            regex: 'apiserver_request_duration_seconds_bucket|apiserver_response_sizes_bucket|apiserver_request_body_size_bytes_bucket|apiserver_response_body_size_bytes_bucket|etcd_request_duration_seconds_bucket'
+            action: drop
+
+    # K3s embeds these in the server process and doesn't expose the scrape endpoints;
+    # leaving them on just produces failing targets with no metrics.
     kubeControllerManager:
-      enabled: true
-    
+      enabled: false
+
     kubeScheduler:
-      enabled: true
-    
+      enabled: false
+
     kubeProxy:
-      enabled: true
-    
+      enabled: false
+
     kubelet:
       enabled: true
+      serviceMonitor:
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            regex: 'rest_client_request_duration_seconds_bucket'
+            action: drop
