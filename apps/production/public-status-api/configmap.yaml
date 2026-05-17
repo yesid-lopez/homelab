@@ -1,0 +1,177 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: public-status-api-app
+  namespace: public-status-api
+data:
+  app.py: |
+    import json
+    import os
+    import ssl
+    import time
+    import urllib.error
+    import urllib.request
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    PORT = int(os.environ.get("PORT", "8080"))
+    CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "30"))
+    CORS_ALLOW_ORIGIN = os.environ.get("CORS_ALLOW_ORIGIN", "https://www.yesidlopez.de")
+    API_HOST = os.environ.get("KUBERNETES_SERVICE_HOST", "kubernetes.default.svc")
+    API_PORT = os.environ.get("KUBERNETES_SERVICE_PORT", "443")
+    API_BASE = f"https://{API_HOST}:{API_PORT}"
+    TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    CA_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+    cache = {"expires_at": 0, "payload": None}
+
+    def read_token():
+        with open(TOKEN_PATH, "r", encoding="utf-8") as token_file:
+            return token_file.read().strip()
+
+    def kube_get(path):
+        context = ssl.create_default_context(cafile=CA_PATH)
+        request = urllib.request.Request(
+            f"{API_BASE}{path}",
+            headers={"Authorization": f"Bearer {read_token()}", "Accept": "application/json"},
+        )
+        with urllib.request.urlopen(request, context=context, timeout=5) as response:
+            return json.loads(response.read().decode("utf-8"))
+
+    def condition_is_true(resource, condition_type):
+        for condition in resource.get("status", {}).get("conditions", []):
+            if condition.get("type") == condition_type:
+                return condition.get("status") == "True"
+        return False
+
+    def count_unavailable_workloads(resources, kind):
+        unavailable = 0
+        for item in resources.get("items", []):
+            status = item.get("status", {})
+            desired = status.get("replicas") or item.get("spec", {}).get("replicas") or 0
+            ready = status.get("readyReplicas") or status.get("numberReady") or 0
+            if kind == "daemonset":
+                desired = status.get("desiredNumberScheduled") or 0
+            if desired > ready:
+                unavailable += 1
+        return unavailable
+
+    def flux_ready_summary(resources):
+        total = 0
+        not_ready = 0
+        for item in resources.get("items", []):
+            total += 1
+            if not condition_is_true(item, "Ready"):
+                not_ready += 1
+        return total, not_ready
+
+    def build_payload():
+        nodes = kube_get("/api/v1/nodes")
+        pods = kube_get("/api/v1/pods")
+        deployments = kube_get("/apis/apps/v1/deployments")
+        statefulsets = kube_get("/apis/apps/v1/statefulsets")
+        daemonsets = kube_get("/apis/apps/v1/daemonsets")
+        kustomizations = kube_get("/apis/kustomize.toolkit.fluxcd.io/v1/kustomizations")
+        helmreleases = kube_get("/apis/helm.toolkit.fluxcd.io/v2/helmreleases")
+
+        node_count = len(nodes.get("items", []))
+        ready_nodes = sum(1 for node in nodes.get("items", []) if condition_is_true(node, "Ready"))
+        pod_items = pods.get("items", [])
+        running_pods = sum(1 for pod in pod_items if pod.get("status", {}).get("phase") == "Running")
+        problematic_pods = sum(
+            1
+            for pod in pod_items
+            if pod.get("status", {}).get("phase") in ["Failed", "Unknown"]
+        )
+
+        workload_total = (
+            len(deployments.get("items", []))
+            + len(statefulsets.get("items", []))
+            + len(daemonsets.get("items", []))
+        )
+        unavailable_workloads = (
+            count_unavailable_workloads(deployments, "deployment")
+            + count_unavailable_workloads(statefulsets, "statefulset")
+            + count_unavailable_workloads(daemonsets, "daemonset")
+        )
+
+        kustomization_total, kustomization_not_ready = flux_ready_summary(kustomizations)
+        helmrelease_total, helmrelease_not_ready = flux_ready_summary(helmreleases)
+        flux_not_ready = kustomization_not_ready + helmrelease_not_ready
+        alert_count = problematic_pods + unavailable_workloads + flux_not_ready + max(node_count - ready_nodes, 0)
+
+        status = "operational"
+        if ready_nodes < node_count or flux_not_ready > 0 or unavailable_workloads > 0:
+            status = "degraded"
+        if ready_nodes == 0 or problematic_pods > 0:
+            status = "incident"
+
+        return {
+            "status": status,
+            "nodes": ready_nodes,
+            "nodeCount": node_count,
+            "workloads": workload_total,
+            "runningPods": running_pods,
+            "gitops": "healthy" if flux_not_ready == 0 else "degraded",
+            "alerts": alert_count,
+            "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+
+    def get_payload():
+        now = time.time()
+        if cache["payload"] is not None and cache["expires_at"] > now:
+            return cache["payload"]
+        try:
+            payload = build_payload()
+            cache["payload"] = payload
+            cache["expires_at"] = now + CACHE_TTL_SECONDS
+            return payload
+        except Exception as error:
+            fallback = {
+                "status": "unknown",
+                "nodes": None,
+                "nodeCount": None,
+                "workloads": None,
+                "runningPods": None,
+                "gitops": "unknown",
+                "alerts": None,
+                "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "message": "Status is temporarily unavailable.",
+            }
+            if cache["payload"] is not None:
+                stale = dict(cache["payload"])
+                stale["stale"] = True
+                stale["message"] = "Serving cached status while live status is temporarily unavailable."
+                return stale
+            return fallback
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, format, *args):
+            return
+
+        def send_json(self, status_code, payload):
+            body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+            self.send_response(status_code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "public, max-age=30")
+            self.send_header("Access-Control-Allow-Origin", CORS_ALLOW_ORIGIN)
+            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_OPTIONS(self):
+            self.send_json(204, {})
+
+        def do_GET(self):
+            if self.path in ["/", "/status"]:
+                self.send_json(200, get_payload())
+                return
+            if self.path == "/healthz":
+                self.send_json(200, {"ok": True})
+                return
+            self.send_json(404, {"error": "not found"})
+
+    if __name__ == "__main__":
+        server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
+        server.serve_forever()

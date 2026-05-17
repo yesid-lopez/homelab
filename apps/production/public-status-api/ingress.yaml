@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: public-status-api
+  namespace: public-status-api
+  annotations:
+    cert-manager.io/cluster-issuer: acme-issuer
+    external-dns.alpha.kubernetes.io/hostname: status.yesidlopez.de
+    external-dns.alpha.kubernetes.io/target: homelab.yesidlopez.de
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "2"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - status.yesidlopez.de
+      secretName: public-status-api-tls
+  rules:
+    - host: status.yesidlopez.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: public-status-api
+                port:
+                  number: 80
