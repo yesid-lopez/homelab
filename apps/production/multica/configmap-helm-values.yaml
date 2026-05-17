@@ -15,6 +15,12 @@ data:
           memory: 128Mi
         limits:
           memory: 512Mi
+      # Required so the uploads PVC is chgrp'd to gid 1000 on mount —
+      # otherwise the non-root backend (runAsUser/Group 1000) gets EACCES
+      # creating subdirectories under /app/data/uploads.
+      podSecurityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
       extraEnv:
         - name: GITHUB_APP_SLUG
           value: "multica-luloai"
