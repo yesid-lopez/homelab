@@ -5,6 +5,7 @@ metadata:
   namespace: public-status-api
 data:
   app.py: |
+    import calendar
     import json
     import os
     import ssl
@@ -12,6 +13,14 @@ data:
     import urllib.error
     import urllib.request
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    # Each entry: (namespace, cronjob name, max age in seconds before "stale").
+    # Max age = schedule period * 2, so one missed run is tolerated.
+    WATCHED_BACKUPS = [
+        ("longhorn-system", "backup-daily", 48 * 3600),
+        ("longhorn-system", "snapshot-daily", 48 * 3600),
+        ("minio", "minio-mirror-backup", 12 * 3600),
+    ]
 
     PORT = int(os.environ.get("PORT", "8080"))
     CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", "30"))
@@ -64,6 +73,45 @@ data:
                 not_ready += 1
         return total, not_ready
 
+    def iso_to_epoch(value):
+        if not value:
+            return None
+        try:
+            return calendar.timegm(time.strptime(value, "%Y-%m-%dT%H:%M:%SZ"))
+        except (ValueError, TypeError):
+            return None
+
+    def backup_summary():
+        now = time.time()
+        status = "ok"
+        oldest_epoch = None
+        for namespace, name, max_age in WATCHED_BACKUPS:
+            try:
+                cronjobs = kube_get(f"/apis/batch/v1/namespaces/{namespace}/cronjobs")
+            except Exception:
+                if status == "ok":
+                    status = "unknown"
+                continue
+            match = next(
+                (cj for cj in cronjobs.get("items", []) if cj.get("metadata", {}).get("name") == name),
+                None,
+            )
+            if match is None:
+                status = "stale"
+                continue
+            last_epoch = iso_to_epoch(match.get("status", {}).get("lastSuccessfulTime"))
+            if last_epoch is None or (now - last_epoch) > max_age:
+                status = "stale"
+                continue
+            if oldest_epoch is None or last_epoch < oldest_epoch:
+                oldest_epoch = last_epoch
+        last_at = (
+            time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(oldest_epoch))
+            if oldest_epoch is not None
+            else None
+        )
+        return status, last_at
+
     def build_payload():
         nodes = kube_get("/api/v1/nodes")
         deployments = kube_get("/apis/apps/v1/deployments")
@@ -89,10 +137,23 @@ data:
         kustomization_total, kustomization_not_ready = flux_ready_summary(kustomizations)
         helmrelease_total, helmrelease_not_ready = flux_ready_summary(helmreleases)
         flux_not_ready = kustomization_not_ready + helmrelease_not_ready
-        alert_count = unavailable_workloads + flux_not_ready + max(node_count - ready_nodes, 0)
+
+        backups_status, backups_last_success = backup_summary()
+        backups_alert = 1 if backups_status == "stale" else 0
+        alert_count = (
+            unavailable_workloads
+            + flux_not_ready
+            + max(node_count - ready_nodes, 0)
+            + backups_alert
+        )
 
         status = "operational"
-        if ready_nodes < node_count or flux_not_ready > 0 or unavailable_workloads > 0:
+        if (
+            ready_nodes < node_count
+            or flux_not_ready > 0
+            or unavailable_workloads > 0
+            or backups_status == "stale"
+        ):
             status = "degraded"
         if ready_nodes == 0:
             status = "incident"
@@ -103,6 +164,10 @@ data:
             "nodeCount": node_count,
             "workloads": workload_total,
             "gitops": "healthy" if flux_not_ready == 0 else "degraded",
+            "backups": {
+                "status": backups_status,
+                "lastSuccessAt": backups_last_success,
+            },
             "alerts": alert_count,
             "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
@@ -123,6 +188,10 @@ data:
                 "nodeCount": None,
                 "workloads": None,
                 "gitops": "unknown",
+                "backups": {
+                    "status": "unknown",
+                    "lastSuccessAt": None,
+                },
                 "alerts": None,
                 "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "message": "Status is temporarily unavailable.",
