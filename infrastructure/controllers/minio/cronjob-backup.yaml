@@ -36,7 +36,7 @@ spec:
                   mc alias set local http://minio.minio.svc.cluster.local:9000 \
                     "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
                   mkdir -p /mnt/mc-mirror
-                  for bucket in payload-media postgres-backups; do
+                  for bucket in payload-media postgres-backups multica-uploads; do
                     echo "[$(date -Iseconds)] mirroring $bucket"
                     mc mirror --overwrite --remove \
                       "local/$bucket" "/mnt/mc-mirror/$bucket"
