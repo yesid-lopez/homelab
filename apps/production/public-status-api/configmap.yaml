@@ -66,7 +66,6 @@ data:
 
     def build_payload():
         nodes = kube_get("/api/v1/nodes")
-        pods = kube_get("/api/v1/pods")
         deployments = kube_get("/apis/apps/v1/deployments")
         statefulsets = kube_get("/apis/apps/v1/statefulsets")
         daemonsets = kube_get("/apis/apps/v1/daemonsets")
@@ -75,13 +74,6 @@ data:
 
         node_count = len(nodes.get("items", []))
         ready_nodes = sum(1 for node in nodes.get("items", []) if condition_is_true(node, "Ready"))
-        pod_items = pods.get("items", [])
-        running_pods = sum(1 for pod in pod_items if pod.get("status", {}).get("phase") == "Running")
-        problematic_pods = sum(
-            1
-            for pod in pod_items
-            if pod.get("status", {}).get("phase") in ["Failed", "Unknown"]
-        )
 
         workload_total = (
             len(deployments.get("items", []))
@@ -97,12 +89,12 @@ data:
         kustomization_total, kustomization_not_ready = flux_ready_summary(kustomizations)
         helmrelease_total, helmrelease_not_ready = flux_ready_summary(helmreleases)
         flux_not_ready = kustomization_not_ready + helmrelease_not_ready
-        alert_count = problematic_pods + unavailable_workloads + flux_not_ready + max(node_count - ready_nodes, 0)
+        alert_count = unavailable_workloads + flux_not_ready + max(node_count - ready_nodes, 0)
 
         status = "operational"
         if ready_nodes < node_count or flux_not_ready > 0 or unavailable_workloads > 0:
             status = "degraded"
-        if ready_nodes == 0 or problematic_pods > 0:
+        if ready_nodes == 0:
             status = "incident"
 
         return {
@@ -110,7 +102,6 @@ data:
             "nodes": ready_nodes,
             "nodeCount": node_count,
             "workloads": workload_total,
-            "runningPods": running_pods,
             "gitops": "healthy" if flux_not_ready == 0 else "degraded",
             "alerts": alert_count,
             "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -131,7 +122,6 @@ data:
                 "nodes": None,
                 "nodeCount": None,
                 "workloads": None,
-                "runningPods": None,
                 "gitops": "unknown",
                 "alerts": None,
                 "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

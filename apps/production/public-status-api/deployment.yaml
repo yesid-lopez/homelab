@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: public-status-api
-          image: python:3.12-alpine
+          image: python:3.12-alpine@sha256:236173eb74001afe2f60862de935b74fcbd00adfca247b2c27051a70a6a39a2d
           imagePullPolicy: IfNotPresent
           command: ["python", "/app/app.py"]
           ports:
