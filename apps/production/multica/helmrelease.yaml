@@ -35,23 +35,3 @@ spec:
       valuesKey: googleClientSecret
       targetPath: config.googleClientSecret
       optional: true
-  postRenderers:
-    # Opt the uploads PVC into Longhorn's `backup` RecurringJob group.
-    # Longhorn syncs recurring-job-group labels from PVC to Volume only when
-    # the PVC also carries `recurring-job.longhorn.io/source=enabled`.
-    # TODO: remove once sshine/multica-helm#2 (persistence.labels) is
-    # released and we bump the chart. Then move both labels into
-    # configmap-helm-values.yaml under persistence.labels.
-    - kustomize:
-        patches:
-          - target:
-              version: v1
-              kind: PersistentVolumeClaim
-              name: multica-uploads
-            patch: |
-              - op: add
-                path: /metadata/labels/recurring-job.longhorn.io~1source
-                value: enabled
-              - op: add
-                path: /metadata/labels/recurring-job-group.longhorn.io~1backup
-                value: enabled
