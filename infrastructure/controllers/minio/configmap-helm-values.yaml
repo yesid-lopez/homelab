@@ -35,15 +35,19 @@ data:
     buckets:
       # payload-media is fronted by the media.luloai.com ingress and serves
       # public assets (case-study mockups, etc.) directly to the landing site.
-      # Only this bucket is public — others stay private.
       - name: payload-media
         policy: download
         purge: false
+      # postgres-backups stays private — only CNPG / backup tooling reads it.
       - name: postgres-backups
         policy: none
         purge: false
+      # multica-uploads is fronted by the media.multica.yesidlopez.de ingress.
+      # Public because Multica's S3-backed storage has no presigned-URL or
+      # backend-proxy path upstream yet (multica-ai/multica#2804, PR #2740);
+      # protection relies on UUID-only keys (workspaces/<uuid>/<uuid>.png).
       - name: multica-uploads
-        policy: none
+        policy: download
         purge: false
     metrics:
       serviceMonitor:
