@@ -15,12 +15,6 @@ data:
           memory: 128Mi
         limits:
           memory: 512Mi
-      # Required so the uploads PVC is chgrp'd to gid 1000 on mount —
-      # otherwise the non-root backend (runAsUser/Group 1000) gets EACCES
-      # creating subdirectories under /app/data/uploads.
-      podSecurityContext:
-        fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
       extraEnv:
         - name: GITHUB_APP_SLUG
           value: "multica-luloai"
@@ -29,6 +23,22 @@ data:
             secretKeyRef:
               name: multica-app-secrets
               key: githubWebhookSecret
+        - name: S3_BUCKET
+          value: "multica-uploads"
+        - name: S3_REGION
+          value: "us-east-1"
+        - name: AWS_ENDPOINT_URL
+          value: "http://minio.minio.svc.cluster.local:9000"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: minio-backup-credentials
+              key: ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-backup-credentials
+              key: ACCESS_SECRET_KEY
 
     frontend:
       replicaCount: 1
@@ -54,11 +64,7 @@ data:
       create: true
 
     persistence:
-      enabled: true
-      storageClass: longhorn
-      size: 10Gi
-      accessModes:
-        - ReadWriteOnce
+      enabled: false
 
     ingress:
       enabled: true
