@@ -4,3 +4,4 @@ resources:
 - storage-classes.yaml
 - recurring-jobs.yaml
 - backup-target.yaml
+- lulo-cms-volume-snapshot-count.yaml

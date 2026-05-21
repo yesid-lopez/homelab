@@ -1,0 +1,59 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: longhorn-volume-patcher
+  namespace: longhorn-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: longhorn-volume-patcher
+  namespace: longhorn-system
+rules:
+  - apiGroups:
+      - longhorn.io
+    resources:
+      - volumes
+    resourceNames:
+      - pvc-49dff3a9-58a0-4ef3-bf2a-fc213962ce85
+    verbs:
+      - get
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: longhorn-volume-patcher
+  namespace: longhorn-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: longhorn-volume-patcher
+subjects:
+  - kind: ServiceAccount
+    name: longhorn-volume-patcher
+    namespace: longhorn-system
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: patch-lulo-cms-snapshot-count-8
+  namespace: longhorn-system
+spec:
+  template:
+    spec:
+      serviceAccountName: longhorn-volume-patcher
+      restartPolicy: OnFailure
+      containers:
+        - name: kubectl
+          image: bitnami/kubectl:1.33.1
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              kubectl -n longhorn-system patch volumes.longhorn.io pvc-49dff3a9-58a0-4ef3-bf2a-fc213962ce85 \
+                --type=merge \
+                -p '{"spec":{"snapshotMaxCount":8}}'
+              kubectl -n longhorn-system get volumes.longhorn.io pvc-49dff3a9-58a0-4ef3-bf2a-fc213962ce85 \
+                -o jsonpath='{.spec.snapshotMaxCount}{"\\n"}'
