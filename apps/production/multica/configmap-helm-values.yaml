@@ -39,6 +39,14 @@ data:
             secretKeyRef:
               name: minio-backup-credentials
               key: ACCESS_SECRET_KEY
+        # Public reader host for attachments. AWS_ENDPOINT_URL above stays
+        # in-cluster for SDK uploads; this overrides the host written into
+        # attachment URLs so browsers resolve them through the public
+        # `media.multica.yesidlopez.de` ingress. Remove once
+        # multica-ai/multica#2740 ships and the backend can proxy `/uploads/*`
+        # from S3 directly.
+        - name: CLOUDFRONT_DOMAIN
+          value: "media.multica.yesidlopez.de"
 
     frontend:
       replicaCount: 1
