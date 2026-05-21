@@ -38,7 +38,7 @@ spec:
             - name: CACHE_TTL_SECONDS
               value: "30"
             - name: CORS_ALLOW_ORIGIN
-              value: "https://www.yesidlopez.de"
+              value: "https://www.yesidlopez.de,https://lab.yesidlopez.de"
           volumeMounts:
             - name: app
               mountPath: /app
