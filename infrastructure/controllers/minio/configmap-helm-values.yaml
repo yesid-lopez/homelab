@@ -35,11 +35,14 @@ data:
     buckets:
       # payload-media is fronted by the media.luloai.com ingress and serves
       # public assets (case-study mockups, etc.) directly to the landing site.
-      # Only this bucket is public — postgres-backups stays private.
+      # Only this bucket is public — others stay private.
       - name: payload-media
         policy: download
         purge: false
       - name: postgres-backups
+        policy: none
+        purge: false
+      - name: multica-uploads
         policy: none
         purge: false
     metrics:
