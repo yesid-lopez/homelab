@@ -1,0 +1,39 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: n8n
+      version: 2.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: open-8gears
+        namespace: n8n
+      interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: n8n-helm-chart-value-overrides
+      valuesKey: values.yaml
+    - kind: Secret
+      name: n8n-postgres-app
+      valuesKey: username
+      targetPath: main.config.db.postgresdb.user
+    - kind: Secret
+      name: n8n-postgres-app
+      valuesKey: dbname
+      targetPath: main.config.db.postgresdb.database
+    - kind: Secret
+      name: n8n-postgres-app
+      valuesKey: password
+      targetPath: main.secret.db.postgresdb.password
+    # Optional until sealed-n8n-app-secrets.yaml is created from the main PC.
+    # The Secret key below becomes N8N_ENCRYPTION_KEY via the 8gears chart.
+    - kind: Secret
+      name: n8n-app-secrets
+      valuesKey: encryptionKey
+      targetPath: main.secret.n8n.encryption_key
+      optional: true
