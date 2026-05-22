@@ -13,3 +13,4 @@ resources:
 - ebay-kleinanzeigen-api
 - multica
 - public-status-api
+- n8n

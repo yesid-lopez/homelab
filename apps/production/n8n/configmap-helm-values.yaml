@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: n8n-helm-chart-value-overrides
+  namespace: n8n
+data:
+  values.yaml: |-
+    image:
+      repository: n8nio/n8n
+      pullPolicy: IfNotPresent
+
+    ingress:
+      enabled: true
+      className: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: acme-issuer
+        external-dns.alpha.kubernetes.io/hostname: "n8n.yesidlopez.de"
+        external-dns.alpha.kubernetes.io/target: "homelab.yesidlopez.de"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+        nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      hosts:
+        - host: n8n.yesidlopez.de
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - hosts:
+            - n8n.yesidlopez.de
+          secretName: n8n-tls
+
+    main:
+      replicaCount: 1
+      config:
+        db:
+          type: postgresdb
+          postgresdb:
+            host: n8n-postgres-rw.n8n.svc.cluster.local
+            port: 5432
+        n8n:
+          host: n8n.yesidlopez.de
+          port: 5678
+          protocol: https
+          editor_base_url: https://n8n.yesidlopez.de
+          # Placeholder only: create sealed-n8n-app-secrets.yaml with
+          # key `encryptionKey` to set N8N_ENCRYPTION_KEY before production use.
+        webhook:
+          url: https://n8n.yesidlopez.de
+        generic:
+          timezone: Europe/Berlin
+
+      persistence:
+        enabled: true
+        type: dynamic
+        storageClass: longhorn
+        accessModes:
+          - ReadWriteOnce
+        size: 10Gi
+
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          memory: 2Gi
+
+      service:
+        enabled: true
+        type: ClusterIP
+        port: 80
+
+    worker:
+      enabled: false
+
+    webhook:
+      enabled: false
+
+    valkey:
+      enabled: false
