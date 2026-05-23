@@ -6,3 +6,5 @@ resources:
   - helmrelease.yaml
   - configmap-helm-values.yaml
   - postgres-cluster.yaml
+  - sealed-n8n-app-secrets.yaml
+  - sealed-minio-backup-credentials.yaml
