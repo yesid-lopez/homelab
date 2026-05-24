@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: jenny-psiquiatra
-        image: "registry.yesidlopez.de/jenny-psiquiatra:v1.0.2" # {"$imagepolicy": "lulo-demo-landings:jenny-psiquiatra"}
+        image: "registry.yesidlopez.de/jenny-psiquiatra:v1.0.3" # {"$imagepolicy": "lulo-demo-landings:jenny-psiquiatra"}
         ports:
         - containerPort: 3000
         env:
