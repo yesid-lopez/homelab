@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: gotenberg-helm-chart-value-overrides
   namespace: resumelo
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |-
     securityContext:

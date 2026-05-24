@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: umami-helm-chart-value-overrides
   namespace: umami
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |-
     replicaCount: 1

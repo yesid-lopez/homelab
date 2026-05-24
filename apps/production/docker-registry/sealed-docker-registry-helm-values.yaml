@@ -11,4 +11,6 @@ spec:
     metadata:
       name: docker-registry-helm-values
       namespace: registry
+      labels:
+        reconcile.fluxcd.io/watch: "Enabled"
     type: Opaque

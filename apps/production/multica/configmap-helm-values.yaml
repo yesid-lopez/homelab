@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: multica-helm-chart-value-overrides
   namespace: multica
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |
     backend:

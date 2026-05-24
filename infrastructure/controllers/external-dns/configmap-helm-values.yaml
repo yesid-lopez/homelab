@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: external-dns-helm-chart-value-overrides
   namespace: external-dns
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |-
     # Use upstream image — Bitnami removed images from docker.io

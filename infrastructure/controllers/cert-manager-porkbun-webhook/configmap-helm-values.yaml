@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: porkbun-webhook-helm-chart-value-overrides
   namespace: cert-manager
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |-
     # Resource limits and requests

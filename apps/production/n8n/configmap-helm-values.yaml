@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: n8n-helm-chart-value-overrides
   namespace: n8n
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |-
     image:

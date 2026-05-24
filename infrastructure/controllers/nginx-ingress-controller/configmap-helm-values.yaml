@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: nginx-ingress-controller-helm-chart-value-overrides
   namespace: nginx-ingress-controller
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |-
     controller:

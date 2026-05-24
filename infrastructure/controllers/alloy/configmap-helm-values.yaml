@@ -4,6 +4,8 @@ kind: ConfigMap
 metadata:
   name: alloy-helm-chart-value-overrides
   namespace: alloy
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |
     alloy:
