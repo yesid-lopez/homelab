@@ -50,8 +50,8 @@ data:
     # Sidecar container for Porkbun webhook provider
     sidecars:
       - name: external-dns-webhook-provider
-        image: ghcr.io/konnektr-io/external-dns-porkbun-webhook:main
-        imagePullPolicy: Always
+        image: ghcr.io/konnektr-io/external-dns-porkbun-webhook:v0.2.19
+        imagePullPolicy: IfNotPresent
         args:
         - --domain-filter=yesidlopez.de
         - --domain-filter=resumelo.me

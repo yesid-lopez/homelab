@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: ddns
-          image: qmcgaw/ddns-updater:latest
+          image: qmcgaw/ddns-updater:v2.10.0
           envFrom:
             - secretRef:
                 name: ddns-updater-config
