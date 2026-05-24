@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: minio-helm-chart-value-overrides
   namespace: minio
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |
     mode: standalone
