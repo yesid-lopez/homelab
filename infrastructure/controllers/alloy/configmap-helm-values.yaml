@@ -27,10 +27,10 @@ data:
           discovery.kubernetes "pods" {
             role = "pod"
             namespaces {
-              names = ["resumelo", "resumelo-dev", "langfuse", "umami", "macondo"]
+              names = ["resumelo", "resumelo-dev", "umami", "macondo"]
             }
           }
-          
+
           // Relabel to use pod name as service
           discovery.relabel "kubernetes_pods" {
             targets = discovery.kubernetes.pods.targets
@@ -73,10 +73,10 @@ data:
           discovery.kubernetes "services" {
             role = "service"
             namespaces {
-              names = ["resumelo", "resumelo-dev", "langfuse", "umami", "macondo"]
+              names = ["resumelo", "resumelo-dev", "umami", "macondo"]
             }
           }
-          
+
           // Scrape metrics from services with prometheus.io annotations
           discovery.relabel "prometheus_services" {
             targets = discovery.kubernetes.services.targets
