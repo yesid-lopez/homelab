@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: maria-fernanda-espana
+  namespace: lulo-demo-landings
+spec:
+  image: registry.yesidlopez.de/maria-fernanda-espana
+  interval: 1m
+  secretRef:
+    name: registry-secret
