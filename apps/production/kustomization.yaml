@@ -14,3 +14,4 @@ resources:
 - multica
 - public-status-api
 - n8n
+- client-sites

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: __CLIENT__
+  name: __CLIENT__
+  namespace: lulo-demo-landings
+spec:
+  selector:
+    app: __CLIENT__
+  type: ClusterIP
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000

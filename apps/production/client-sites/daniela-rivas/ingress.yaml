@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: daniela-rivas
+  namespace: lulo-demo-landings
+  annotations:
+    cert-manager.io/cluster-issuer: luloai-issuer
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    external-dns.alpha.kubernetes.io/target: homelab.luloai.com
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: daniela-rivas-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Demo Lulo AI"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - daniela-rivas.demo.luloai.com
+      secretName: daniela-rivas-tls
+  rules:
+    - host: daniela-rivas.demo.luloai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: daniela-rivas
+                port:
+                  number: 3000

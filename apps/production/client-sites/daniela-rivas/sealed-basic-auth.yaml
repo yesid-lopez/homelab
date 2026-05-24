@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: daniela-rivas-basic-auth
+  namespace: lulo-demo-landings
+spec:
+  encryptedData:
+    auth: AgC2WqbsthpjcqsD4EjtDIIrqp6XsavGiu7f1dqbzQIRsUS/m689z1j+27QHZeved6LELDV+RZ5dt0gPL9sTeXIDmkiNZFm/xkr/KgDnQKVFgN8osHJJrpv6FhKBFj1mxpslIHkZVrj4ECv3u/5QALJqANGynI5EW7CrmItDmKg4XLjHPFAYH2t4/P+TY5UZrw9t+DcSxPCkR0l9yOTtGTmK50RmfmyxTBN7s+QPjes3q4xIQsqcPNQIvC0BhjPTk2ySMHoYOr0g3FCo7ONrKI50a0qC9LY9b0NucU3/TYqA1NudM+Zx8G/SB3DGwVSWdE4QimcKuFLLdAgb/CZAWlZ21sn3BkX4T63O1GKRbFM+xhEABykjJOYLoS1DpZ5hzhD8vDNHHyL/HNW9YWKMcEDBG9vOr39NW886NrXnz26464GjxVcErwTBbtcNiAoag5+GjDTob8w0SO9hWY5WVhefilsXEjs0PFapAFg0OzOrXHQySUboSkln1qDKsM92b/lZEZY3HmtU4/K3GmPyq7B4mEOUk7z+FBtXWjXJcjI77Z1Lw2Wn2kf9dOM7u6YMatZktzwEvCCp8srVja3qnR0MaCDN/iv86gNIl9gFq+sKck5RDUJRpE1V+kH1esT31/AQEPxpYYLNa9ArhpqVfFY6EfWJO2fBR4rJh7LnRpR1fR0pFfipiw3d+9+c6eo7WDefS1au6JIbgjtO9u6gQO8tyRZnG1Firho3d4FRSMFp/+Id8eMOvc4R6fPhDOyqKm2orljoHWD3KAwF3k4G51n2GLAgZK8=
+  template:
+    metadata:
+      name: daniela-rivas-basic-auth
+      namespace: lulo-demo-landings
+    type: Opaque

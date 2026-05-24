@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: daniela-rivas
+  namespace: lulo-demo-landings
+spec:
+  image: registry.yesidlopez.de/daniela-rivas
+  interval: 1m
+  secretRef:
+    name: registry-secret

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: daniela-rivas
+  name: daniela-rivas
+  namespace: lulo-demo-landings
+spec:
+  selector:
+    app: daniela-rivas
+  type: ClusterIP
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
