@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: mariana-toro-basic-auth
+  namespace: lulo-demo-landings
+spec:
+  encryptedData:
+    auth: AgBCBjGu0nrK1DtpIvM7VFzTByQmNxz2rPJZoukPZCE8/ZoEF08iZQR/rzTTaCFocGG4AUUjtch8wGXzad1ddrvPfL0CktpmWRkcdVERNob+Nbw6Z2GBgvO/PwhUcM9/fTFIWXZrjofA1ZpDF5mMk0l972RjZr8v14tos0562WeJlgbItl8eIw0fr9G7v9qs0d9hOe6RJxsSsR47NUnvl5tpk2bT00RxV5QQk/I6TRu1HLBTNUBOOdpGaERP3GMTeWTqcrmP9ZT/8iKbCAspkKiBCRBToSKrhePk0zYze6G2LHpYPjkt/AY6cQ0tVr0C6J9KGZTrRDHCOWJ8b7LpojHarTygPtzx5OLm8SXPsadWbDB+T4nIId9P0K5EEKa52e2iTOC2FG2Cp9M3hNZQCzkT8F1vq9CPfY/Jl+X2F0SUMh5qw8G1v7nGCJzWQ98t3UtpHma+DWeFgTokfCLMXQ3YvW/WEV79vPDyzSF2jFjT/2+vRRJKvR4IRd44Q8lPtz8tWex9FkOuRK0q9GqKvEQ/fdI+2+l90nuXcq7hxRNNRnTp2ID4CwSB3GtcSRXNTGs600fws8CEdcij5oVDNSpeQt6VZmx2B8nHwM6/6oF2o9QykcuF/IftQNW4crI906Em8+ZE+8cL/aTqZy3VKUsJTOMScRAH0Fj4PdJJdf6c+Z3ntzlWMebCGF9qd9F5uQSe1kISuxwVemJVfhmXcQ18bIWNtGCPWMfdKWRB8+MYPbmIFiTA85G2kEkA0j3MPoyP6SgSTIOB6U7yhBlkwS/CT9zseEQ=
+  template:
+    metadata:
+      name: mariana-toro-basic-auth
+      namespace: lulo-demo-landings
+    type: Opaque
