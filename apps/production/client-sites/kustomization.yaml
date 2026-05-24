@@ -8,3 +8,4 @@ resources:
   - namespace.yaml
   - sealed-registry-secret.yaml
   - daniela-rivas
+  - jenny-psiquiatra

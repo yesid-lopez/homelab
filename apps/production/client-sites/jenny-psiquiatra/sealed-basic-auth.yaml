@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: jenny-psiquiatra-basic-auth
+  namespace: lulo-demo-landings
+spec:
+  encryptedData:
+    auth: AgBlfF6LqrVUXF4l7Wfrsxt6fU/QzIQZFAcLR38XsJSlOnVOXN7VJCgRVfIvC95bSMD0fvFoBAI4ieP2b2yCgGqK23o4yMLtwotKmdLmA0ikIio3QLfKNaitQrbzYlPfv9y8S90rXfTIaj3x8LVgiq/jsrsDhv5/vfHOr33EHFAEKsQBggUjqSikcGyf74jFUGSh3iFVb3aet8RNY5bbMHNIp8D60j+NtKr2qvD3uZfXJJsQv4m4Tk8fymUbz1/qhgjbieneQ+Kx4borKeoq5QSca3+b3iQjHY/7t4qT5hJVWkHoYvucF/q6KRQJ7wbhRIcz1IQXalxdlarESYm3hYaIDclZBU9CIPT6sjv/MmrwKgdob4rag1ToaziPtf0MLsbf4q/yhAwDM+Mpaq9ifoHmTnUL5rZc9QKA8wrW4S+ibKqhFyHrMtmTCyKobthWLztP3PusXOWc7waoBbAXkNcVj+0rxQacOy5SmIjjzJWUgBu8ahzQUtyeIjKf6Bn+zxJ1WGbJQjHoJL7CXoQ8nAJgyaLfx9FhE1Os90okxD2PLizUV2kxON/brhwIXAzKzBEpCAbDjRUhhFL81PjUE6QgL7kwAEB5EG1Ysucu5vbup6Mp9X4V8H7LKzraqA5qYrwL7TPo9PsufPmqFF13IQ8rEMo2TKYsDl3Lk8JGFLyCIuB3PbyOkNbDPq2bArQkdLt0QyG51KkU2+IblHgtRVcs6uy8jBwYlzMmz3ZLHdNON5drWpPhkS6ulxPotTTDa54DbtnHR9B4TNrs4/gmaVkdvnK1dtw=
+  template:
+    metadata:
+      name: jenny-psiquiatra-basic-auth
+      namespace: lulo-demo-landings
+    type: Opaque
