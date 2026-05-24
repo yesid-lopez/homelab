@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: jenny-florez
+  namespace: lulo-demo-landings
+spec:
+  image: registry.yesidlopez.de/jenny-florez
+  interval: 1m
+  secretRef:
+    name: registry-secret

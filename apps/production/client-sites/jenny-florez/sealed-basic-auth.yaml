@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: jenny-florez-basic-auth
+  namespace: lulo-demo-landings
+spec:
+  encryptedData:
+    auth: AgB/mQ9snsSt4lKtHpirBb4CJvoQKyZxBWFLFgHqyWiMPzAAnEuMJxlqFMTCogW589fD8Q/wYAKJ0FyWcFDb0gZckGjH7r2fsq9OowsG92IhsMvshZ0cFoF6PbJNibuPofwpnpEYEBHlXQzR/JtwpmaNYAbweR+jrGQ4vXvj/XSqllwzzjVzWiIK/mLyAsbVe3j2rimUvaIC6u4bO17B8zsf+ovvLMb8XVZ0crowzwUVNfK+VOlFngdR89du2EuvIRBviaUSqWi6bvrk4UJNnCzmQTUqOF3A9rUK330eZSqnFJX+g5EKfymwztq0p3gNS7ozWeFvjYgx1nJS/kkircor523SJ9RO5zJhLZ1ho7XzNxUzcL0RiGgpoWJdcaXJfJ42IO98X3sF/BHMQIv2bpyvsW5+YKL2swEwPHtfc1Htli5zIg8aYyLFvkW0ScwSiDztvr+EYo0+N90L7lf/+1n7iFG2p1ljBXX0CluzhVu/BP4+UbOQ36cPHMK63lbI3iMNRyXyaVrc0On9JXKF26sgyVBHyzcR7meK9989/R+9k9FjV+xnvokVNvSYYMXpfMBIyzBnIcuARz9ykODspJfnER5aj4QouHdIbHNDNIHj07CIqHwGggLOCFF1TATDHmWbzJ7DdQVF/vRqyBVSpoQXhG7xBMMU5xL4f16N7IzWrQpm6Y8zeXxglLCePNLL/4NEyCfBEx5M1YaRg0ns83JQM/ytIxVIMFbRuISA391Mz2E4BepeCp7vEqoPAytUHv+FLX4ysPR9Bze6h/j/p5AVJ0ZbCuc=
+  template:
+    metadata:
+      name: jenny-florez-basic-auth
+      namespace: lulo-demo-landings
+    type: Opaque
