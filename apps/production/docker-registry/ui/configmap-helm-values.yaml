@@ -12,7 +12,7 @@ data:
       deleteImages: true
       registrySecured: true
       singleRegistry: true
-      image: "joxit/docker-registry-ui:latest"
+      image: "joxit/docker-registry-ui:2.6.0"
       resources:
         requests:
           memory: "64Mi"
