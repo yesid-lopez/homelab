@@ -36,3 +36,24 @@ spec:
           annotations:
             summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} sobre 90%"
             description: "El PVC {{ $labels.persistentvolumeclaim }} en el namespace {{ $labels.namespace }} está al {{ $value | printf \"%.1f\" }}% de uso. Riesgo inminente de llenarse."
+
+    - name: longhorn.usage
+      rules:
+        # Detects when Longhorn's block-level accounting (actualSize) exceeds
+        # the declared volume capacity. This is a leading indicator of
+        # orphan snapshots, missed TRIM commands, or thin-provisioning
+        # accumulation — none of which show up in the filesystem-level
+        # alerts above (kubelet_volume_stats_*).
+        - alert: LonghornVolumeBlockOverhead
+          expr: |
+            (
+              longhorn_volume_actual_size_bytes
+              / on(volume) group_left() longhorn_volume_capacity_bytes
+            ) > 1.1
+          for: 30m
+          labels:
+            severity: warning
+            scope: storage
+          annotations:
+            summary: "Volumen Longhorn {{ $labels.volume }} con bloques sobre el 110% del declarado"
+            description: "El volumen {{ $labels.volume }} reporta actualSize al {{ $value | printf \"%.0f\" }}x del capacity declarado. Suele indicar snapshots huérfanos o falta de TRIM. Revisar con kubectl get snapshots.longhorn.io."

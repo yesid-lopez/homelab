@@ -1,0 +1,24 @@
+---
+# The ServiceMonitor shipped by the Longhorn chart does not carry the
+# `release: kube-prometheus-stack` label that kube-prometheus-stack's
+# Prometheus uses to select scrape targets, so its metrics were never
+# being collected. This ServiceMonitor mirrors the upstream config but
+# adds the required label so Prometheus picks it up.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - longhorn-system
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  endpoints:
+    - port: manager
+      interval: 30s
+      scrapeTimeout: 10s
