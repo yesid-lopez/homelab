@@ -71,7 +71,12 @@ jobs:
 
       - name: Build all Kustomize overlays
         run: |
+          # Skip `_templates/` directories — they hold per-client scaffolding
+          # (e.g. apps/production/client-sites/_templates) that references
+          # files generated at provisioning time (sealed-basic-auth.yaml),
+          # so building them directly fails.
           find infrastructure apps clusters \
+            -type d -name _templates -prune -o \
             \( -name kustomization.yaml -o -name kustomization.yml -o -name Kustomization \) \
             -print0 |
           xargs -0 -n1 dirname |
