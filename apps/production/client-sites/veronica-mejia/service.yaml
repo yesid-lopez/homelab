@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: veronica-mejia
+  name: veronica-mejia
+  namespace: lulo-demo-landings
+spec:
+  selector:
+    app: veronica-mejia
+  type: ClusterIP
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000

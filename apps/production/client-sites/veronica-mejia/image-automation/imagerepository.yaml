@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: veronica-mejia
+  namespace: lulo-demo-landings
+spec:
+  image: registry.yesidlopez.de/veronica-mejia
+  interval: 1m
+  secretRef:
+    name: registry-secret
