@@ -5,4 +5,5 @@ resources:
   - helmrepository.yaml
   - helmrelease.yaml
   - configmap-helm-values.yaml
+  - prometheus-pvc-resize.yaml
   - alerts/

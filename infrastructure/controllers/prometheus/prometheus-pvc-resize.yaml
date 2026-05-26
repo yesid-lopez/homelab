@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-kube-prometheus-stack-prometheus-db-prometheus-kube-prometheus-stack-prometheus-0
+  namespace: prometheus
+  annotations:
+    # This manifest exists only to resize the already-created PVC from 30Gi to 50Gi.
+    # The PVC is created by the Prometheus StatefulSet volumeClaimTemplate, but
+    # changes to that template do not resize existing claims automatically.
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
