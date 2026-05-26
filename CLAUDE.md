@@ -174,7 +174,7 @@ apps/production/client-sites/
 
 ```bash
 scripts/new-client-site.sh <client>           # scaffolds the overlay from _templates
-scripts/seal-client-basic-auth.sh <client>    # generates + seals basic-auth, prints credentials once
+scripts/set-client-basic-auth.sh <client> <firstname> <lastname>  # writes plain basic-auth Secret, prints credentials
 # (push Docker image to registry.yesidlopez.de/<client>:v0.0.1 — MUST be multi-arch)
 # Add `- <client>` to apps/production/client-sites/kustomization.yaml
 git commit && git push                        # Flux applies in ~1 min

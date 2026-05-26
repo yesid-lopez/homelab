@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-# Generate a random basic-auth credential for a client and seal it for the
-# lulo-demo-landings namespace.
+# Write a PLAIN Secret with basic-auth credentials for a client.
+#
+# Stored as cleartext in git (the homelab repo is private and the demo sites
+# are low-stakes — credentials are name/surname-style and rotation is cheap).
+# The bcrypt hash inside the htpasswd line still hides the password from
+# anyone who reads the Secret in the cluster but lacks git access; that is
+# good enough for these demos.
 #
 # Usage:
-#   scripts/seal-client-basic-auth.sh <client> [user] [password]
+#   scripts/set-client-basic-auth.sh <client> [user] [password]
 #
-# Writes apps/production/client-sites/<client>/sealed-basic-auth.yaml
-# and prints the cleartext credentials once (save them).
+# Writes apps/production/client-sites/<client>/basic-auth.yaml and prints
+# the cleartext credentials.
 
 set -euo pipefail
 
@@ -27,18 +32,12 @@ if [[ ! -d "$DST" ]]; then
   exit 1
 fi
 
-for tool in kubeseal htpasswd; do
-  command -v "$tool" >/dev/null 2>&1 || { echo "Missing tool: $tool" >&2; exit 1; }
-done
+command -v htpasswd >/dev/null 2>&1 || { echo "Missing htpasswd" >&2; exit 1; }
 
 HTPASSWD=$(htpasswd -nbB "$USERNAME" "$PASSWORD")
 AUTH_B64=$(printf '%s\n' "$HTPASSWD" | base64)
 
-cat <<EOF | kubeseal \
-  --format yaml \
-  --controller-namespace flux-system \
-  --controller-name sealed-secrets-controller \
-  > "$DST/sealed-basic-auth.yaml"
+cat > "$DST/basic-auth.yaml" <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
@@ -49,10 +48,8 @@ data:
   auth: $AUTH_B64
 EOF
 
-echo "Sealed basic-auth written to $DST/sealed-basic-auth.yaml"
+echo "Wrote $DST/basic-auth.yaml"
 echo
 echo "Credentials for $CLIENT.demo.luloai.com:"
 echo "  user: $USERNAME"
 echo "  pass: $PASSWORD"
-echo
-echo "Save these — sealed secrets cannot be recovered from git."

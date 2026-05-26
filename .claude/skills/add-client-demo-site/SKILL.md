@@ -38,22 +38,28 @@ scripts/new-client-site.sh <client>
 
 This copies `apps/production/client-sites/_templates/` into `apps/production/client-sites/<client>/` and replaces every `__CLIENT__` placeholder. The resulting overlay includes deployment, service, ingress (with basic-auth annotations), and the per-client image-automation policy.
 
-### 3. Generate and seal the basic-auth credential
+### 3. Generate the basic-auth credential
 
 ```bash
-scripts/seal-client-basic-auth.sh <client>
+scripts/set-client-basic-auth.sh <client> <firstname> <lastname>
+# Convention: user = client's first name, pass = client's last name.
+# Example: scripts/set-client-basic-auth.sh maria-fernanda-espana maria-fernanda espana
+# If you omit the user/pass args, defaults are: user="cliente", pass=random 16 chars.
 ```
 
 Output:
 ```
-Sealed basic-auth written to apps/production/client-sites/<client>/sealed-basic-auth.yaml
+Wrote apps/production/client-sites/<client>/basic-auth.yaml
 
 Credentials for <client>.demo.luloai.com:
-  user: cliente
-  pass: <RANDOM-16-CHARS>
+  user: <firstname>
+  pass: <lastname>
 ```
 
-**CAPTURE THE PASSWORD FROM STDOUT.** It is printed once and not recoverable from git (the sealed file contains a bcrypt hash, then encrypted). If you lose it, re-run the script to rotate.
+The credential is written as a **plain Kubernetes Secret in git** (the
+password is bcrypt-hashed in the file, but the cleartext is the firstname /
+lastname per convention — see `apps/production/client-sites/README.md`).
+Rotation is just re-running the script and committing.
 
 ### 4. Register the client in the parent kustomization
 
@@ -110,7 +116,7 @@ pass: <captured pass>
 
 1. **Always use the scripts.** Do NOT hand-write manifests. The templates in `apps/production/client-sites/_templates/` are the source of truth and the scripts apply consistent substitutions.
 2. **Shared namespace `lulo-demo-landings`.** Never create a per-client namespace. All clients live in this one namespace; per-client uniqueness comes from resource names (`<client>`) and the basic-auth secret name (`<client>-basic-auth`).
-3. **Capture the cleartext pass on first run.** It is never written to disk in cleartext. Re-running the script rotates the credential (any client using the old pass will get 401).
+3. **Use the firstname/lastname convention for credentials.** `user=<firstname>`, `pass=<lastname>` (both lowercase, matching the slug). For compound first names, hyphenate (e.g. `maria-fernanda`). Plain-text Secret in git is intentional — these are low-stakes demos in a private repo.
 4. **`nginx.ingress.kubernetes.io/auth-realm` must be ASCII only.** The templates already comply ("Demo Lulo AI"). If you customize, no accents, no `·`, no `ñ`.
 5. **Image MUST be multi-arch** (linux/amd64 + linux/arm64). The GH Action in the sister repo handles this. Single-arch images cause `exec format error` on this cluster.
 6. **Do NOT push manually built images.** The CI pipeline in `luloai-client-sites` is the only source of images for client sites. Manual pushes break the semver counter.

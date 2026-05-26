@@ -9,7 +9,7 @@ auth (one credential per client).
 ```
 client-sites/
   namespace.yaml              # shared namespace: lulo-demo-landings
-  sealed-registry-secret.yaml # shared registry pull secret
+  sealed-registry-secret.yaml # shared registry pull secret (sealed)
   kustomization.yaml          # lists shared resources + active clients
   _templates/                 # placeholder manifests for new clients
   <client>/                   # one folder per client (deploy + svc + ing + basic-auth)
@@ -26,7 +26,7 @@ scripts/seal-shared-registry.sh
 
 ```bash
 scripts/new-client-site.sh <client>
-scripts/seal-client-basic-auth.sh <client>
+scripts/set-client-basic-auth.sh <client> <firstname> <lastname>
 # (push image to registry.yesidlopez.de/<client>:v0.0.1)
 # add `- <client>` to ./kustomization.yaml
 git add . && git commit -m "feat: add <client> demo site"
@@ -40,7 +40,12 @@ automatically and rewrites the deployment to redeploy.
 
 - Image: `registry.yesidlopez.de/<client>` with semver tags (`v0.0.1`, …).
 - All resources live in `lulo-demo-landings` namespace, named after the client.
-- Basic-auth secret per client: `<client>-basic-auth` (referenced by the ingress).
+- Basic-auth secret per client: `<client>-basic-auth`, stored in
+  `basic-auth.yaml` as a **plain Secret** (cleartext in git — the repo is
+  private and these are low-stakes demo credentials). Default convention is
+  `user = firstname`, `pass = lastname` of the client.
+- Registry pull secret is the only sealed secret here, because it shares
+  credentials with other apps.
 - Port: 3000 (Next.js standalone default).
 - TLS via `luloai-issuer` (cert-manager). DNS via external-dns to
   `homelab.luloai.com`.

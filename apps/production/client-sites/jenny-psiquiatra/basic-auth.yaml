@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jenny-psiquiatra-basic-auth
+  namespace: lulo-demo-landings
+type: Opaque
+data:
+  auth: amVubnk6JDJ5JDA1JGFPSG9Ya1JRWW9VOVN0b1lSdURsZ2VVZlJlS3pkSUhucy5yZngyQURsMlRBMVZ6Y082NVZhCg==
