@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: veronica-mejia
-        image: "registry.yesidlopez.de/veronica-mejia:v1.0.15" # {"$imagepolicy": "lulo-demo-landings:veronica-mejia"}
+        image: "registry.yesidlopez.de/veronica-mejia:v1.0.16" # {"$imagepolicy": "lulo-demo-landings:veronica-mejia"}
         ports:
         - containerPort: 3000
         env:
