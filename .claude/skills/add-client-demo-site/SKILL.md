@@ -36,7 +36,7 @@ git checkout main && git pull --ff-only
 scripts/new-client-site.sh <client>
 ```
 
-This copies `apps/production/client-sites/_templates/` into `apps/production/client-sites/<client>/` and replaces every `__CLIENT__` placeholder. The resulting overlay includes deployment, service, ingress (with basic-auth annotations), and the per-client image-automation policy.
+This copies `apps/production/client-sites/_templates/` into `apps/production/client-sites/<client>/` and replaces every `__CLIENT__` placeholder. The resulting overlay includes deployment, service, ingress (with basic-auth annotations), per-client image-automation policy, and a **placeholder `basic-auth.yaml` with `auth: ""`** so the site stays locked until step 3 runs.
 
 ### 3. Generate the basic-auth credential
 

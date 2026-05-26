@@ -1,0 +1,14 @@
+# PLACEHOLDER — overwrite this file by running:
+#   scripts/set-client-basic-auth.sh <client> <firstname> <lastname>
+#
+# With `auth: ""` nginx ingress rejects every request, so the site stays
+# locked until real credentials are generated. This is intentional —
+# better than shipping a known default password.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: __CLIENT__-basic-auth
+  namespace: lulo-demo-landings
+type: Opaque
+data:
+  auth: ""
