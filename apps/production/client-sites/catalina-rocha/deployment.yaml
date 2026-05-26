@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: catalina-rocha
-        image: "registry.yesidlopez.de/catalina-rocha:v0.0.1" # {"$imagepolicy": "lulo-demo-landings:catalina-rocha"}
+        image: "registry.yesidlopez.de/catalina-rocha:v1.0.17" # {"$imagepolicy": "lulo-demo-landings:catalina-rocha"}
         ports:
         - containerPort: 3000
         env:
@@ -48,4 +48,4 @@ spec:
             memory: "256Mi"
             cpu: "300m"
       imagePullSecrets:
-        - name: registry-secret
+      - name: registry-secret
