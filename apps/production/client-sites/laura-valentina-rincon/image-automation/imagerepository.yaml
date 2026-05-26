@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: laura-valentina-rincon
+  namespace: lulo-demo-landings
+spec:
+  image: registry.yesidlopez.de/laura-valentina-rincon
+  interval: 1m
+  secretRef:
+    name: registry-secret

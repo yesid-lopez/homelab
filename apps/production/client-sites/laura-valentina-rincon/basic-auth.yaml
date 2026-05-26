@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: laura-valentina-rincon-basic-auth
+  namespace: lulo-demo-landings
+type: Opaque
+data:
+  auth: bGF1cmEtdmFsZW50aW5hOiQyeSQwNSRNNlVzLy5YSkNJa2k2UFBQZktMNGhlZ1hkMk9xOWhPSk1Ka2lJY1I1SzJ6c0dJang1WTgudQo=
