@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: katerin-osorio
-        image: "registry.yesidlopez.de/katerin-osorio:v1.0.14" # {"$imagepolicy": "lulo-demo-landings:katerin-osorio"}
+        image: "registry.yesidlopez.de/katerin-osorio:v1.0.0" # {"$imagepolicy": "lulo-demo-landings:katerin-osorio"}
         ports:
         - containerPort: 3000
         env:
@@ -48,4 +48,4 @@ spec:
             memory: "256Mi"
             cpu: "300m"
       imagePullSecrets:
-        - name: registry-secret
+      - name: registry-secret
