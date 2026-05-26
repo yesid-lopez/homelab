@@ -17,7 +17,7 @@ data:
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
-                  storage: 30Gi
+                  storage: 50Gi
         retention: 14d
         retentionSize: 24GB
         replicas: 1
