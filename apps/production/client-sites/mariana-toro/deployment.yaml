@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: mariana-toro
-        image: "registry.yesidlopez.de/mariana-toro:v1.0.4" # {"$imagepolicy": "lulo-demo-landings:mariana-toro"}
+        image: "registry.yesidlopez.de/mariana-toro:v1.0.19" # {"$imagepolicy": "lulo-demo-landings:mariana-toro"}
         ports:
         - containerPort: 3000
         env:
