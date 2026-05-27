@@ -3,7 +3,6 @@ kind: Kustomization
 # Shared namespace + registry pull secret for all demo landings.
 # Add new clients below after running:
 #   scripts/new-client-site.sh <client>
-#   scripts/set-client-basic-auth.sh <client> <firstname> <lastname>
 resources:
   - namespace.yaml
   - sealed-registry-secret.yaml

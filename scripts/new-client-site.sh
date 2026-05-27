@@ -6,9 +6,6 @@
 #
 # Creates apps/production/client-sites/<client-name>/ with all manifests
 # pre-filled (deployment, service, ingress, image-automation, kustomization).
-# Then run:
-#   scripts/seal-client-basic-auth.sh <client-name>
-# to generate the per-client sealed basic-auth secret.
 
 set -euo pipefail
 
@@ -47,7 +44,7 @@ done
 echo "Created overlay at $DST"
 echo
 echo "Next steps:"
-echo "  1. scripts/seal-client-basic-auth.sh $CLIENT"
-echo "  2. Push image to registry.yesidlopez.de/$CLIENT:v0.0.1"
-echo "  3. Add '- $CLIENT' to apps/production/client-sites/kustomization.yaml"
+echo "  1. Push image to registry.yesidlopez.de/$CLIENT:v0.0.1"
+echo "  2. Add '- $CLIENT' to apps/production/client-sites/kustomization.yaml"
+echo "  3. Ensure lulo-demo-preview-config and lulo-demo-preview-webhook exist if tracking/Discord are needed"
 echo "  4. Commit & push (Flux applies in ~1 min) or kubectl apply -k apps/production/client-sites"

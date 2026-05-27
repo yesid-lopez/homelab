@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: daniela-rivas-basic-auth
-  namespace: lulo-demo-landings
-type: Opaque
-data:
-  auth: ZGFuaWVsYTokMnkkMDUkcXdWR3VuSkFqRlQ0VzU0M1Zmd2JwLk9zNXQ1eVJLOEJXSkxuMXFjOS9KZUpYRTBSaXBzbVMK
