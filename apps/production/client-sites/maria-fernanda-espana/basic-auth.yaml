@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: maria-fernanda-espana-basic-auth
-  namespace: lulo-demo-landings
-type: Opaque
-data:
-  auth: bWFyaWEtZmVybmFuZGE6JDJ5JDA1JHNqbVhXSFRoNFNtc2hIMVlyMUxCU2VpTldZQjVHNi9mNC4uZm5CekNVekNFVVU0SnpMbUtPCg==

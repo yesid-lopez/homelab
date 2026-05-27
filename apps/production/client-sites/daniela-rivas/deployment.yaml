@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: daniela-rivas
-        image: "registry.yesidlopez.de/daniela-rivas:v1.0.13" # {"$imagepolicy": "lulo-demo-landings:daniela-rivas"}
+        image: "registry.yesidlopez.de/daniela-rivas:v1.0.19" # {"$imagepolicy": "lulo-demo-landings:daniela-rivas"}
         ports:
         - containerPort: 3000
         env:
@@ -28,6 +28,19 @@ spec:
           value: "3000"
         - name: HOSTNAME
           value: "0.0.0.0"
+        - name: NEXT_PUBLIC_UMAMI_SCRIPT_URL
+          value: "https://umami.yesidlopez.de/script.js"
+        - name: NEXT_PUBLIC_UMAMI_WEBSITE_ID
+          valueFrom:
+            configMapKeyRef:
+              name: lulo-demo-preview-config
+              key: umamiWebsiteId
+        - name: DISCORD_DEMO_OPEN_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: lulo-demo-preview-webhook
+              key: webhookUrl
+              optional: true
         readinessProbe:
           httpGet:
             path: /

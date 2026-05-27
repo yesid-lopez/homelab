@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: jenny-florez-basic-auth
-  namespace: lulo-demo-landings
-type: Opaque
-data:
-  auth: amVubnk6JDJ5JDA1JDdESzV6WEtuNlFkb2cuaXJLbktuZHUzNWkuVEF0aFVCMHJmNjh4LzFqdTFWZUxtU3VoU2xpCg==
