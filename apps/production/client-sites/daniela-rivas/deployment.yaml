@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: daniela-rivas
-        image: "registry.yesidlopez.de/daniela-rivas:v1.0.19" # {"$imagepolicy": "lulo-demo-landings:daniela-rivas"}
+        image: "registry.yesidlopez.de/daniela-rivas:v1.0.21" # {"$imagepolicy": "lulo-demo-landings:daniela-rivas"}
         ports:
         - containerPort: 3000
         env:
