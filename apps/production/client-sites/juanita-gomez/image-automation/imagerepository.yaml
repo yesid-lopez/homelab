@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: juanita-gomez
+  namespace: lulo-demo-landings
+spec:
+  image: registry.yesidlopez.de/juanita-gomez
+  interval: 1m
+  secretRef:
+    name: registry-secret
