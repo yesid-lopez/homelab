@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: lulo-demo-preview-webhook
+  namespace: lulo-demo-landings
+spec:
+  encryptedData:
+    webhookUrl: AgC+SMa0j5x4x9lj3tdEyY1QpsSpUwrbf5iKe6FEgwvy/13HmodlglDB9qjKfLlPGWuSjraPPYLLY5im6pSmbShXpa3vtPyY+Mdqp2nfdz4XDQr7L2cAoT2/aofRz7WOzCfjlfbDiuD1SpcwSrqeM6O1DN8M0AvUHRsU06TR3xBq2PyRc3rKjoEJSWsdFXqfuOHQaQdHWn27KlzifKWpcTs3hJ/TiEYQGal4Puwy1f+VcNKubi5pFGxQu4lyDpK4mwdsHoYNs0uLGowusYR8/FdGizleFRGEPSrEMs+SzlDfYLj9SORT3RRPFZ9uIsWGhhv3Ji8ytTOl/j4M+HNqUynzMJitO9zbmlVFYNT7AvGEvHf5UABfuaursoFUh7GQTMrH97d2us7rIjmfBNBrCEYXlEv4UQxahhHsjvZWZA7WuV/CL29PcNOtkxDP1tCeT9tyD0FZdt4v9rzMQqaqwWfVHNUC2e4YKqZLPelC6/4QZWja9kv+ZzMrmDK3EK7sg81e9d/xT2F41shV2AKYiGQvj3gpK0UWhVaOObi7JKyOWLzFwEC5N4n2yJ5Z7f0uRSXcwTkZPlGbEHGeFPsePStEwiZk8i2PW93p4mNcgh6dxUqGGkgiwMVEcTJDugjV/KAPkQHlSZOkJExbLjWSpLqTOtg8WYoLqtaB3rM/2hBLLIfgTgEv5cYM7qqFlpXozAQsW+JzAqjwAcQKRcOkNIRzNzUEkwnKyy+iCX/MpgihhmUiKIHVaK89Q9dEOP6NWqmvPHrtaQ4ZVC7jhAXcVSy5PjDLn56T1zqG4+X3k5etRdCdVfz8bIN9+5VCCI3bPOIytumEsHvSS7nO0+zYePcr7wxxiV4cg7XW
+  template:
+    metadata:
+      name: lulo-demo-preview-webhook
+      namespace: lulo-demo-landings
