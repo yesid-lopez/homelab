@@ -30,14 +30,11 @@ spec:
           value: "0.0.0.0"
         - name: NEXT_PUBLIC_UMAMI_SCRIPT_URL
           value: "https://umami.yesidlopez.de/script.js"
-        - name: NEXT_PUBLIC_UMAMI_DOMAINS
-          value: "demo.luloai.com"
         - name: NEXT_PUBLIC_UMAMI_WEBSITE_ID
           valueFrom:
             configMapKeyRef:
               name: lulo-demo-preview-config
               key: umamiWebsiteId
-              optional: true
         - name: DISCORD_DEMO_OPEN_WEBHOOK_URL
           valueFrom:
             secretKeyRef:

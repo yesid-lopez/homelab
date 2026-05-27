@@ -184,10 +184,10 @@ git commit && git push                        # Flux applies in ~1 min
   (deployment, service, ingress) are named after the client.
 - **Public demos**: client-site ingresses do not set nginx auth annotations.
   The app itself shows the lightweight Lulo AI preview banner.
-- **Tracking**: deployments read optional shared ConfigMap
-  `lulo-demo-preview-config` key `umamiWebsiteId`, set
-  `NEXT_PUBLIC_UMAMI_SCRIPT_URL=https://umami.yesidlopez.de/script.js`, and
-  segment one Umami website by hostname plus the app's `demo_opened` event.
+- **Tracking**: deployments read the shared ConfigMap
+  `lulo-demo-preview-config` key `umamiWebsiteId` for the `demo.luloai.com`
+  Umami website, set `NEXT_PUBLIC_UMAMI_SCRIPT_URL=https://umami.yesidlopez.de/script.js`,
+  and segment one Umami website by hostname plus the app's `demo_opened` event.
 - **Discord first-open webhook**: deployments read optional Secret
   `lulo-demo-preview-webhook` key `webhookUrl` into
   `DISCORD_DEMO_OPEN_WEBHOOK_URL`.

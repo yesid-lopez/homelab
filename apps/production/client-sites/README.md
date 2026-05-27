@@ -44,9 +44,10 @@ automatically and rewrites the deployment to redeploy.
 - TLS via `luloai-issuer` (cert-manager). DNS via external-dns to
   `homelab.luloai.com`.
 - Demos read the shared Umami website ID from ConfigMap
-  `lulo-demo-preview-config` key `umamiWebsiteId`. They use
-  `https://umami.yesidlopez.de/script.js` and segment by hostname plus the
-  `demo_opened` event emitted by the app.
+  `lulo-demo-preview-config` key `umamiWebsiteId`. The shared website is
+  `demo.luloai.com`; deployments intentionally do not set `data-domains`, so
+  Umami tracks each `<client>.demo.luloai.com` subdomain under that website.
+  Segment by hostname plus the `demo_opened` event emitted by the app.
 - First-open Discord notifications read optional Secret
   `lulo-demo-preview-webhook` key `webhookUrl`. Missing config does not block
   the pods; the app skips tracking or webhook delivery until those values

@@ -6,6 +6,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - sealed-registry-secret.yaml
+  - configmap-demo-preview.yaml
   - daniela-rivas
   - jenny-psiquiatra
   - mariana-toro

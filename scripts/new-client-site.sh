@@ -46,5 +46,5 @@ echo
 echo "Next steps:"
 echo "  1. Push image to registry.yesidlopez.de/$CLIENT:v0.0.1"
 echo "  2. Add '- $CLIENT' to apps/production/client-sites/kustomization.yaml"
-echo "  3. Ensure lulo-demo-preview-config and lulo-demo-preview-webhook exist if tracking/Discord are needed"
+echo "  3. Confirm shared lulo-demo-preview-config exists; add lulo-demo-preview-webhook if Discord is needed"
 echo "  4. Commit & push (Flux applies in ~1 min) or kubectl apply -k apps/production/client-sites"
