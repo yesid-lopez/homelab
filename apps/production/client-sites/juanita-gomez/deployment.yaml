@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: juanita-gomez
-        image: "registry.yesidlopez.de/juanita-gomez:v0.0.1" # {"$imagepolicy": "lulo-demo-landings:juanita-gomez"}
+        image: "registry.yesidlopez.de/juanita-gomez:v1.0.23" # {"$imagepolicy": "lulo-demo-landings:juanita-gomez"}
         ports:
         - containerPort: 3000
         env:
@@ -61,4 +61,4 @@ spec:
             memory: "256Mi"
             cpu: "300m"
       imagePullSecrets:
-        - name: registry-secret
+      - name: registry-secret
