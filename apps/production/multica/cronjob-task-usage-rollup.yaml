@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: multica-task-usage-rollup
+  namespace: multica
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: rollup
+              image: ghcr.io/cloudnative-pg/postgresql:17.6-standard-trixie
+              command:
+                - psql
+                - -v
+                - ON_ERROR_STOP=1
+                - -c
+                - SELECT rollup_task_usage_hourly();
+              env:
+                - name: PGHOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: multica-postgres-app
+                      key: host
+                - name: PGPORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: multica-postgres-app
+                      key: port
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: multica-postgres-app
+                      key: user
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: multica-postgres-app
+                      key: password
+                - name: PGDATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: multica-postgres-app
+                      key: dbname
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
