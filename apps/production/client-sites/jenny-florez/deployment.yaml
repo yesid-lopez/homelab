@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: jenny-florez
-        image: "registry.yesidlopez.de/jenny-florez:v1.0.1" # {"$imagepolicy": "lulo-demo-landings:jenny-florez"}
+        image: "registry.yesidlopez.de/jenny-florez:v1.0.19" # {"$imagepolicy": "lulo-demo-landings:jenny-florez"}
         ports:
         - containerPort: 3000
         env:
