@@ -151,8 +151,7 @@ Applications using Helm charts follow this pattern:
 
 Demo landing pages for prospective clients live in
 `apps/production/client-sites/` and are all deployed in the shared namespace
-**`lulo-demo-landings`**, served at `<client>.demo.luloai.com` with per-client
-HTTP basic auth.
+**`lulo-demo-landings`**, served publicly at `<client>.demo.luloai.com`.
 
 Source code for each site lives in a separate repo (`luloai-client-sites`),
 which builds Next.js apps into Docker images and pushes them to
@@ -167,14 +166,13 @@ apps/production/client-sites/
 ├── sealed-registry-secret.yaml # shared registry pull secret
 ├── kustomization.yaml          # lists shared resources + active clients
 ├── _templates/                 # placeholder manifests with __CLIENT__ slots
-└── <client>/                   # per-client overlay (deploy + svc + ing + basic-auth + image-automation)
+└── <client>/                   # per-client overlay (deploy + svc + ing + image-automation)
 ```
 
 ### Add a new client
 
 ```bash
 scripts/new-client-site.sh <client>           # scaffolds the overlay from _templates
-scripts/set-client-basic-auth.sh <client> <firstname> <lastname>  # writes plain basic-auth Secret, prints credentials
 # (push Docker image to registry.yesidlopez.de/<client>:v0.0.1 — MUST be multi-arch)
 # Add `- <client>` to apps/production/client-sites/kustomization.yaml
 git commit && git push                        # Flux applies in ~1 min
@@ -183,9 +181,16 @@ git commit && git push                        # Flux applies in ~1 min
 ### Conventions
 
 - **Namespace**: all clients share `lulo-demo-landings`. Per-client resources
-  (deployment, service, ingress, basic-auth secret) are named after the client.
-- **Basic-auth secret name**: `<client>-basic-auth` (referenced by the ingress
-  annotation `nginx.ingress.kubernetes.io/auth-secret`).
+  (deployment, service, ingress) are named after the client.
+- **Public demos**: client-site ingresses do not set nginx auth annotations.
+  The app itself shows the lightweight Lulo AI preview banner.
+- **Tracking**: deployments read the shared ConfigMap
+  `lulo-demo-preview-config` key `umamiWebsiteId` for the `demo.luloai.com`
+  Umami website, set `NEXT_PUBLIC_UMAMI_SCRIPT_URL=https://umami.yesidlopez.de/script.js`,
+  and segment one Umami website by hostname plus the app's `demo_opened` event.
+- **Discord first-open webhook**: deployments read optional Secret
+  `lulo-demo-preview-webhook` key `webhookUrl` into
+  `DISCORD_DEMO_OPEN_WEBHOOK_URL`.
 - **Port**: 3000 (Next.js standalone default).
 - **Image tags**: semver (`v0.0.1`, `v0.1.0`, …). image-automation matches the
   regex `^v?[0-9]+\.[0-9]+\.[0-9]+$`.
@@ -201,5 +206,5 @@ git commit && git push                        # Flux applies in ~1 min
   mixed-arch worker pool; single-arch images cause `exec format error`.
   Always build with `docker buildx build --platform linux/amd64,linux/arm64
   --push …`.
-- **`nginx.ingress.kubernetes.io/auth-realm` must be ASCII-only.** Special
-  characters (e.g. `·`, `ñ`) are rejected by the nginx ingress webhook.
+- Keep all runtime config optional unless the value is committed in this repo;
+  missing Umami or Discord config should not keep a demo pod from starting.

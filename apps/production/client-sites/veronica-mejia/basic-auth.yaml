@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: veronica-mejia-basic-auth
-  namespace: lulo-demo-landings
-type: Opaque
-data:
-  auth: dmVyb25pY2E6JDJ5JDA1JEhFWVRKQ3Z1STFtYzd1L1BqMXI5VWViRnphZFNBai5pV1NVNkNOcjIvdUhsRGlKLjZscXNPCg==

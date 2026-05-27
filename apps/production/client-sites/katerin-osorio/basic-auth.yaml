@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: katerin-osorio-basic-auth
-  namespace: lulo-demo-landings
-type: Opaque
-data:
-  auth: a2F0ZXJpbjokMnkkMDUkNWNTMi54SDdLN3dEdUhpWGhncDAuT1FkcnV0RzdxaFliQnF5Y1l5TGFTSnZvL0NZVGN3ejIK

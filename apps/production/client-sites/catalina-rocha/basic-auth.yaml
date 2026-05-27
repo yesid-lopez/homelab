@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: catalina-rocha-basic-auth
-  namespace: lulo-demo-landings
-type: Opaque
-data:
-  auth: Y2F0YWxpbmE6JDJ5JDA1JHBZbExxdWh5OGJzeHpCTWxnOTFqZy5xRXlUVzZsVmxnaDZVSjNiYU9YeTBvWHFVUmRQZDBXCg==

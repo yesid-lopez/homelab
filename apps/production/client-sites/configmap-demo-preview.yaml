@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lulo-demo-preview-config
+  namespace: lulo-demo-landings
+data:
+  umamiWebsiteId: 0091d83e-3c13-449e-9326-82ef6c1fd7f4
