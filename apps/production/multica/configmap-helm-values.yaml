@@ -10,7 +10,7 @@ data:
     backend:
       replicaCount: 1
       image:
-        tag: v0.3.7
+        tag: v0.3.10
       resources:
         requests:
           cpu: 100m
@@ -53,7 +53,7 @@ data:
     frontend:
       replicaCount: 1
       image:
-        tag: v0.3.7
+        tag: v0.3.10
       resources:
         requests:
           cpu: 50m
