@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: maria-fernanda-espana
-        image: "registry.yesidlopez.de/maria-fernanda-espana:v1.0.19" # {"$imagepolicy": "lulo-demo-landings:maria-fernanda-espana"}
+        image: "registry.yesidlopez.de/maria-fernanda-espana:v1.0.21" # {"$imagepolicy": "lulo-demo-landings:maria-fernanda-espana"}
         ports:
         - containerPort: 3000
         env:
