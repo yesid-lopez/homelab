@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: jim-ballester
+  namespace: lulo-demo-landings
+spec:
+  image: registry.yesidlopez.de/jim-ballester
+  interval: 1m
+  secretRef:
+    name: registry-secret
