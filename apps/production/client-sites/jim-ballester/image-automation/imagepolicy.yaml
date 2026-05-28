@@ -1,0 +1,14 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: jim-ballester
+  namespace: lulo-demo-landings
+spec:
+  imageRepositoryRef:
+    name: jim-ballester
+  policy:
+    semver:
+      range: ">=0.0.0"
+  filterTags:
+    pattern: '^v?[0-9]+\.[0-9]+\.[0-9]+$'
+    extract: '$0'
