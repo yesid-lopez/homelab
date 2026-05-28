@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: laura-galeano-psicologa
-        image: "registry.yesidlopez.de/laura-galeano-psicologa:v0.0.1" # {"$imagepolicy": "lulo-demo-landings:laura-galeano-psicologa"}
+        image: "registry.yesidlopez.de/laura-galeano-psicologa:v1.0.25" # {"$imagepolicy": "lulo-demo-landings:laura-galeano-psicologa"}
         ports:
         - containerPort: 3000
         env:
@@ -61,4 +61,4 @@ spec:
             memory: "256Mi"
             cpu: "300m"
       imagePullSecrets:
-        - name: registry-secret
+      - name: registry-secret
