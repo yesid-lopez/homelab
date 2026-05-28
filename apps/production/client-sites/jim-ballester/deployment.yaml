@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: jim-ballester
-        image: "registry.yesidlopez.de/jim-ballester:v0.0.1" # {"$imagepolicy": "lulo-demo-landings:jim-ballester"}
+        image: "registry.yesidlopez.de/jim-ballester:v1.0.24" # {"$imagepolicy": "lulo-demo-landings:jim-ballester"}
         ports:
         - containerPort: 3000
         env:
@@ -61,4 +61,4 @@ spec:
             memory: "256Mi"
             cpu: "300m"
       imagePullSecrets:
-        - name: registry-secret
+      - name: registry-secret
