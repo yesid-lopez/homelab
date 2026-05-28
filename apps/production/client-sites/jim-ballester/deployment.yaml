@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jim-ballester
+  namespace: lulo-demo-landings
+  labels:
+    app: jim-ballester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jim-ballester
+  template:
+    metadata:
+      labels:
+        app: jim-ballester
+        name: jim-ballester
+    spec:
+      containers:
+      - name: jim-ballester
+        image: "registry.yesidlopez.de/jim-ballester:v1.0.24" # {"$imagepolicy": "lulo-demo-landings:jim-ballester"}
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: HOSTNAME
+          value: "0.0.0.0"
+        - name: NEXT_PUBLIC_UMAMI_SCRIPT_URL
+          value: "https://umami.yesidlopez.de/script.js"
+        - name: NEXT_PUBLIC_UMAMI_WEBSITE_ID
+          valueFrom:
+            configMapKeyRef:
+              name: lulo-demo-preview-config
+              key: umamiWebsiteId
+        - name: DISCORD_DEMO_OPEN_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: lulo-demo-preview-webhook
+              key: webhookUrl
+              optional: true
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "300m"
+      imagePullSecrets:
+      - name: registry-secret
