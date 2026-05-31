@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: catalina-rocha
-        image: "registry.yesidlopez.de/catalina-rocha:v1.0.21" # {"$imagepolicy": "lulo-demo-landings:catalina-rocha"}
+        image: "registry.yesidlopez.de/catalina-rocha:v1.0.28" # {"$imagepolicy": "lulo-demo-landings:catalina-rocha"}
         ports:
         - containerPort: 3000
         env:
