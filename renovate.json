@@ -6,7 +6,29 @@
       "/\\.yaml$/"
     ]
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track image tags pinned inside Helm values ConfigMaps (e.g. multica backend/frontend)",
+      "managerFilePatterns": [
+        "/configmap-helm-values\\.yaml$/"
+      ],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)\\s*\\n\\s*tag:\\s*['\"]?(?<currentValue>[^'\"\\s]+)['\"]?"
+      ],
+      "versioningTemplate": "docker"
+    }
+  ],
   "packageRules": [
+    {
+      "description": "Bump multica backend + frontend together (released from one monorepo tag)",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/multica-ai/multica-backend",
+        "ghcr.io/multica-ai/multica-web"
+      ],
+      "groupName": "multica images"
+    },
     {
       "description": "Group infrastructure controller updates",
       "matchFileNames": ["infrastructure/**"],
