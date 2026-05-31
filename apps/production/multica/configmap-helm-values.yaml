@@ -10,6 +10,7 @@ data:
     backend:
       replicaCount: 1
       image:
+        # renovate: datasource=docker depName=ghcr.io/multica-ai/multica-backend
         tag: v0.3.11
       resources:
         requests:
@@ -53,6 +54,7 @@ data:
     frontend:
       replicaCount: 1
       image:
+        # renovate: datasource=docker depName=ghcr.io/multica-ai/multica-web
         tag: v0.3.11
       resources:
         requests:
