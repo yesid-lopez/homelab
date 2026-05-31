@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: camila-duque
-        image: "registry.yesidlopez.de/camila-duque:v0.0.1" # {"$imagepolicy": "lulo-demo-landings:camila-duque"}
+        image: "registry.yesidlopez.de/camila-duque:v1.0.29" # {"$imagepolicy": "lulo-demo-landings:camila-duque"}
         ports:
         - containerPort: 3000
         env:
@@ -61,4 +61,4 @@ spec:
             memory: "256Mi"
             cpu: "300m"
       imagePullSecrets:
-        - name: registry-secret
+      - name: registry-secret
