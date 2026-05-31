@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: maria-elvira
-        image: "registry.yesidlopez.de/maria-elvira:v0.0.1" # {"$imagepolicy": "lulo-demo-landings:maria-elvira"}
+        image: "registry.yesidlopez.de/maria-elvira:v1.0.26" # {"$imagepolicy": "lulo-demo-landings:maria-elvira"}
         ports:
         - containerPort: 3000
         env:
@@ -61,4 +61,4 @@ spec:
             memory: "256Mi"
             cpu: "300m"
       imagePullSecrets:
-        - name: registry-secret
+      - name: registry-secret
