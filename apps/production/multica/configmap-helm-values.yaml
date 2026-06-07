@@ -11,7 +11,7 @@ data:
       replicaCount: 1
       image:
         # renovate: datasource=docker depName=ghcr.io/multica-ai/multica-backend
-        tag: v0.3.15
+        tag: v0.3.17
       resources:
         requests:
           cpu: 100m
@@ -55,7 +55,7 @@ data:
       replicaCount: 1
       image:
         # renovate: datasource=docker depName=ghcr.io/multica-ai/multica-web
-        tag: v0.3.15
+        tag: v0.3.17
       resources:
         requests:
           cpu: 50m
