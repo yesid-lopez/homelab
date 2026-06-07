@@ -26,3 +26,17 @@ spec:
   retain: 7
   concurrency: 2
   labels: {}
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: filesystem-trim-weekly
+  namespace: longhorn-system
+spec:
+  cron: "30 3 * * 0"
+  task: filesystem-trim
+  groups:
+    - backup
+  retain: 0
+  concurrency: 1
+  labels: {}

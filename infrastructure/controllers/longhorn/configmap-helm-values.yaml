@@ -23,3 +23,6 @@ data:
       snapshotMaxCount: 12
       # Enable snapshot purging
       disableSnapshotPurge: false
+      # Allow filesystem trim to remove Longhorn snapshots that are already
+      # marked for deletion but still pinned by the active volume head.
+      removeSnapshotsDuringFilesystemTrim: true
