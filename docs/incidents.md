@@ -84,3 +84,66 @@ sudo systemctl start k3s
 - Set a calendar reminder ~2027-05 to rotate k3s certs again (they auto-rotate on restart if within 90 days of expiry, but only if k3s is actually restarted — otherwise the same silent expiry can happen again).
 - One external client (IP `192.168.2.208` = `worker` / `luloclaw`) was intermittently presenting the old client cert (SN `8016972684918034376`) after rotation. Node was `Ready` so it self-recovered, but if the noise persists, restart the k3s-agent on `luloclaw` to force a fresh kubelet-client cert.
 - The `apps/production/*` and `infrastructure/*` GitOps tree was **not** touched; all fixes are host-level. If master-1 is ever reprovisioned, these host tweaks must be re-applied manually (or better: put them into a small provisioning script / cloud-init).
+
+### Update — same day, 20:37 UTC: reset returned with the r8169 workaround already in place
+
+The fixes above did **not** fully resolve the resets. Timeline of that same 2026-07-18:
+
+- 10:22 UTC → 12:17 UTC (1 h 55 m): boot -2 crashed with `r8169-fix.service` active, offloads confirmed off, EEE off, k3s certs freshly rotated, journal persistent, swap active.
+- 12:17:29 UTC → 12:17:29 UTC: BIOS auto-boot lasted **0 seconds** — died again on the spot.
+- 12:17 UTC → 20:37 UTC (~8 h): machine stayed off, user powered it on manually at 22:37 local time.
+
+With persistent journal now in place, we could confirm:
+
+- `journalctl -b -2 -k --since '2026-07-18 12:12:00'` returned **`-- No entries --`**: not a single kernel line before the cut → hard physical reset.
+- CPU load averaged **~3 %** for the entire 1 h 55 m (idle host — sysstat `sar -u -f /var/log/sysstat/sa18`).
+- No apt upgrade happened: `unattended-upgrades` ran at 10:35 and found zero updatable packages.
+- k3s activity in the 10 min before the cut was normal (etcd hourly snapshot at 12:00, WAL purge at 12:04, no OOM, no pod restart, no CronJob spike at 12:17).
+- The 8 h off is inconsistent with a pure kernel panic (which would auto-reboot in seconds via `kernel.panic=10`). Consistent with **BIOS thermal cutoff** or an external **19 V PSU brick** tripping and needing to cool down.
+
+Revised root-cause hypothesis: the `r8169` bug was real and worth fixing, but was **not the only** (and possibly not the primary) cause. Current suspects, in order:
+
+1. External 19 V PSU brick degraded (typical Minisforum failure mode).
+2. Thermal solution (fan/heatsink dust) in the compact UM690 chassis.
+3. NVMe thermal shutdown under sustained k3s+Longhorn writes.
+4. Marginal RAM (Ryzen 7840HS has no ECC → silent bit flips → hard fault, no log).
+5. VRM capacitors on the motherboard degraded.
+6. Wall outlet / power strip / brownouts on the same circuit.
+7. Weak CMOS battery.
+
+### Update — 2026-07-18 20:51 UTC: hardware monitoring logger installed
+
+To capture what's happening in the 30 s before the next crash, added a host-level logger:
+
+- `/usr/local/bin/hwmon-log.sh` — bash loop, samples every 30 s.
+- `/etc/systemd/system/hwmon-log.service` — `Type=simple`, `Restart=always`, `WantedBy=multi-user.target`.
+- `/var/log/hwmon.log` — persistent output. One line per sample:
+
+    ```
+    2026-07-18T20:52:08+00:00 tctl=48.0 gpu=43.0 nvme=29.9 load=0.57 mem_used_mb=6643 mem_avail_mb=7069 swap_used_mb=0 rx=91733419 tx=172947618
+    ```
+
+- `[BOOT] uptime_s=… kernel=…` line written on every service start, so each boot session is visible.
+- `sync` after each write so the last line survives a hard reset.
+- `/etc/logrotate.d/hwmon` — weekly rotation, 4 archives kept, compressed.
+
+After the next reset, inspect with:
+
+```bash
+ssh yeye@192.168.2.108 "tail -30 /var/log/hwmon.log"
+# The lines immediately preceding a `[BOOT]` marker are the last-known state before the crash.
+```
+
+Signals to look for:
+
+- `tctl > 85` or `nvme > 80` in the final samples → thermal.
+- All fields normal on the last line, then abrupt `[BOOT]` → electrical (PSU brick trip or blackout).
+- Sudden `load` or `mem_used_mb` spike → software runaway.
+- `rx`/`tx` delta jumping to hundreds of MB in 30 s → network storm despite the r8169 workaround.
+
+### Follow-ups (post-update)
+
+- Physical check pending: dust-blow the UM690 heatsink, tap the PSU brick after 30–40 min uptime to feel if it's uncomfortably hot, consider swapping to a spare 19 V/6.3 A brick.
+- BIOS `AC Power Loss = Always On` is currently **off** (confirmed: user had to power on manually after the 12:17 crash). Change this in BIOS setup so the cluster doesn't stay down for hours.
+- If the logger implicates thermal or PSU, order a spare 19 V brick (~15 €) and/or a CR2032 for the CMOS battery.
+- If nothing physical shows up, run `memtest86+` for at least 4 h from the GRUB menu.
