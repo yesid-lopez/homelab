@@ -26,3 +26,24 @@ spec:
   retain: 7
   concurrency: 2
   labels: {}
+---
+# Reclaims block-level space that filesystem deletes leave behind (e.g. Prometheus
+# TSDB compaction). Scoped to a dedicated `trim` group so it never trims
+# backup-group volumes and risks purging their intentional snapshot chains
+# (removeSnapshotsDuringFilesystemTrim is global). Opt a volume in via PVC labels:
+#   recurring-job.longhorn.io/source: enabled
+#   recurring-job-group.longhorn.io/trim: enabled
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: filesystem-trim-weekly
+  namespace: longhorn-system
+spec:
+  cron: "0 3 * * 0"
+  task: filesystem-trim
+  groups:
+    - trim
+  # Not effective for trim tasks; Longhorn forces this to 0.
+  retain: 0
+  concurrency: 2
+  labels: {}
