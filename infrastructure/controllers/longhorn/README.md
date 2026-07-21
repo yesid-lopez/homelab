@@ -3,7 +3,25 @@
 The NFS backup target and recurring jobs are managed via `infrastructure/configs/longhorn/`:
 
 - `backup-target.yaml` — BackupTarget CRD pointing to `nfs://192.168.2.10:/ssd-pool/longhorn-backups`
-- `recurring-jobs.yaml` — `snapshot-daily` (1 AM, retain 2) and `backup-daily` (2 AM, retain 14)
+- `recurring-jobs.yaml` — `snapshot-daily` (1 AM, retain 2), `backup-daily` (2 AM, retain 7), and `filesystem-trim-weekly` (Sun 3 AM, group `trim`)
+
+### Filesystem TRIM
+
+`filesystem-trim-weekly` reclaims block-level space that filesystem deletes leave
+behind (e.g. Prometheus TSDB compaction), which otherwise shows up as
+`actualSize` drifting above the declared PVC size and fires the
+`LonghornVolumeBlockOverhead` alert. It relies on the global setting
+`removeSnapshotsDuringFilesystemTrim: true` (see the Helm values). Because that
+setting is global and can purge intentional snapshot chains during a trim, the
+job is scoped to a dedicated `trim` group so it never touches `backup`-group
+volumes. Opt a volume in with **both** PVC labels:
+
+```yaml
+metadata:
+  labels:
+    recurring-job.longhorn.io/source: enabled       # activates PVC → Volume sync
+    recurring-job-group.longhorn.io/trim: enabled    # joins the `trim` group
+```
 
 Volumes are opted into the daily backup job by labels on the **Longhorn Volume CR**. Longhorn can sync those labels from the PVC, but only when the PVC is marked as a "source" — so you need **both** labels on the PVC:
 

@@ -12,6 +12,13 @@ data:
       prometheusSpec:
         storageSpec:
           volumeClaimTemplate:
+            metadata:
+              labels:
+                # Opt this volume into the Longhorn `filesystem-trim-weekly`
+                # RecurringJob so reclaimed TSDB space doesn't accumulate as
+                # block-level overhead. `source` enables PVC → Volume label sync.
+                recurring-job.longhorn.io/source: "enabled"
+                recurring-job-group.longhorn.io/trim: "enabled"
             spec:
               storageClassName: longhorn
               accessModes: ["ReadWriteOnce"]
