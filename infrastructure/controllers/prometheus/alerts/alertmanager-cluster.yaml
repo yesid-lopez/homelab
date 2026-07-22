@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: homelab-cluster
+  namespace: prometheus
+  labels:
+    scope: cluster
+spec:
+  route:
+    receiver: discord
+    groupBy:
+      - alertname
+      - instance
+      - node
+      - namespace
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    matchers:
+      - name: scope
+        value: cluster
+  receivers:
+    - name: discord
+      discordConfigs:
+        - apiURL:
+            name: discord-homelab-webhook
+            key: apiURL
+          sendResolved: true
+          title: '{{ if eq .Status "firing" }}🔴{{ else }}🟢{{ end }} [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] homelab cluster'
+          message: |
+            {{ range .Alerts -}}
+            **{{ .Annotations.summary }}**
+            {{ .Annotations.description }}
+            Severidad: `{{ .Labels.severity }}`
+
+            {{ end }}

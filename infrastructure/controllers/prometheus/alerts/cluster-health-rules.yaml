@@ -1,0 +1,164 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cluster-health-alerts
+  namespace: prometheus
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    # ------------------------------------------------------------------
+    # Node availability — the master-1 hard-reset incident (see
+    # docs/incidents.md 2026-07-18) had no clean shutdown and no logs.
+    # These alerts are the early-warning net for a node vanishing or
+    # coming back after an unexplained reboot.
+    # ------------------------------------------------------------------
+    - name: node.availability
+      rules:
+        - alert: NodeExporterDown
+          expr: up{job="node-exporter"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            scope: cluster
+          annotations:
+            summary: "Nodo {{ $labels.instance }} sin métricas (node-exporter down)"
+            description: "El node-exporter de {{ $labels.instance }} lleva 5m sin responder. El nodo puede estar caído, reiniciándose o con la red muerta (revisar el bug r8169 del incidente 2026-07-18)."
+
+        - alert: KubeNodeNotReady
+          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            scope: cluster
+          annotations:
+            summary: "Nodo {{ $labels.node }} en estado NotReady"
+            description: "El nodo {{ $labels.node }} lleva 5m sin reportar Ready=True. Revisar kubectl describe node {{ $labels.node }} y el estado del kubelet."
+
+        - alert: NodeRecentlyRebooted
+          expr: (node_time_seconds - node_boot_time_seconds) < 600
+          for: 1m
+          labels:
+            severity: warning
+            scope: cluster
+          annotations:
+            summary: "Nodo {{ $labels.instance }} reinició hace poco"
+            description: "{{ $labels.instance }} lleva menos de 10 min encendido. Si no fue un reinicio planeado, sospechar reset físico (PSU/térmico/NIC) — ver docs/incidents.md y /var/log/hwmon.log en master-1."
+
+    # ------------------------------------------------------------------
+    # Node resources — the incident host is a 16 GB machine running k3s +
+    # Longhorn + Prometheus with only a 4 GiB swapfile. Memory / disk /
+    # CPU pressure and OOM kills are the most likely software-side causes
+    # of instability.
+    # ------------------------------------------------------------------
+    - name: node.resources
+      rules:
+        - alert: NodeMemoryLow
+          expr: |
+            (
+              1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+            ) * 100 > 90
+          for: 10m
+          labels:
+            severity: warning
+            scope: cluster
+          annotations:
+            summary: "Memoria disponible baja en {{ $labels.instance }}"
+            description: "{{ $labels.instance }} tiene menos del 10% de RAM disponible desde hace 10m ({{ $value | printf \"%.1f\" }}% usado). Riesgo de OOM en un host sin ECC y con poco swap."
+
+        - alert: NodeRootFilesystemLow
+          expr: |
+            (
+              1 - (
+                node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint="/"}
+                / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs",mountpoint="/"}
+              )
+            ) * 100 > 85
+          for: 15m
+          labels:
+            severity: warning
+            scope: cluster
+          annotations:
+            summary: "Disco raíz lleno en {{ $labels.instance }}"
+            description: "El filesystem raíz de {{ $labels.instance }} está al {{ $value | printf \"%.1f\" }}%. Un disco lleno tumba el kubelet y etcd."
+
+        - alert: NodeCPUSaturated
+          expr: |
+            node_load15
+            > on(instance) 2 * count by(instance) (node_cpu_seconds_total{mode="idle"})
+          for: 15m
+          labels:
+            severity: warning
+            scope: cluster
+          annotations:
+            summary: "CPU saturada en {{ $labels.instance }}"
+            description: "load15 en {{ $labels.instance }} supera 2x el número de núcleos desde hace 15m ({{ $value | printf \"%.2f\" }}). Posible runaway de un pod."
+
+        - alert: PodOOMKilled
+          expr: |
+            increase(kube_pod_container_status_restarts_total[15m]) > 0
+            and on(namespace, pod, container)
+            kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+          for: 0m
+          labels:
+            severity: warning
+            scope: cluster
+          annotations:
+            summary: "OOMKilled: {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: "El contenedor {{ $labels.container }} en {{ $labels.namespace }}/{{ $labels.pod }} fue matado por falta de memoria (OOMKilled). Revisar límites de memoria."
+
+    # ------------------------------------------------------------------
+    # Node thermals — one of the leading suspects for the master-1 resets
+    # was thermal cutoff (dusty UM690 heatsink / NVMe). node-exporter's
+    # hwmon sensors expose CPU/NVMe temps directly.
+    # ------------------------------------------------------------------
+    - name: node.thermal
+      rules:
+        - alert: NodeHighTemperature
+          expr: node_hwmon_temp_celsius > 85
+          for: 5m
+          labels:
+            severity: warning
+            scope: cluster
+          annotations:
+            summary: "Temperatura alta en {{ $labels.instance }} ({{ $labels.chip }})"
+            description: "El sensor {{ $labels.sensor }} de {{ $labels.chip }} en {{ $labels.instance }} lleva 5m sobre 85°C ({{ $value | printf \"%.1f\" }}°C). Revisar disipación (ver sospecha térmica del incidente 2026-07-18)."
+
+        - alert: NodeCriticalTemperature
+          expr: node_hwmon_temp_celsius > 90
+          for: 2m
+          labels:
+            severity: critical
+            scope: cluster
+          annotations:
+            summary: "Temperatura CRÍTICA en {{ $labels.instance }} ({{ $labels.chip }})"
+            description: "El sensor {{ $labels.sensor }} de {{ $labels.chip }} en {{ $labels.instance }} está a {{ $value | printf \"%.1f\" }}°C. Riesgo de apagado térmico inminente."
+
+    # ------------------------------------------------------------------
+    # Kubernetes workloads — broadly useful pod-health signals.
+    # ------------------------------------------------------------------
+    - name: kubernetes.workloads
+      rules:
+        - alert: PodCrashLooping
+          expr: |
+            max_over_time(
+              kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"}[5m]
+            ) >= 1
+          for: 5m
+          labels:
+            severity: warning
+            scope: cluster
+          annotations:
+            summary: "CrashLoopBackOff: {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: "El contenedor {{ $labels.container }} en {{ $labels.namespace }}/{{ $labels.pod }} lleva 5m en CrashLoopBackOff."
+
+        - alert: PodNotReady
+          expr: |
+            kube_pod_status_phase{phase=~"Pending|Unknown"} == 1
+          for: 15m
+          labels:
+            severity: warning
+            scope: cluster
+          annotations:
+            summary: "Pod atascado: {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: "El pod {{ $labels.namespace }}/{{ $labels.pod }} lleva 15m en estado {{ $labels.phase }}."
