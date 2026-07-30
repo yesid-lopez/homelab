@@ -245,3 +245,56 @@ The `50-second recovery` timing still fits either (1), (2) or (4) equally well.
 - **If desperate, test kernel regression**: install `linux-generic-hwe-24.04` (mainline 6.11+) or the out-of-tree `r8125-dkms` driver and see if the interval extends further.
 - Keep the hwmon logger running. Every additional crash refines the pattern.
 - If after IPv6-fix + RAM + BIOS + kernel, resets keep happening on ~2–3 day intervals → RMA / warranty ticket with Minisforum.
+
+### Update — 2026-07-30 08:14 UTC: IPv6 SLAAC churn mitigated on `eno1`
+
+Applied the follow-up #1 from the section above — cheapest, remote-only change to attack the most visible symptom.
+
+**Change** (host-level on `master-1`, not committed to the repo):
+
+New file `/etc/sysctl.d/98-disable-ipv6-slaac-eno1.conf`:
+
+```
+# Disable IPv6 SLAAC on eno1 to prevent prefix churn from upstream router.
+# The homelab network is IPv4-only (192.168.2.0/24); accepting RAs from the
+# ISP router causes NodeIPs flapping in k3s every 15-90s.
+net.ipv6.conf.eno1.accept_ra = 0
+net.ipv6.conf.eno1.autoconf = 0
+```
+
+Runtime application:
+
+```bash
+sudo sysctl -p /etc/sysctl.d/98-disable-ipv6-slaac-eno1.conf
+sudo ip -6 addr flush dev eno1 scope global
+```
+
+Note: `accept_ra` was already `0` at runtime (inherited from a prior default), but `autoconf` was still `1`, which is what kept generating global IPv6 addresses from cached RAs. Both are now pinned to `0` and persisted.
+
+IPv6 is **not disabled kernel-wide**; link-local (`fe80::…`) still works. Only the global SLAAC path on `eno1` is neutralised. k3s cluster networking (flannel VXLAN over IPv4), Longhorn iSCSI, MetalLB, ingress and all pod traffic are IPv4 — no impact expected.
+
+### Verification
+
+Immediately after the change:
+
+```bash
+ip -6 addr show eno1
+# Before: inet6 2003:eb:5f3d:9cc0:… /64 scope global dynamic mngtmpaddr noprefixroute
+#         inet6 fe80::…             /64 scope link
+# After : inet6 fe80::…             /64 scope link
+```
+
+3 min observation window on k3s journal:
+
+```bash
+sudo journalctl -u k3s --since '3 minutes ago' | grep -c 'NodeIPs changed'
+# 0   (down from ~30+/hour before the fix)
+```
+
+Long-term check (5–7 days): `sudo journalctl -u k3s --since '1 day ago' | grep -c 'NodeIPs changed'` should stay at 0. Kubelet will eventually drop the stale IPv6 from `.status.addresses` on next restart or node re-registration; not urgent.
+
+### Follow-ups
+
+- **Watch until 2026-08-06** (7 days) whether the ~2–3 day crash cadence extends. If yes, this was a real contributor and we keep the fix. If no, IPv6 churn was just noise and the real root cause is still in the hardware shortlist.
+- If crashes continue after 2026-08-06 with IPv6 quiet, **run `memtester 8G 1` in the running OS** (no reboot, ~30 min, non-destructive to the k3s workloads on that node — but drain first with `kubectl drain master-1 --ignore-daemonsets --delete-emptydir-data`). Any error confirms RAM.
+- If memtester is clean and crashes continue → schedule an overnight `memtest86+` USB boot as originally planned.
