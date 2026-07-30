@@ -148,23 +148,32 @@ Signals to look for:
 - If the logger implicates thermal or PSU, order a spare 19 V brick (~15 €) and/or a CR2032 for the CMOS battery.
 - If nothing physical shows up, run `memtest86+` for at least 4 h from the GRUB menu.
 
-### Update — 2026-07-30 01:31 UTC: crash returned after brick replacement
+### Update — 2026-07-30 01:31 UTC: crash returned with brick + new kernel already in place
 
-The 19 V/6.32 A/120 W replacement brick had been installed some days earlier (user-confirmed). Under those conditions the machine still hard-reset at 01:31 UTC (03:31 local time).
+Corrected timeline (assistant initially misread the boot list on Jul 24 08:37→08:40 as the brick-swap gap; user later clarified):
 
-Progress since the July 18 baseline is significant but not complete:
+- **Jul 20 12:59 UTC** — `unattended-upgrade` installed **kernel 6.8.0-136** (upgrade from 6.8.0-124), plus openssh, curl, python, tzdata, libcurl and libheif. Package installed but not activated yet (needs reboot).
+- **Jul 20 (same day)** — user manually swapped the 19 V/6.32 A/120 W brick. That reboot picked up the new kernel, so from Jul 20 onwards the host was on **kernel 6.8.0-136 + new brick**.
+- **Jul 24 01:47 / 02:41 / 03:34 UTC** — 3 quick crashes with **both** new-brick and new-kernel already in place. Uptimes 52 min, 52 min, 5 h.
+- **Jul 24 08:40 → Jul 27 20:05 UTC** — stable **3 d 11 h**.
+- **Jul 27 20:05 UTC** — planned manual power-off (user rearranging cables); not a crash.
+- **Jul 27 20:06 → Jul 30 01:31 UTC** — stable **2 d 5 h**, then this crash.
 
-| Ciclo | Uptime before crash | Downtime after crash |
-|---|---|---|
-| Jul 9   | 5–10 min (loop) | seconds |
-| Jul 10  | 1 h 21 m        | ~15 h |
-| Jul 12  | 2 h 47 m        | ~11 h |
-| Jul 18  | 1 h 55 m        | 8 h |
-| Jul 24 (×3) | 52 m each   | 3–5 min |
-| Jul 27  | 3 d 11 h        | 21 min |
-| **Jul 30** | **2 d 5 h**  | **52 s** |
+Progress since the July 18 baseline is significant but not complete. Consolidated crash frequency:
 
-Frequency dropped from every 1–3 h to every 2–3 days; recovery time dropped from 8 h to 52 s. So the software mitigations (r8169 workaround, `kernel.panic=10` with fast reboot, BIOS `AC Power Loss=On`) are working — the crashes just don't hang the box anymore. But the underlying physical fault is still there.
+| Ciclo | Uptime before crash | Downtime after crash | Config at the time |
+|---|---|---|---|
+| Jul 9   | 5–10 min (loop) | seconds | old brick, kernel -124, no r8169 fix |
+| Jul 10  | 1 h 21 m        | ~15 h   | old brick, kernel -124, no r8169 fix |
+| Jul 12  | 2 h 47 m        | ~11 h   | old brick, kernel -124, no r8169 fix |
+| Jul 18  | 1 h 55 m        | 8 h     | old brick, kernel -124, r8169 fix applied same day |
+| Jul 24 (×3) | 52 m / 52 m / 5 h | 3–5 min | **new brick**, **kernel -136**, r8169 fix |
+| Jul 27  | 3 d 11 h        | 21 min (planned shutdown, not a crash) | new brick, kernel -136 |
+| **Jul 30** | **2 d 5 h**  | **52 s** | new brick, kernel -136 |
+
+Frequency dropped from every 1–3 h to every 2–3 days; recovery time dropped from 8 h to 52 s. The software mitigations (r8169 workaround, `kernel.panic=10` with fast reboot, BIOS `AC Power Loss=On`) are working — the crashes just don't hang the box anymore. But the underlying fault is still there **despite** the brick swap and kernel upgrade.
+
+Note on the earlier "brick was to blame" hypothesis: with the correct timeline (brick swapped Jul 20, not Jul 24 as originally inferred), the 3 back-to-back crashes on Jul 24 happened with the new brick already in place. Therefore the brick was at most a contributor, not the primary cause.
 
 hwmon evidence from `/var/log/hwmon.log` in the 10 minutes leading to the cut:
 
@@ -188,23 +197,51 @@ Interpretation:
 - Network: RX/TX deltas ~1–2 MB per 30 s window — normal.
 - Recovery time of 52 s: consistent with a brief physical reset that let BIOS auto-boot immediately (not a thermal cutoff needing hours to clear).
 
-### Revised root-cause hypothesis (as of 2026-07-30)
+### New finding — IPv6 SLAAC prefix churn (2026-07-30 log analysis)
 
-With the brick replaced, the shortlist of remaining suspects for an idle-time hard reset with no kernel log is:
+Reviewing k3s logs around both crashes (Jul 24 02:37 and Jul 30 00:42) revealed a chronic pattern of `NodeIPs changed` events every 15–90 s. Not just the IPv6 address flapping in and out, but **the prefix itself changing**:
 
-1. **Motherboard VRM caps** on the UM690 board degrading — mimics the brick symptoms exactly but internal to the board. High probability now that the external PSU is ruled out.
-2. **RAM marginal / SO-DIMM contact** — Ryzen 7840HS has no ECC; a single bit flip in the wrong page triggers an oops → immediate reboot (`kernel.panic=10` → 10 s to reboot; boot then takes ~40 s → total ~50 s, which matches this crash perfectly).
-3. **DC input jack / power delivery path on the mainboard** — oxidation or dry solder joint at the barrel connector or downstream can cause transient rail drops even with a healthy brick.
-4. **CPU microcode / BIOS firmware bug** — Ryzen 7040/7045-series has had a few advisories. BIOS is Sept-2024, no LVFS update available; would need to fetch a newer BIOS from Minisforum's website manually.
-5. **NVMe firmware quirk on Longhorn write bursts** — unlikely given the 30 s samples showed no I/O anomaly, but possible.
+```
+Jul 24 02:37:05  oldNodeIPs=[..., 2003:eb:5f3d:9c49:5a47:caff:fe79:adf6]
+                 newNodeIPs=[..., 2003:eb:5f3d:9ce3:5a47:caff:fe79:adf6]  ← prefix 9c49 → 9ce3
+Jul 24 02:38:26  same prefix flip
+Jul 24 02:39:55  same
+Jul 30 00:42:29  same pattern
+Jul 30 00:42:57  same
+Jul 30 00:43:42  same
+Jul 30 00:47:35  same
+```
 
-The **50-second recovery on this crash is actually a strong pointer toward RAM**: that timing is exactly `kernel.panic=10` + BIOS POST time. The 8-hour recovery on the earlier crash pointed at brick thermal cutoff (which we've now eliminated by replacement). Different failure modes may have coexisted.
+The upstream router (Fritzbox on this network) is announcing IPv6 Router Advertisements with **different `/64` prefixes** in the same DHCPv6-PD session, so SLAAC produces a new global IPv6 for `eno1` on each RA. Consequences on master-1:
 
-### Follow-ups (2026-07-30)
+- Kubelet re-registers the node with the API server every time the address set changes.
+- kube-proxy rewrites iptables NAT rules for every service.
+- All controller informers get invalidated and re-list.
 
-- **Top priority — memtest86+ for at least 4 h overnight**. Boot into GRUB menu, pick the memtest entry. Any single error confirms RAM. If the modules are user-serviceable, reseat them or swap in a known-good pair.
-- **Visual inspection of the UM690 board** while it's opened for RAM work: look for bulged/leaking capacitors near the CPU (VRM area) and around the DC-in jack. Photograph the board so we can compare over time.
-- **Reseat the DC-in barrel** on the chassis — even sound solder joints benefit from cycling.
-- **BIOS update**: check Minisforum's UM690 support page for a firmware newer than the current Sep-2024 build; if available, flash it (has some brick risk; do only if RAM checks clean).
-- Keep monitoring `/var/log/hwmon.log`; every additional crash refines the pattern.
-- If after RAM + BIOS + visual, resets keep happening on ~2–3 day intervals → open an RMA / warranty ticket with Minisforum, this is a hardware-level fault they should replace.
+This happens dozens of times per hour, indefinitely. It is a chronic background stress that plausibly contributes to the crashes — either via a kernel-side leak/state issue in the networking stack, or by keeping something in the k3s data plane pinned in "reconciling" until an unrelated stressor tips it over.
+
+The hwmon load spike observed at 2026-07-30 00:44 (peak 15.37, ~4 min duration, 47 min before the crash) coincided with a burst of `NodeIPs changed` events and an etcd snapshot trigger, consistent with this cascade.
+
+### Revised root-cause hypothesis (as of 2026-07-30, post user correction)
+
+With brick swap and kernel upgrade both already applied and crashes still recurring on a 2–3 day cadence:
+
+1. **IPv6 SLAAC prefix churn from the ISP router** — chronic and unambiguous in the logs. Easy to mitigate (disable IPv6 on `eno1` or force a static ULA). Highest expected impact / lowest risk change to try next.
+2. **RAM marginal / SO-DIMM contact** — Ryzen 7840HS has no ECC; a single bit flip triggers an oops → 10 s panic delay + ~40 s POST → ~50 s recovery, matches the observed pattern. Still on the shortlist.
+3. **Motherboard VRM caps** on the UM690 board degrading — mimics brick symptoms but internal to the board.
+4. **Kernel 6.8.0-136 regression on `r8169`** — the crashes started reappearing with -136 (same day as brick swap), so a regression in the in-tree Realtek driver between -124 and -136 can't be fully ruled out. Would need to test `r8125-dkms` or a mainline kernel.
+5. **DC input jack / power delivery path on the mainboard** — oxidation or dry solder at the barrel or downstream.
+6. **BIOS firmware bug** — UM690 BIOS is Sep-2024, no LVFS update available; would need manual flash from Minisforum's site.
+7. **NVMe firmware quirk on Longhorn write bursts** — unlikely given the 30 s samples showed no I/O anomaly, but possible.
+
+The `50-second recovery` timing still fits either (1), (2) or (4) equally well.
+
+### Follow-ups (2026-07-30, revised)
+
+- **Try first: kill IPv6 prefix churn.** Disable IPv6 on `eno1` (network is IPv4-only 192.168.2.0/24 anyway), or set a static ULA/global IPv6 for the interface so the address stops flapping. Observe 5–7 days.
+- **If the crash still returns after IPv6 is quiet — run memtest86+ overnight**. Boot into GRUB → Advanced options → Memory test. Any single error confirms RAM.
+- **While the chassis is open for RAM work**: reseat SO-DIMMs, photograph the board around CPU VRMs and DC-in jack, look for bulged/leaking caps, dust-blow the heatsink.
+- **BIOS update**: check Minisforum's UM690 support page for a firmware newer than Sep-2024; flash only if RAM checks clean (some brick risk).
+- **If desperate, test kernel regression**: install `linux-generic-hwe-24.04` (mainline 6.11+) or the out-of-tree `r8125-dkms` driver and see if the interval extends further.
+- Keep the hwmon logger running. Every additional crash refines the pattern.
+- If after IPv6-fix + RAM + BIOS + kernel, resets keep happening on ~2–3 day intervals → RMA / warranty ticket with Minisforum.
