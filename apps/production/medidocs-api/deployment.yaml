@@ -138,11 +138,15 @@ spec:
     spec:
       imagePullSecrets:
         - name: registry-secret
-      # Wait for the API deployment's `migrate` initContainer to bring the DB
-      # to head before the worker imports models and starts polling tasks.
-      # psql is present in the image (see Dockerfile: apt-get install
-      # postgresql-client) and the DSN it needs uses the plain postgresql://
-      # scheme, so we strip the +asyncpg driver suffix.
+      # Block the worker until the DB is at the exact Alembic head this
+      # image expects. Reads the expected revision from the image's own
+      # alembic/versions/ (no DB access) via `alembic heads`, then polls
+      # Postgres until `alembic_version.version_num` matches. This catches
+      # the case where a prior rollout already populated `alembic_version`
+      # but the current image ships a new migration — the API's `migrate`
+      # initContainer must complete before this loop exits. libpq reads
+      # the PG* env vars directly (no DSN string), and psql is in the image
+      # via the Dockerfile's `postgresql-client` apt package.
       initContainers:
         - name: wait-for-migrations
           image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
@@ -151,14 +155,21 @@ spec:
             - -c
             - |
               set -eu
-              DSN="postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}"
-              until psql "$DSN" -tA -c \
-                "SELECT 1 FROM alembic_version WHERE version_num IS NOT NULL LIMIT 1;" \
-                | grep -q '^1$'; do
-                echo "waiting for medidocs-api migrations to complete..."
+              EXPECTED=$(uv run alembic heads 2>/dev/null | awk 'NR==1{print $1}')
+              if [ -z "$EXPECTED" ]; then
+                echo "could not resolve expected alembic head from image" >&2
+                exit 1
+              fi
+              echo "expecting DB at alembic revision $EXPECTED"
+              while :; do
+                CURRENT=$(psql -tA -c "SELECT version_num FROM alembic_version" 2>/dev/null | tr -d '[:space:]' || true)
+                if [ "$CURRENT" = "$EXPECTED" ]; then
+                  echo "DB at $EXPECTED; starting worker."
+                  break
+                fi
+                echo "waiting: DB at '${CURRENT:-<none>}', want $EXPECTED..."
                 sleep 3
               done
-              echo "migrations present; starting worker."
           env:
             - name: PGUSER
               valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: user}}
@@ -170,9 +181,14 @@ spec:
               valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: port}}
             - name: PGDATABASE
               valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: dbname}}
+            # `uv run alembic heads` loads env.py which instantiates the
+            # medical_docs settings object; that requires DATABASE_URL even
+            # though the `heads` command itself never touches the DB.
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
           resources:
-            requests: {memory: "32Mi", cpu: "50m"}
-            limits: {memory: "128Mi", cpu: "200m"}
+            requests: {memory: "128Mi", cpu: "100m"}
+            limits: {memory: "512Mi", cpu: "500m"}
       containers:
         - name: worker
           image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
