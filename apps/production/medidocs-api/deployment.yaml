@@ -44,6 +44,16 @@ spec:
               valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: dbname}}
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            # `alembic upgrade head` runs env.py, which imports medical_docs
+            # (api.py -> routers -> config.py), instantiating the full
+            # Settings object. These fields have no defaults, so the import
+            # fails even though the migration itself never uses them.
+            - name: OPENAI_API_KEY
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: OPENAI_API_KEY}}
+            - name: ZILLIZ_URI
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: ZILLIZ_URI}}
+            - name: ZILLIZ_TOKEN
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: ZILLIZ_TOKEN}}
           resources:
             requests: {memory: "128Mi", cpu: "100m"}
             limits: {memory: "512Mi", cpu: "500m"}
