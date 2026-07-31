@@ -7,6 +7,16 @@ metadata:
     app: medidocs-api
 spec:
   replicas: 1
+  # maxUnavailable: 0 keeps the currently-serving pod up until the new one is
+  # Ready. If the `migrate` initContainer below fails, the new pod never
+  # becomes Ready, the rollout stalls, and the old pod keeps serving —
+  # `progressDeadlineSeconds` surfaces the failure to Flux.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  progressDeadlineSeconds: 600
   selector:
     matchLabels:
       app: medidocs-api
@@ -17,6 +27,26 @@ spec:
     spec:
       imagePullSecrets:
         - name: registry-secret
+      initContainers:
+        - name: migrate
+          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          command: ["uv", "run", "alembic", "upgrade", "head"]
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+          resources:
+            requests: {memory: "128Mi", cpu: "100m"}
+            limits: {memory: "512Mi", cpu: "500m"}
       containers:
         - name: api
           image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
@@ -92,6 +122,12 @@ metadata:
     app: medidocs-api-worker
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  progressDeadlineSeconds: 600
   selector:
     matchLabels:
       app: medidocs-api-worker
@@ -102,6 +138,41 @@ spec:
     spec:
       imagePullSecrets:
         - name: registry-secret
+      # Wait for the API deployment's `migrate` initContainer to bring the DB
+      # to head before the worker imports models and starts polling tasks.
+      # psql is present in the image (see Dockerfile: apt-get install
+      # postgresql-client) and the DSN it needs uses the plain postgresql://
+      # scheme, so we strip the +asyncpg driver suffix.
+      initContainers:
+        - name: wait-for-migrations
+          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              DSN="postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}"
+              until psql "$DSN" -tA -c \
+                "SELECT 1 FROM alembic_version WHERE version_num IS NOT NULL LIMIT 1;" \
+                | grep -q '^1$'; do
+                echo "waiting for medidocs-api migrations to complete..."
+                sleep 3
+              done
+              echo "migrations present; starting worker."
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: dbname}}
+          resources:
+            requests: {memory: "32Mi", cpu: "50m"}
+            limits: {memory: "128Mi", cpu: "200m"}
       containers:
         - name: worker
           image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
