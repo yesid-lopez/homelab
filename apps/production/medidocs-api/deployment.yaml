@@ -1,0 +1,247 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medidocs-api
+  namespace: medidocs-api
+  labels:
+    app: medidocs-api
+spec:
+  replicas: 1
+  # maxUnavailable: 0 keeps the currently-serving pod up until the new one is
+  # Ready. If the `migrate` initContainer below fails, the new pod never
+  # becomes Ready, the rollout stalls, and the old pod keeps serving —
+  # `progressDeadlineSeconds` surfaces the failure to Flux.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels:
+      app: medidocs-api
+  template:
+    metadata:
+      labels:
+        app: medidocs-api
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      initContainers:
+        - name: migrate
+          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          command: ["uv", "run", "alembic", "upgrade", "head"]
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+          resources:
+            requests: {memory: "128Mi", cpu: "100m"}
+            limits: {memory: "512Mi", cpu: "500m"}
+      containers:
+        - name: api
+          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            - name: REDIS_URL
+              value: "redis://medidocs-api-redis:6379/0"
+            - name: OPENAI_API_KEY
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: OPENAI_API_KEY}}
+            - name: OPENAI_MODEL
+              value: "gpt-4o"
+            - name: UPLOAD_DIR
+              value: "/app/uploads"
+            - name: THUMBNAIL_DIR
+              value: "/app/thumbnails"
+            - name: S3_ENDPOINT_URL
+              value: "http://minio.minio.svc.cluster.local:9000"
+            - name: S3_PUBLIC_URL
+              value: "https://media.luloai.com"
+            - name: S3_ACCESS_KEY_ID
+              valueFrom: {secretKeyRef: {name: minio-credentials, key: rootUser}}
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom: {secretKeyRef: {name: minio-credentials, key: rootPassword}}
+            - name: S3_BUCKET_NAME
+              value: "medidocs-api"
+            - name: ZILLIZ_URI
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: ZILLIZ_URI}}
+            - name: ZILLIZ_TOKEN
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: ZILLIZ_TOKEN}}
+            - name: ZILLIZ_COLLECTION_NAME
+              value: "medical_documents"
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+            - name: thumbnails
+              mountPath: /app/thumbnails
+          resources:
+            requests: {memory: "256Mi", cpu: "250m"}
+            limits: {memory: "1Gi", cpu: "1000m"}
+          readinessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+      volumes:
+        - name: uploads
+          emptyDir: {}
+        - name: thumbnails
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medidocs-api-worker
+  namespace: medidocs-api
+  labels:
+    app: medidocs-api-worker
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels:
+      app: medidocs-api-worker
+  template:
+    metadata:
+      labels:
+        app: medidocs-api-worker
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      # Block the worker until the DB is at the exact Alembic head this
+      # image expects. Reads the expected revision from the image's own
+      # alembic/versions/ (no DB access) via `alembic heads`, then polls
+      # Postgres until `alembic_version.version_num` matches. This catches
+      # the case where a prior rollout already populated `alembic_version`
+      # but the current image ships a new migration — the API's `migrate`
+      # initContainer must complete before this loop exits. libpq reads
+      # the PG* env vars directly (no DSN string), and psql is in the image
+      # via the Dockerfile's `postgresql-client` apt package.
+      initContainers:
+        - name: wait-for-migrations
+          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              EXPECTED=$(uv run alembic heads 2>/dev/null | awk 'NR==1{print $1}')
+              if [ -z "$EXPECTED" ]; then
+                echo "could not resolve expected alembic head from image" >&2
+                exit 1
+              fi
+              echo "expecting DB at alembic revision $EXPECTED"
+              while :; do
+                CURRENT=$(psql -tA -c "SELECT version_num FROM alembic_version" 2>/dev/null | tr -d '[:space:]' || true)
+                if [ "$CURRENT" = "$EXPECTED" ]; then
+                  echo "DB at $EXPECTED; starting worker."
+                  break
+                fi
+                echo "waiting: DB at '${CURRENT:-<none>}', want $EXPECTED..."
+                sleep 3
+              done
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: dbname}}
+            # `uv run alembic heads` loads env.py which instantiates the
+            # medical_docs settings object; that requires DATABASE_URL even
+            # though the `heads` command itself never touches the DB.
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+          resources:
+            requests: {memory: "128Mi", cpu: "100m"}
+            limits: {memory: "512Mi", cpu: "500m"}
+      containers:
+        - name: worker
+          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          command: ["uv", "run", "taskiq", "worker", "medical_docs.workers.document_processor:broker"]
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: medidocs-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            - name: REDIS_URL
+              value: "redis://medidocs-api-redis:6379/0"
+            - name: OPENAI_API_KEY
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: OPENAI_API_KEY}}
+            - name: OPENAI_MODEL
+              value: "gpt-4o"
+            - name: UPLOAD_DIR
+              value: "/app/uploads"
+            - name: THUMBNAIL_DIR
+              value: "/app/thumbnails"
+            - name: S3_ENDPOINT_URL
+              value: "http://minio.minio.svc.cluster.local:9000"
+            - name: S3_PUBLIC_URL
+              value: "https://media.luloai.com"
+            - name: S3_ACCESS_KEY_ID
+              valueFrom: {secretKeyRef: {name: minio-credentials, key: rootUser}}
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom: {secretKeyRef: {name: minio-credentials, key: rootPassword}}
+            - name: S3_BUCKET_NAME
+              value: "medidocs-api"
+            - name: ZILLIZ_URI
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: ZILLIZ_URI}}
+            - name: ZILLIZ_TOKEN
+              valueFrom: {secretKeyRef: {name: medidocs-api-secrets, key: ZILLIZ_TOKEN}}
+            - name: ZILLIZ_COLLECTION_NAME
+              value: "medical_documents"
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+            - name: thumbnails
+              mountPath: /app/thumbnails
+          resources:
+            requests: {memory: "256Mi", cpu: "250m"}
+            limits: {memory: "1Gi", cpu: "1000m"}
+      volumes:
+        - name: uploads
+          emptyDir: {}
+        - name: thumbnails
+          emptyDir: {}
