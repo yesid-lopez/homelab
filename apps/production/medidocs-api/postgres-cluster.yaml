@@ -62,7 +62,7 @@ metadata:
   name: medidocs-api-postgres-daily
   namespace: medidocs-api
 spec:
-  schedule: "0 0 3 * * *"
+  schedule: "0 15 3 * * *"
   backupOwnerReference: self
   cluster:
     name: medidocs-api-postgres
