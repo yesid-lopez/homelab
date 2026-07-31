@@ -1,0 +1,14 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: medidocs-api
+  namespace: medidocs-api
+spec:
+  imageRepositoryRef:
+    name: medidocs-api
+  policy:
+    semver:
+      range: ">=0.3.0"
+  filterTags:
+    pattern: '^v[0-9]+\.[0-9]+\.[0-9]+$'
+    extract: '$0'
