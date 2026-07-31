@@ -19,7 +19,7 @@ spec:
         - name: registry-secret
       containers:
         - name: api
-          image: registry.yesidlopez.de/medidocs-api:v0.1.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
           ports:
             - containerPort: 8000
           env:
@@ -104,7 +104,7 @@ spec:
         - name: registry-secret
       containers:
         - name: worker
-          image: registry.yesidlopez.de/medidocs-api:v0.1.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
           command: ["uv", "run", "taskiq", "worker", "medical_docs.workers.document_processor:broker"]
           env:
             - name: PGUSER
