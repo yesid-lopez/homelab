@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medidocs-ui
+  namespace: medidocs-ui
+  labels:
+    app: medidocs-ui
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  progressDeadlineSeconds: 300
+  selector:
+    matchLabels:
+      app: medidocs-ui
+  template:
+    metadata:
+      labels:
+        app: medidocs-ui
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      containers:
+        - name: medidocs-ui
+          image: registry.yesidlopez.de/medidocs-ui:v0.0.1 # {"$imagepolicy": "medidocs-ui:medidocs-ui"}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: API_INTERNAL_URL
+              value: "http://medidocs-api.medidocs-api.svc.cluster.local"
+          resources:
+            requests: {memory: "128Mi", cpu: "50m"}
+            limits: {memory: "256Mi", cpu: "300m"}
+          readinessProbe:
+            httpGet: {path: /, port: 3000}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /, port: 3000}
+            initialDelaySeconds: 15
+            periodSeconds: 20
