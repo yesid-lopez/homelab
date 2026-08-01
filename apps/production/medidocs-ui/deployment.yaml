@@ -31,7 +31,7 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: medidocs-ui
-          image: registry.yesidlopez.de/medidocs-ui:v0.0.1 # {"$imagepolicy": "medidocs-ui:medidocs-ui"}
+          image: registry.yesidlopez.de/medidocs-ui:v0.0.2 # {"$imagepolicy": "medidocs-ui:medidocs-ui"}
           ports:
             - containerPort: 3000
           env:
