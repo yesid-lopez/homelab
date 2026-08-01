@@ -16,3 +16,4 @@ resources:
 - n8n
 - client-sites
 - medidocs-api
+- medidocs-ui
