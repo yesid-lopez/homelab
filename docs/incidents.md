@@ -298,3 +298,191 @@ Long-term check (5–7 days): `sudo journalctl -u k3s --since '1 day ago' | grep
 - **Watch until 2026-08-06** (7 days) whether the ~2–3 day crash cadence extends. If yes, this was a real contributor and we keep the fix. If no, IPv6 churn was just noise and the real root cause is still in the hardware shortlist.
 - If crashes continue after 2026-08-06 with IPv6 quiet, **run `memtester 8G 1` in the running OS** (no reboot, ~30 min, non-destructive to the k3s workloads on that node — but drain first with `kubectl drain master-1 --ignore-daemonsets --delete-emptydir-data`). Any error confirms RAM.
 - If memtester is clean and crashes continue → schedule an overnight `memtest86+` USB boot as originally planned.
+
+### Update — 2026-08-02: IPv6 fix ineffective, cadence worsened to ~12 h
+
+7-day observation window on the IPv6 SLAAC mitigation returned a negative result. Post-fix boot history:
+
+| # | Boot                | Uptime before crash |
+|---|---------------------|---------------------|
+| 1 | 2026-07-30 20:32 UTC | ~12 h |
+| 2 | 2026-07-31 11:50 UTC | ~15 h |
+| 3 | 2026-07-31 20:40 UTC | ~9 h  |
+| 4 | 2026-08-01 10:46 UTC | ~14 h |
+| 5 | 2026-08-02 01:22 UTC | ~15 h |
+| 6 | 2026-08-02 04:49 UTC | ~3.5 h |
+| 7 | 2026-08-02 18:16 UTC | ~13.5 h |
+
+**7 crashes in 86 hours**, average interval ~12 h — the cadence actually accelerated from the 2–3 day pre-fix baseline. Zero `NodeIPs changed` events post-fix (the IPv6 change worked as intended) yet the underlying fault kept firing. Conclusion: IPv6 SLAAC churn was noise, not the trigger.
+
+Every crash retained the same clean-cut signature: no panic, no oops, no MCE, no OOM, no thermal warning, journal terminating on unremarkable log lines (etcd compaction / cron / sysstat). Recovery averaged 60–90 s. hwmon at the time of each cut consistently showed idle CPU (load 0.1–0.6), cool temperatures (Tctl 50–55 °C, NVMe 30–33 °C), memory well below limits, negligible network — a completely healthy-looking box seconds before disappearing.
+
+### New finding — the master is a Ryzen 6900HX ("Rembrandt", Zen 3+), not a 7840HS
+
+Prior notes assumed a Ryzen 7 7840HS (Phoenix, Zen 4). Actual `dmidecode` output on 2026-08-02:
+
+- **System**: Minisforum EliteMini Series (UM690)
+- **CPU**: AMD Ryzen 9 **6900HX** with Radeon Graphics (Zen 3+ / Rembrandt, family 19h model 44h)
+- **RAM**: 2× 8 GB Samsung DDR5-4800, dual channel P0 A+B, 1.1 V — SMBIOS clean, EDAC reports zero correctable errors since 2026-07-30
+- **BIOS**: v1.04 dated 2024-09-06 (nearly 2 years without an update)
+- **Microcode**: `0xa404108` (up to date for Rembrandt on Ubuntu 24.04)
+- **Kernel**: Ubuntu 6.8.0-136-generic
+- **Kernel cmdline pre-fix**: `BOOT_IMAGE=/vmlinuz-6.8.0-136-generic root=/dev/mapper/ubuntu--vg-ubuntu--lv ro` — **no idle / C-state / PCIe / NVMe mitigations set**
+- **C-states exposed by ACPI**: POLL, C1, C2, C3, all four with `disable=0`
+
+The Ryzen 6000 mobile family is exactly the generation with a widely documented Linux stability bug — deep C-state (CC6, exposed as ACPI C3 with ~350 µs wake latency) transitions can trigger an AMD *Data Fabric sync flood* that instantaneously resets the SoC. Because the reset is triggered inside the fabric, the OS gets no chance to log a panic, oops, MCE, or thermal event: the journal simply ends on the last routine line. This exact failure signature is documented across Proxmox / Framework / CachyOS / Manjaro forums and in the ArchWiki and Gentoo wiki Ryzen pages.
+
+References consulted:
+
+- [AMD Ryzen Zen 4: random reboots caused by data fabric sync flood (0x08000800)](https://gist.github.com/eliottness/ded6bce8163689dc426732d0670c7a28) — closest match to our symptoms; fix documented as `processor.max_cstate=2` plus PCIe/NVMe extras.
+- [ArchWiki — Ryzen § Random reboots / soft lock](https://wiki.archlinux.org/title/Ryzen) — "strongly linked to the C6 CPU idle state"; recommends BIOS `Power Supply Idle Control = Typical Current Idle` or kernel `processor.max_cstate=1`.
+- [Gentoo Wiki — Ryzen § Random reboots with mce events](https://wiki.gentoo.org/wiki/Ryzen#Random_reboots_with_mce_events) — same recommendation, plus the `amd-disable-c6` systemd service as backup when the kernel parameter is ignored.
+- [klingt.net — AMD Ryzen random reboots under Linux when in idle](https://www.klingt.net/articles/amd-ryzen-random-reboots-under-linux-when-in-idle.html) — same phenomenology (idle-only, no logs, journal ends clean).
+- [Gah0/amd-disable-c6](https://github.com/Gah0/amd-disable-c6) — packaged systemd service for the same bug.
+
+Every criterion of the documented bug matches our observations:
+
+| Documented bug trait | master-1 observation |
+|---|---|
+| Reboots every 1–4 days, irregular cadence | Yes (2–3 d → 12 h currently) |
+| Occurs when idle, not under load | Yes (load 0.1–0.6 at every cut) |
+| No panic / oops / MCE in journal | Confirmed since 2026-07-30 |
+| Journal ends on unremarkable line | Confirmed (etcd compaction, cron) |
+| Temperatures cold at time of cut | Yes (~52 °C) |
+| Auto-recovery works (it's a reset, not a lockup) | Yes (52–90 s recoveries) |
+| Tends to worsen over time on affected silicon | Yes (accelerating) |
+
+Live measurement on 2026-08-02 19:31 UTC before the fix: cpu0 idle residency showed **~70 % of wall time in C3, ~20 % in C2, ~3 % in C1, ~0 % in POLL** — the CPU was spending the vast majority of its time in exactly the state that hosts the bug.
+
+### Change — 2026-08-02 19:39 UTC: extended hwmon logger + applied `processor.max_cstate=1`
+
+Two host-level changes on `master-1` (nothing committed to the repo):
+
+**1. Extended `/usr/local/bin/hwmon-log.sh`** to record C-state health going forward. Each `[BOOT]` marker now includes the effective kernel parameter so it's obvious per boot whether the fix is active:
+
+```
+2026-08-02T19:31:30+00:00 [BOOT] uptime_s=4499.01 kernel=6.8.0-136-generic max_cstate=unlimited
+```
+
+Each sample line now appends cumulative per-C-state residency in seconds since boot, so post-hoc deltas over any window are computable:
+
+```
+… rx=X tx=Y poll_s=A c1_s=B c2_s=C c3_s=D
+```
+
+When `processor.max_cstate=1` is active, `c2_s` and `c3_s` report `NA` because the kernel doesn't expose those states at all — this itself is a positive signal that the parameter took effect. Existing sample fields are unchanged; older parsers keep working.
+
+**2. Applied kernel parameter `processor.max_cstate=1`** via GRUB.
+
+- Backup: `/etc/default/grub.bak.1785699318`.
+- Edited `/etc/default/grub`:
+
+    ```
+    GRUB_CMDLINE_LINUX_DEFAULT="processor.max_cstate=1"
+    ```
+
+- Regenerated with `sudo update-grub`.
+- Controlled reboot: `kubectl cordon master-1` from the Mac → `sudo systemctl reboot` on the host → wait ~4 min → `kubectl uncordon master-1`. No drain needed on a single-master setup; containerd resumed pods automatically.
+
+### Verification (immediately post-boot)
+
+```bash
+$ cat /proc/cmdline
+BOOT_IMAGE=/vmlinuz-6.8.0-136-generic root=/dev/mapper/ubuntu--vg-ubuntu--lv ro processor.max_cstate=1
+
+$ for i in /sys/devices/system/cpu/cpu0/cpuidle/state*/; do
+    echo "$(cat $i/name): disable=$(cat $i/disable)"
+  done
+POLL: disable=0
+C1:   disable=0
+# C2 and C3 no longer exist in sysfs — kernel dropped them entirely.
+
+$ systemctl is-active k3s
+active
+
+$ tail -1 /var/log/hwmon.log
+2026-08-02T19:39:49+00:00 [BOOT] uptime_s=23.29 kernel=6.8.0-136-generic max_cstate=1
+```
+
+Cluster returned to `Ready` on both nodes in ~4 min. Longhorn recovered cleanly, Flux controllers reconciled successfully, no CrashLoopBackOff remaining after ~1 min of settling.
+
+### Correction on the "diagnosis certainty" note
+
+An earlier draft implied the C-state hypothesis was "not provable without applying the fix". That is inaccurate. AMD Zen SoCs expose a persistent hardware register `PMx3C0` (a.k.a. `S5_RESET_STATUS`) at physical address `0xFED803C0` that **survives resets** and encodes the reset cause as a bitmap. Reading it after a crash tells you what really happened. The reason we hadn't inspected it before this session is that Ubuntu 24.04 ships `CONFIG_STRICT_DEVMEM=y`, which blocks `/dev/mem` access to arbitrary physical addresses — so `sudo busybox devmem 0xFED803C0 32` returns `Operation not permitted`. To unlock the register we need the kernel boot parameter `iomem=relaxed`. Once that is active, the register becomes the ground-truth diagnostic for every subsequent reset. That capability is added below.
+
+Additionally, the clean reboot at 19:39 UTC to apply `processor.max_cstate=1` **overwrote** the register with an ACPI-clean-transition value, so we lost the ground-truth value that the 2026-08-02 18:15 UTC crash would have left there. Regrettable but unavoidable — we didn't have `iomem=relaxed` yet. From now on we will.
+
+### Additional change — 2026-08-02 19:46 UTC: unlock PMx3C0 register + record it per boot
+
+Two more host-level changes on `master-1`, applied without a reboot so they only take effect on the next boot event (either a scheduled reboot or a crash):
+
+**1. Added kernel parameter `iomem=relaxed`** alongside `processor.max_cstate=1` in `/etc/default/grub`:
+
+```
+GRUB_CMDLINE_LINUX_DEFAULT="processor.max_cstate=1 iomem=relaxed"
+```
+
+- Backup: `/etc/default/grub.bak.1785699960`.
+- Regenerated with `sudo update-grub`.
+- **No reboot performed.** The current boot still runs with `iomem=strict` (kernel default) so `/dev/mem` reads at arbitrary physical addresses still return `EPERM`. That is expected — we intentionally deferred activation to the next boot so we don't churn the fix's monitoring window.
+
+`iomem=relaxed` weakens `/dev/mem` protection so root can read/write arbitrary physical memory. Trade-off: any root process can now poke any MMIO. Acceptable here because the box is a single-tenant homelab node behind the LAN. If tightened security is ever needed, remove the flag and re-run `update-grub`.
+
+**2. Extended `/usr/local/bin/hwmon-log.sh` again** to read `PMx3C0` at boot and log it in the `[BOOT]` marker. New `[BOOT]` line format:
+
+```
+YYYY-MM-DDTHH:MM:SS+TZ [BOOT] uptime_s=X kernel=Y max_cstate=Z iomem=Q rst_status=0x...
+```
+
+- `max_cstate=` and `iomem=` are parsed from `/proc/cmdline` and echo the effective parameters for that boot.
+- `rst_status=` is `busybox devmem 0xFED803C0 32` output. Falls back to `NA` when the read fails (unset `iomem=relaxed`, no `busybox`, `/dev/mem` denied, etc.). Field is always present so downstream parsers don't have to special-case its absence.
+
+Bit meanings encoded in the register (per the reference gist we cite, `sp5100_tco` driver source, and AMD PPR for Family 19h):
+
+| Bit | Mask | Meaning |
+|---|---|---|
+| 0  | `0x00000001` | `SB_RTS_STATUS` — southbridge reset triggered |
+| 11 | `0x00000800` | `SYNC_FLOOD` — AMD Data Fabric sync flood occurred |
+| 21 | `0x00200000` | `ACPI_TRANSITION` — normal ACPI S5 / reboot (clean shutdown) |
+| 27 | `0x08000000` | Uncorrected hardware error triggered a sync flood |
+
+Interpretation rules for the next crash's `[BOOT]` marker:
+
+- **`rst_status=0x00200800`** (bits 21 + 11) → **clean ACPI transition**. The "reset" was an intentional reboot, not a crash. If we see this after an unexpected event, someone/something rebooted the box on purpose (kernel update, `shutdown -r`, etc.).
+- **`rst_status=0x08000800`** (bits 27 + 11) → **uncorrected hardware error triggered a Data Fabric sync flood**. This is the smoking-gun value for our hypothesis: it's what a failed CC6 transition on Ryzen 6000/7000 mobile is documented to leave behind. **However**, bit 27 alone does *not* uniquely identify CC6 as the cause — it can also be raised by marginal RAM, VRM glitches, PCIe uncorrectable errors, or any other data-fabric-visible fault. If we see this value **and** the fix is confirmed active (`max_cstate=1` earlier in the same line), then C-state alone can't be the culprit and the culprit is one of the other hardware faults.
+- **`rst_status=0x00000001`** or a small value with no bit-11 → a normal reset with no sync flood observed. Suggests the reset was triggered outside the data fabric (e.g., watchdog, external reset pin, brownout — not necessarily a crash).
+- **`rst_status=NA`** → `iomem=relaxed` didn't take effect (`iomem=strict` will show in the same line). Re-check `/proc/cmdline`; the register can only be read once `iomem=relaxed` is honoured.
+
+Together, the three fields on the `[BOOT]` line answer the two most important post-crash questions in one look: *was the fix active?* (`max_cstate=1`) and *what did the hardware say caused the last reset?* (`rst_status=…`).
+
+Deployment verification (in-boot restart of the service, not a real reboot):
+
+```
+$ tail -1 /var/log/hwmon.log
+2026-08-02T19:46:34+00:00 [BOOT] uptime_s=428.63 kernel=6.8.0-136-generic max_cstate=1 iomem=strict rst_status=NA
+```
+
+`iomem=strict` and `rst_status=NA` are the *expected* values for this in-place restart because the running kernel still has the pre-fix cmdline. On the next real boot, the line will show `iomem=relaxed rst_status=0x…`.
+
+### Follow-ups
+
+- **Monitor until 2026-08-09** (7 days). Daily check from the Mac:
+
+    ```bash
+    ssh yeye@192.168.2.108 "uptime && grep BOOT /var/log/hwmon.log | tail -3"
+    ```
+
+  Expected: no new `[BOOT]` markers, uptime growing monotonically.
+- **If uptime crosses 7 days cleanly** → C-state bug confirmed; keep the fix permanently. Consider closing this incident thread and enabling a Grafana panel on `node_boot_time_seconds{node="master-1"}` for long-term visibility.
+- **If a crash returns before 7 days** with `max_cstate=1` in the pre-crash `[BOOT]` line:
+    - **Read the `rst_status` field on the post-crash `[BOOT]` line first** — it tells you unambiguously whether the reset was a data fabric sync flood (`0x08000800` = bit 27+11) or something else. Interpretation table above.
+    - If bit 27 is set: the C-state fix alone wasn't enough (or the culprit is a different data-fabric-visible hardware fault). Next escalations, in order:
+        1. Also add `idle=nomwait` to GRUB (disables mwait in C1 too; some Rembrandt units need this).
+        2. Install `amd-disable-c6` systemd service — forces C6 off at MSR level, in case the ACPI/cpuidle path is being ignored.
+        3. Also add `nvme_core.default_ps_max_latency_us=0` and `pcie_aspm=off` (documented co-contributors to the fabric sync flood).
+        4. Run `memtester 8G 1` in-OS (`kubectl drain` first) to rule out marginal RAM as the fabric error source.
+        5. Flash BIOS if Minisforum has a version newer than 2024-09-06 on the UM690 support page.
+    - If bit 21 is set alone: someone rebooted the box intentionally; this wasn't a crash at all.
+    - If `rst_status=NA`: `iomem=relaxed` didn't activate. Check `/proc/cmdline` on the current boot; may need to fix the GRUB entry manually.
+- **If a crash returns before 7 days without `max_cstate=1` visible in the pre-crash `[BOOT]` line** → GRUB didn't apply the parameter; re-check `/proc/cmdline`.
+- **Reversibility**: if in the future we want to revert (e.g. for benchmarking, or if a kernel upgrade fixes the bug upstream), restore `/etc/default/grub.bak.1785699318` (pre-C-state fix) or `/etc/default/grub.bak.1785699960` (pre-iomem fix), run `sudo update-grub`, reboot.
