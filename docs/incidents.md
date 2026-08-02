@@ -486,3 +486,96 @@ $ tail -1 /var/log/hwmon.log
     - If `rst_status=NA`: `iomem=relaxed` didn't activate. Check `/proc/cmdline` on the current boot; may need to fix the GRUB entry manually.
 - **If a crash returns before 7 days without `max_cstate=1` visible in the pre-crash `[BOOT]` line** → GRUB didn't apply the parameter; re-check `/proc/cmdline`.
 - **Reversibility**: if in the future we want to revert (e.g. for benchmarking, or if a kernel upgrade fixes the bug upstream), restore `/etc/default/grub.bak.1785699318` (pre-C-state fix) or `/etc/default/grub.bak.1785699960` (pre-iomem fix), run `sudo update-grub`, reboot.
+
+### Update — 2026-08-02 20:10 UTC: `processor.max_cstate=1` REVERTED — fix made things dramatically worse
+
+**Result: the C-state fix did not help. It catastrophically accelerated the crash cadence.**
+
+Post-fix boot log:
+
+| Boot start (UTC) | cmdline | Uptime before crash |
+|---|---|---|
+| 2026-08-02 19:39 | `processor.max_cstate=1` | ~10 min |
+| 2026-08-02 19:49 | `processor.max_cstate=1 iomem=relaxed` | ~7 min |
+| 2026-08-02 19:56 | `processor.max_cstate=1 iomem=relaxed` | ~14 min (until manual revert reboot) |
+
+Pre-fix baseline (from the earlier table in this document) was **~12 h between crashes**. Post-fix cadence collapsed to **~7–10 min**. Two orders of magnitude worse.
+
+Both crashes at 19:49 and 19:56 retained the same clean-cut signature (journal ends on `session logout` / `k3s snapshot`, no panic/oops/MCE, auto-recovery in ~50 s). The clean signature is not the point — the point is that limiting C-states to `POLL`+`C1` clearly does not stop whatever is triggering the reset on this hardware, and in this observation window it appeared to make it worse.
+
+Two candidate explanations:
+
+1. **A different bug lives in the mwait path used by C1 too.** With C2/C3 removed the CPU spent all its idle wall time in C1 (`c1_s` sample delta was ~28 s per 30 s of wall clock; `poll_s` ~0 s). C1 on AMD is entered via `mwait` on this cpuidle driver. If the bug is a generic mwait state-machine issue on this specific silicon, not a CC6-only issue, `processor.max_cstate=1` doesn't help — it only removes the deepest states from the *policy*, not the mwait code path itself. The next-level fix `idle=nomwait` would bypass mwait entirely and use `HLT` instead.
+2. **The C-state hypothesis was wrong from the start.** The correlation between C3 residency and the pre-fix crashes was strong on paper, but it is possible that C-state was innocent and the real trigger is a hardware fault that happened to be uncorrelated (RAM bit flip cascade, VRM instability, PCIe corruption, etc.). Two crashes on a fresh boot with cold hardware and near-idle load argues for a persistent hardware fault, not a state-machine issue.
+
+Either way, `processor.max_cstate=1` is not a viable production setting on this host in its current state. Reverted.
+
+**Revert actions** (host-level, 2026-08-02 20:10 UTC):
+
+- Backup: `/etc/default/grub.bak.1785701205`.
+- Edited `/etc/default/grub`:
+
+    ```
+    GRUB_CMDLINE_LINUX_DEFAULT="iomem=relaxed"
+    ```
+
+- `sudo update-grub`.
+- `kubectl cordon master-1` → `sudo systemctl reboot` → wait ~3 min → `kubectl uncordon master-1`.
+
+**Note**: `iomem=relaxed` was **intentionally kept** on GRUB. It is harmless (single-tenant homelab) and it is a prerequisite for reading the `PMx3C0` diagnostic register on the next crash. Removing `processor.max_cstate=1` alone was enough to restore the pre-fix cpuidle policy.
+
+**Post-revert verification** (boot at 2026-08-02 20:10:33 UTC):
+
+```
+$ cat /proc/cmdline
+BOOT_IMAGE=/vmlinuz-6.8.0-136-generic root=/dev/mapper/ubuntu--vg-ubuntu--lv ro iomem=relaxed
+
+$ for i in /sys/devices/system/cpu/cpu0/cpuidle/state*/; do
+    echo "$(cat $i/name): disable=$(cat $i/disable)"
+  done
+POLL: disable=0
+C1:   disable=0
+C2:   disable=0
+C3:   disable=0
+# All four states restored; CPU can enter deep sleep again as before.
+
+$ grep BOOT /var/log/hwmon.log | tail -1
+2026-08-02T20:10:33+00:00 [BOOT] uptime_s=23.48 kernel=6.8.0-136-generic max_cstate=unlimited iomem=relaxed rst_status=NA
+```
+
+### Correction on the `iomem=relaxed` claim
+
+`iomem=relaxed` **did not** unlock the `PMx3C0` register on Ubuntu 24.04 kernel 6.8.0-136 as I originally expected. All three boots after the flag was added (19:49, 19:56, 20:10) show `rst_status=NA` despite `iomem=relaxed` being visible in the same `[BOOT]` line's `iomem=` field. Manual test also fails:
+
+```
+$ sudo busybox devmem 0xFED803C0 32
+devmem: can't open '/dev/mem': Operation not permitted
+```
+
+Ubuntu compiles this kernel with `CONFIG_STRICT_DEVMEM=y` and `CONFIG_IO_STRICT_DEVMEM=y`; on this build `iomem=relaxed` only affects a subset of the region checks. Reading FCH MMIO like `0xFED803C0` still fails. To actually read the register we would need one of:
+
+- Rebuild the kernel with `CONFIG_STRICT_DEVMEM=n` and `CONFIG_IO_STRICT_DEVMEM=n`. Overkill.
+- A dedicated driver / kernel module that reads the register via ioremap and exposes it via sysfs (write a small out-of-tree kmod, or wait for `sp5100_tco` / `amd_pmc` upstream to add it).
+- `mmio_test`-style unsafe access from a signed kernel module — not worth the effort.
+
+Consequence: `rst_status=NA` will keep showing in `[BOOT]` markers unless we invest in one of the above. For now the field is aspirational. Left in place because it costs nothing and if any future Ubuntu kernel starts honouring it, we'll get the data automatically.
+
+### Revised suspect list (2026-08-02, post C-state fix failure)
+
+With IPv6 and C-state both ruled out empirically, the shortlist narrows toward the physical layer:
+
+1. **RAM marginality without ECC** — still consistent, though EDAC still reports zero correctable errors in 3+ days. Non-ECC DDR5 can hard-fault without corrigible-error warning. Next test is `memtester 8G 1` in-OS or `memtest86+` from USB overnight.
+2. **VRM / mainboard power delivery** — degrading capacitors on the CPU VRM produce exactly this failure profile: instantaneous reset, no logs, temperatures normal, cadence worsening over time as caps age. Only diagnosis is visual inspection with the chassis open.
+3. **BIOS firmware bug** — v1.04 (2024-09-06) is nearly 2 years old. Minisforum has released newer versions for the UM690 line; a BIOS update with newer AGESA microcode is a documented fix for random-reset issues on Rembrandt boards.
+4. **DC input jack / dry solder** — micro-cuts of ms on the 19 V input produce identical symptoms. Only reproducible by wiggling the barrel connector while the box is running.
+5. **NVMe firmware quirk under sustained Longhorn writes** — low probability given hwmon shows no I/O spike near cuts, but has documented links to fabric sync floods on some drives.
+
+### Follow-ups (2026-08-02, post revert)
+
+- **Immediate**: observe master-1 for the next 30–60 min. If it stays up → the ~7–10 min cadence was fix-induced, and we return to the pre-fix ~12 h baseline. If it crashes again in <30 min → the hardware degradation accelerated independently of the fix; escalate to physical inspection or planned power-off until the box can be examined.
+- **Next diagnostic (in-OS, no reboot)**: `kubectl drain master-1 --ignore-daemonsets --delete-emptydir-data` from the Mac, then `sudo apt install memtester && sudo memtester 8G 1` on the host. Runs ~30 min, non-destructive, will loudly log any RAM error.
+- **If `memtester` clean**: flash the latest UM690 BIOS from [minisforum.com/pages/download_um690](https://www.minisforum.com/pages/download_um690). Not available via LVFS/`fwupdmgr` — has to be the manual USB utility. Physical intervention required.
+- **If BIOS update doesn't fix it**: open the chassis, reseat SO-DIMMs, photograph VRM area for bulged caps, dust-blow the heatsink, wiggle the DC barrel. Physical intervention required.
+- **Try `idle=nomwait` (LAST resort software workaround)** only if we want one more remote software attempt. Bypasses mwait entirely and uses `HLT` for idle. Same reversibility as `processor.max_cstate`. Cost: ~5 W extra idle. Given the last software fix backfired hard, prefer hardware diagnostics first.
+- **Long-term**: if hardware fixes don't resolve within 2 weeks, RMA the UM690 with Minisforum (still under warranty if bought after 2024-08). Bring workloads temporarily to the worker Pi (limited, but coredns/metrics/some pods can live there).
+- **Never re-apply `processor.max_cstate=1` alone on this host** without a matched hardware fix in place. Documented here so future readers don't repeat the mistake.
