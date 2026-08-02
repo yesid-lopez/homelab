@@ -487,28 +487,33 @@ $ tail -1 /var/log/hwmon.log
 - **If a crash returns before 7 days without `max_cstate=1` visible in the pre-crash `[BOOT]` line** → GRUB didn't apply the parameter; re-check `/proc/cmdline`.
 - **Reversibility**: if in the future we want to revert (e.g. for benchmarking, or if a kernel upgrade fixes the bug upstream), restore `/etc/default/grub.bak.1785699318` (pre-C-state fix) or `/etc/default/grub.bak.1785699960` (pre-iomem fix), run `sudo update-grub`, reboot.
 
-### Update — 2026-08-02 20:10 UTC: `processor.max_cstate=1` REVERTED — fix made things dramatically worse
+### Update — 2026-08-02 20:10 UTC: `processor.max_cstate=1` REVERTED — no benefit, possible harm
 
-**Result: the C-state fix did not help. It catastrophically accelerated the crash cadence.**
+**Result: the C-state fix showed no benefit and the two boots that ran with it both ended in crashes within minutes. Reverted.**
 
 Post-fix boot log:
 
-| Boot start (UTC) | cmdline | Uptime before crash |
-|---|---|---|
-| 2026-08-02 19:39 | `processor.max_cstate=1` | ~10 min |
-| 2026-08-02 19:49 | `processor.max_cstate=1 iomem=relaxed` | ~7 min |
-| 2026-08-02 19:56 | `processor.max_cstate=1 iomem=relaxed` | ~14 min (until manual revert reboot) |
+| Boot start (UTC) | cmdline | Uptime | How it ended |
+|---|---|---|---|
+| 2026-08-02 19:39 | `processor.max_cstate=1` | ~10 min | crash |
+| 2026-08-02 19:49 | `processor.max_cstate=1 iomem=relaxed` | ~7 min | crash |
+| 2026-08-02 19:56 | `processor.max_cstate=1 iomem=relaxed` | ~14 min | intentional revert reboot (not a crash) |
 
-Pre-fix baseline (from the earlier table in this document) was **~12 h between crashes**. Post-fix cadence collapsed to **~7–10 min**. Two orders of magnitude worse.
+Pre-fix baseline (from the earlier table in this document) was **~12 h between crashes**; these two boots died after 10 and 7 minutes.
 
-Both crashes at 19:49 and 19:56 retained the same clean-cut signature (journal ends on `session logout` / `k3s snapshot`, no panic/oops/MCE, auto-recovery in ~50 s). The clean signature is not the point — the point is that limiting C-states to `POLL`+`C1` clearly does not stop whatever is triggering the reset on this hardware, and in this observation window it appeared to make it worse.
+Both crashes retained the same clean-cut signature (journal ends on `session logout` / `k3s snapshot`, no panic/oops/MCE, auto-recovery in ~50 s). The clean signature is not the news — the news is that restricting the CPU to `POLL`+`C1` did not stop whatever triggers the reset.
 
-Two candidate explanations:
+**Calibration note — do not over-read these two data points.** The inference "the fix caused the fast crashes" is *suggestive, not established*, for two reasons:
 
-1. **A different bug lives in the mwait path used by C1 too.** With C2/C3 removed the CPU spent all its idle wall time in C1 (`c1_s` sample delta was ~28 s per 30 s of wall clock; `poll_s` ~0 s). C1 on AMD is entered via `mwait` on this cpuidle driver. If the bug is a generic mwait state-machine issue on this specific silicon, not a CC6-only issue, `processor.max_cstate=1` doesn't help — it only removes the deepest states from the *policy*, not the mwait code path itself. The next-level fix `idle=nomwait` would bypass mwait entirely and use `HLT` instead.
-2. **The C-state hypothesis was wrong from the start.** The correlation between C3 residency and the pre-fix crashes was strong on paper, but it is possible that C-state was innocent and the real trigger is a hardware fault that happened to be uncorrelated (RAM bit flip cascade, VRM instability, PCIe corruption, etc.). Two crashes on a fresh boot with cold hardware and near-idle load argues for a persistent hardware fault, not a state-machine issue.
+- **Sample size.** Two crashes against a stochastic fault is thin evidence. A pre-fix boot had already died after 3.5 h on 2026-08-02 04:49, so short uptimes were not unprecedented.
+- **Startup-churn confound.** Both post-fix crashes landed inside or just after the heavy post-reboot workload restart (all pods recreating, Longhorn re-attaching 13 volumes, etcd recovering, Flux controllers reconciling). That window is the highest-stress period this host ever sees, and it was entered three times in 30 minutes. The post-revert boot passed through the same churn and survived, which supports the fix-caused reading, but does not isolate it.
 
-Either way, `processor.max_cstate=1` is not a viable production setting on this host in its current state. Reverted.
+The defensible conclusion is narrower: **`processor.max_cstate=1` produced no observable benefit, is not safe to leave running on this host, and the C-state hypothesis is no longer the leading explanation.**
+
+Two candidate explanations for why the fix didn't work:
+
+1. **A different bug lives in the mwait path used by C1 too.** With C2/C3 removed the CPU spent all its idle wall time in C1 (`c1_s` sample delta was ~28 s per 30 s of wall clock; `poll_s` ~0 s). C1 on AMD is entered via `mwait` on this cpuidle driver. If the bug is a generic mwait state-machine issue on this specific silicon, not a CC6-only issue, `processor.max_cstate=1` doesn't help — it only removes the deepest states from the *policy*, not the mwait code path itself. `idle=nomwait` would bypass mwait entirely and use `HLT` instead.
+2. **The C-state hypothesis was wrong from the start.** The correlation between C3 residency and the pre-fix crashes was strong on paper, but C3 residency being ~70 % is simply what an idle Linux box does — it is a property of *every* idle AMD host, not evidence specific to this one. Absent the `PMx3C0` register (see below, unreadable), the C-state theory never had direct evidence behind it, only symptom-pattern matching against forum reports.
 
 **Revert actions** (host-level, 2026-08-02 20:10 UTC):
 
@@ -543,6 +548,26 @@ $ grep BOOT /var/log/hwmon.log | tail -1
 2026-08-02T20:10:33+00:00 [BOOT] uptime_s=23.48 kernel=6.8.0-136-generic max_cstate=unlimited iomem=relaxed rst_status=NA
 ```
 
+### Post-revert observation — 2026-08-02 20:30 UTC (20 min after the revert boot)
+
+Checked at +20 min, i.e. past the 7–10 min window in which both post-fix boots died:
+
+- **Uptime 20 min, no new `[BOOT]` marker** after `20:10:33`. `last -x reboot` confirms 20:10 is still the running boot.
+- **C-state residency back to pre-fix profile**: `c3_s` growing ~20 s per 30 s sample (≈67 % of wall time in C3), `c2_s` ~6 s, `c1_s` ~1 s, `poll_s` 0. Identical to the 2026-08-02 19:31 pre-fix measurement.
+- **Thermals and load normal**: Tctl 52–53 °C, GPU 46 °C, NVMe 32 °C, load 0.27–0.46, swap 1 MB.
+- **Kernel log clean**: no panic, oops, MCE, EDAC, thermal or watchdog events since the revert boot. Only routine boot-time noise (PCI INT routing, ACPI `_PRW` overrides, unsupported Bluetooth variant, `sd N:N:N:N Power-on or device reset` from iSCSI reconnect).
+- **journald noted `system.journal corrupted or uncleanly shut down, renaming and replacing`** — expected fallout from the hard crashes, handled automatically, no data loss.
+
+**Longhorn survived the reboot storm intact.** This was the main collateral-damage risk from five reboots inside one hour. All 13 volumes report `attached` + `healthy`, all PVCs `Bound`, no degraded replicas and no rebuild backlog:
+
+```bash
+kubectl get volumes.longhorn.io -n longhorn-system \
+  -o custom-columns='NAME:.metadata.name,STATE:.status.state,ROBUSTNESS:.status.robustness'
+# 13/13 attached + healthy
+```
+
+Both nodes `Ready`, zero pods outside `Running`/`Completed` after force-deleting one orphaned `medidocs-api` pod left in `Unknown` from a pre-crash boot.
+
 ### Correction on the `iomem=relaxed` claim
 
 `iomem=relaxed` **did not** unlock the `PMx3C0` register on Ubuntu 24.04 kernel 6.8.0-136 as I originally expected. All three boots after the flag was added (19:49, 19:56, 20:10) show `rst_status=NA` despite `iomem=relaxed` being visible in the same `[BOOT]` line's `iomem=` field. Manual test also fails:
@@ -572,10 +597,38 @@ With IPv6 and C-state both ruled out empirically, the shortlist narrows toward t
 
 ### Follow-ups (2026-08-02, post revert)
 
-- **Immediate**: observe master-1 for the next 30–60 min. If it stays up → the ~7–10 min cadence was fix-induced, and we return to the pre-fix ~12 h baseline. If it crashes again in <30 min → the hardware degradation accelerated independently of the fix; escalate to physical inspection or planned power-off until the box can be examined.
-- **Next diagnostic (in-OS, no reboot)**: `kubectl drain master-1 --ignore-daemonsets --delete-emptydir-data` from the Mac, then `sudo apt install memtester && sudo memtester 8G 1` on the host. Runs ~30 min, non-destructive, will loudly log any RAM error.
-- **If `memtester` clean**: flash the latest UM690 BIOS from [minisforum.com/pages/download_um690](https://www.minisforum.com/pages/download_um690). Not available via LVFS/`fwupdmgr` — has to be the manual USB utility. Physical intervention required.
-- **If BIOS update doesn't fix it**: open the chassis, reseat SO-DIMMs, photograph VRM area for bulged caps, dust-blow the heatsink, wiggle the DC barrel. Physical intervention required.
-- **Try `idle=nomwait` (LAST resort software workaround)** only if we want one more remote software attempt. Bypasses mwait entirely and uses `HLT` for idle. Same reversibility as `processor.max_cstate`. Cost: ~5 W extra idle. Given the last software fix backfired hard, prefer hardware diagnostics first.
-- **Long-term**: if hardware fixes don't resolve within 2 weeks, RMA the UM690 with Minisforum (still under warranty if bought after 2024-08). Bring workloads temporarily to the worker Pi (limited, but coredns/metrics/some pods can live there).
-- **Never re-apply `processor.max_cstate=1` alone on this host** without a matched hardware fix in place. Documented here so future readers don't repeat the mistake.
+**0. Change nothing for several days.** Three configuration changes were made to this host today (IPv6 SLAAC, `processor.max_cstate=1`, `iomem=relaxed`) and one of them backfired. Without a stable baseline period there is nothing to compare future attempts against. Collect uptime data on the reverted configuration first. Daily check from the Mac:
+
+```bash
+ssh yeye@192.168.2.108 "uptime && grep BOOT /var/log/hwmon.log | tail -5"
+```
+
+Expected if we are back to baseline: a crash roughly every ~12 h, with recovery in 50–90 s. A crash sooner than ~6 h repeatedly would suggest the hardware fault is genuinely accelerating rather than the fix having caused the fast cycle.
+
+**1. Newer kernel via HWE (best remaining remote option, untested).** The host runs the Ubuntu 24.04 GA kernel `6.8.0-136`. Installing `linux-generic-hwe-24.04` moves to 6.11+, which carries substantial upstream work on the AMD `cpuidle`, `amd_pmc` and `amd_pstate` paths — the same subsystems implicated in the Rembrandt reset reports. Preferable to hand-tuned kernel parameters because it is a whole tested component rather than a single policy knob, and GRUB retains `6.8.0-136` in the boot menu for instant rollback:
+
+```bash
+sudo apt install linux-generic-hwe-24.04
+# reboot; verify with uname -r; if worse, pick the 6.8 entry in GRUB and pin it back
+```
+
+**2. `memtester` in-OS (remote, ~30 min).** Drain first, then:
+
+```bash
+kubectl drain master-1 --ignore-daemonsets --delete-emptydir-data
+# on the host:
+sudo apt install memtester && sudo memtester 8G 1
+kubectl uncordon master-1
+```
+
+Caveat: a clean `memtester` run does not prove the RAM is healthy, only that it does not fail obviously under that pattern. A *failing* run is conclusive; a passing run is weak evidence.
+
+**3. BIOS update (physical, highest expected value of the hardware options).** v1.04 dated 2024-09-06 is nearly two years old. The AGESA firmware bundled in the BIOS sits *below* anything the kernel can influence, and it is the layer where Rembrandt C-state and data-fabric errata actually get fixed. Not distributed via LVFS — `fwupdmgr` reports `0 local devices supported` — so it needs the manual USB utility from [minisforum.com/pages/download_um690](https://www.minisforum.com/pages/download_um690).
+
+**4. Physical inspection (while the chassis is open for the BIOS work).** Reseat both SO-DIMMs, photograph the VRM area around the CPU looking for bulged or leaking capacitors, dust-blow the heatsink, and wiggle the 19 V DC barrel jack while the machine is running to test for a dry solder joint on the input.
+
+**5. `idle=nomwait` — only if hardware avenues are exhausted.** Bypasses `mwait` entirely in favour of `HLT`, which addresses candidate explanation (1) above in a way `processor.max_cstate=1` could not. Cost ~5 W idle, same reversibility. Deliberately ranked below hardware work because the previous parameter-level intervention backfired and this host has now demonstrated it can get *worse* from cpuidle policy changes.
+
+**6. RMA.** If nothing above resolves it within ~2 weeks, open a warranty ticket with Minisforum (in warranty if purchased after 2024-08). This document is the evidence package: crash history, ruled-out causes, and the clean-cut no-log signature. Workloads can be temporarily consolidated onto the worker Pi (`coredns`, `metrics-server`, `local-path-provisioner` and several app pods already run there), though it cannot host the control plane or the Longhorn replicas currently pinned to master-1.
+
+**Never re-apply `processor.max_cstate=1` alone on this host** without a matched hardware fix in place. Recorded here so a future reader does not repeat it.
