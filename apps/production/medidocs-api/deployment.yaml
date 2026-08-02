@@ -29,7 +29,7 @@ spec:
         - name: registry-secret
       initContainers:
         - name: migrate
-          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          image: registry.yesidlopez.de/medidocs-api:v0.4.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
           command: ["uv", "run", "alembic", "upgrade", "head"]
           env:
             - name: PGUSER
@@ -59,7 +59,7 @@ spec:
             limits: {memory: "512Mi", cpu: "500m"}
       containers:
         - name: api
-          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          image: registry.yesidlopez.de/medidocs-api:v0.4.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
           ports:
             - containerPort: 8000
           env:
@@ -159,7 +159,7 @@ spec:
       # via the Dockerfile's `postgresql-client` apt package.
       initContainers:
         - name: wait-for-migrations
-          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          image: registry.yesidlopez.de/medidocs-api:v0.4.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
           command:
             - /bin/sh
             - -c
@@ -201,7 +201,7 @@ spec:
             limits: {memory: "512Mi", cpu: "500m"}
       containers:
         - name: worker
-          image: registry.yesidlopez.de/medidocs-api:v0.3.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
+          image: registry.yesidlopez.de/medidocs-api:v0.4.0 # {"$imagepolicy": "medidocs-api:medidocs-api"}
           command: ["uv", "run", "taskiq", "worker", "medical_docs.workers.document_processor:broker"]
           env:
             - name: PGUSER
