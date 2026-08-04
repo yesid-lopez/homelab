@@ -9,7 +9,6 @@ resources:
   - sealed-lulo-demo-preview-webhook.yaml
   - configmap-demo-preview.yaml
   - daniela-rivas
-  - jenny-psiquiatra
   - mariana-toro
   - jenny-florez
   - maria-fernanda-espana
