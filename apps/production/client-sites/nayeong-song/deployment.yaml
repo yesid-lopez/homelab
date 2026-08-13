@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: nayeong-song
-        image: "registry.yesidlopez.de/nayeong-song:v0.0.1" # {"$imagepolicy": "lulo-demo-landings:nayeong-song"}
+        image: "registry.yesidlopez.de/nayeong-song:v1.0.30" # {"$imagepolicy": "lulo-demo-landings:nayeong-song"}
         ports:
         - containerPort: 3000
         env:
@@ -61,4 +61,4 @@ spec:
             memory: "256Mi"
             cpu: "300m"
       imagePullSecrets:
-        - name: registry-secret
+      - name: registry-secret
