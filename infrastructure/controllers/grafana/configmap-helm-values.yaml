@@ -17,13 +17,15 @@ data:
       storageClassName: longhorn
       size: 10Gi
     
+    # A long-running Grafana pod settles around 305Mi, peaking at 323Mi.
+    # No CPU limit: bursts are ~5x the 5m average, and throttling only slows
+    # dashboard loads without protecting anything.
     resources:
       requests:
-        memory: 256Mi
-        cpu: 100m
+        memory: 384Mi
+        cpu: 50m
       limits:
-        memory: 512Mi
-        cpu: 500m
+        memory: 768Mi
 
     service:
       type: ClusterIP

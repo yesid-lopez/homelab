@@ -14,11 +14,10 @@ data:
       size: 20Gi
     resources:
       requests:
-        memory: 128Mi
-        cpu: 100m
+        memory: 96Mi
+        cpu: 25m
       limits:
         memory: 512Mi
-        cpu: 500m
     service:
       type: ClusterIP
     ingress:

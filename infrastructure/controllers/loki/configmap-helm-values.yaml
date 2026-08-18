@@ -46,11 +46,10 @@ data:
         - -config.expand-env=true
       resources:
         requests:
-          memory: 512Mi
-          cpu: 250m
+          memory: 256Mi
+          cpu: 50m
         limits:
-          memory: 2Gi
-          cpu: 1000m
+          memory: 1Gi
     
     # Disable SimpleScalable components to avoid conflicts
     read:
@@ -88,8 +87,7 @@ data:
         enabled: false
       resources:
         requests:
-          memory: 64Mi
-          cpu: 50m
+          memory: 32Mi
+          cpu: 10m
         limits:
           memory: 128Mi
-          cpu: 200m
