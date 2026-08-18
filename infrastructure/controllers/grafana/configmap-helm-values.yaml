@@ -17,6 +17,14 @@ data:
       storageClassName: longhorn
       size: 10Gi
     
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+
     service:
       type: ClusterIP
       port: 80
