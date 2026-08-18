@@ -92,12 +92,18 @@ data:
     
     nodeExporter:
       enabled: true
-      serviceMonitor:
-        relabelings:
-          - sourceLabels: [__meta_kubernetes_pod_node_name]
-            targetLabel: instance
-          - targetLabel: job
-            replacement: node-exporter
+
+    # The node-exporter ServiceMonitor comes from the prometheus-node-exporter
+    # subchart, so its relabelings live here — `nodeExporter.serviceMonitor` is
+    # not a key this chart reads and is silently ignored.
+    prometheus-node-exporter:
+      prometheus:
+        monitor:
+          relabelings:
+            # Without this, `instance` stays as IP:port and alerts read
+            # "192.168.2.108:9100" instead of "master-1".
+            - sourceLabels: [__meta_kubernetes_pod_node_name]
+              targetLabel: instance
     
     kubeStateMetrics:
       enabled: true
