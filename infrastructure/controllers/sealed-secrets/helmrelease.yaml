@@ -12,7 +12,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: sealed-secrets
-      version: 2.19.1
+      version: 2.19.2
   install:
     crds: Create
   interval: 1h0m0s
