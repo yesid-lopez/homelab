@@ -632,3 +632,368 @@ Caveat: a clean `memtester` run does not prove the RAM is healthy, only that it 
 **6. RMA.** If nothing above resolves it within ~2 weeks, open a warranty ticket with Minisforum (in warranty if purchased after 2024-08). This document is the evidence package: crash history, ruled-out causes, and the clean-cut no-log signature. Workloads can be temporarily consolidated onto the worker Pi (`coredns`, `metrics-server`, `local-path-provisioner` and several app pods already run there), though it cannot host the control plane or the Longhorn replicas currently pinned to master-1.
 
 **Never re-apply `processor.max_cstate=1` alone on this host** without a matched hardware fix in place. Recorded here so a future reader does not repeat it.
+
+### Update — 2026-08-18: 16 days of baseline data. Cadence is ~3× worse than predicted and no follow-up was executed
+
+First review since the 2026-08-02 revert. The host is on the intended post-revert configuration and nothing is misconfigured — `/proc/cmdline` reads `ro iomem=relaxed` with no `processor.max_cstate`, exactly as the revert left it, and every `[BOOT]` marker since confirms `max_cstate=unlimited`. The r8169 workaround is still `enabled` + `active`, and `kernel.panic=10` / `panic_on_oops=1` are still set.
+
+**The "collect a baseline" follow-up (#0) produced its answer, and it falsifies the prediction.** That section expected "a crash roughly every ~12 h". Measured over the 15.5 days since the revert boot:
+
+| Metric | Predicted | Measured |
+|---|---|---|
+| Mean time between crashes | ~12 h | **4.22 h** |
+| Crashes | — | **88** |
+| Crashes with uptime < 1 h | "would suggest accelerating" | **51 of 88** |
+
+The doc's own stated tripwire — "a crash sooner than ~6 h repeatedly would suggest the hardware fault is genuinely accelerating" — has been tripped 51 times. This is worse than every previously recorded era, including the pre-r8169-fix July 9–12 window.
+
+**The crashes cluster in bursts rather than arriving at a steady rate**, which the earlier per-era averages hid:
+
+| Window | Crashes | Character |
+|---|---|---|
+| Aug 6–8 | ~60 | storm; many boots died in 4–20 min |
+| Aug 9–13 | 6 | calm; stretches of 22 h, 29 h, **51.6 h** |
+| Aug 14–15 | 11 | second storm |
+| Aug 16–18 | 4 | calm; 18.7 h, 29.5 h, 8.0 h, 12.2 h |
+
+Bimodality matters for diagnosis. A fault that alternates between "stable for 2 days" and "resets every 10 minutes" on an unchanged software configuration points away from a deterministic kernel/policy bug and toward something with a varying external input — ambient temperature, mains quality, or a marginal component whose threshold is being crossed intermittently. It also means **any future fix must be judged over at least a week**; the 51.6 h stable stretch on Aug 11–13 happened with no intervention at all, so a two-day quiet period proves nothing.
+
+Today's crash is representative of the pattern and rules out the usual suspects. Boot `-1` ended at 07:45:52 UTC and boot `0` began at 07:46:52 — a 60 s round trip. The journal's last line is `fwupd-refresh.service: Finished`, unremarkable and mid-stream, with no shutdown sequence. `last -x shutdown` records no clean shutdown since 2026-08-02 19:39, confirming every one of the 88 events was a hard reset. `journalctl -b -1 -k` has no panic, oops, `BUG:`, MCE, thermal or watchdog entry. The `hwmon.log` sample 16 s before the cut reads `tctl=52.8 gpu=47.0 nvme=31.9 load=0.34` — cold and idle.
+
+### Correction — `rst_status=NA` is caused by Secure Boot lockdown, not `CONFIG_IO_STRICT_DEVMEM`
+
+The 2026-08-02 entry attributed the unreadable `PMx3C0` register to Ubuntu shipping `CONFIG_STRICT_DEVMEM=y` **and** `CONFIG_IO_STRICT_DEVMEM=y`. The second half is wrong, and the real cause is more actionable. Measured on kernel 6.8.0-137:
+
+```
+$ grep -E "CONFIG_STRICT_DEVMEM|CONFIG_IO_STRICT_DEVMEM" /boot/config-$(uname -r)
+CONFIG_STRICT_DEVMEM=y
+# CONFIG_IO_STRICT_DEVMEM is not set     <-- not enabled at all
+
+$ cat /sys/kernel/security/lockdown
+none [integrity] confidentiality        <-- lockdown ACTIVE
+
+$ mokutil --sb-state
+SecureBoot enabled
+```
+
+The kernel is in **integrity lockdown mode**, which it entered automatically because Secure Boot is on (`CONFIG_LOCK_DOWN_IN_SECURE_BOOT=y`). Integrity lockdown blocks `/dev/mem` unconditionally, so `iomem=relaxed` can never take effect while Secure Boot is enabled — the flag is not merely unhonoured on this build, it is *unreachable*. This invalidates the earlier conclusion that reading the register would require a custom kernel or an out-of-tree module.
+
+**Consequence: the ground-truth diagnostic is one BIOS toggle away, not a kernel rebuild away.** Disabling Secure Boot in the UM690 BIOS drops lockdown to `none`, at which point `iomem=relaxed` works and `busybox devmem 0xFED803C0 32` returns the reset-cause bitmap. Given 88 undiagnosed resets, this is now the highest-value cheap action available: it converts the next crash from "no logs, guess again" into a definitive answer on whether bit 27 (uncorrected hardware error → fabric sync flood) is set. Cost is losing Secure Boot on a single-tenant LAN box, which is the same trade-off already accepted for `iomem=relaxed`.
+
+### Status of the 2026-08-02 follow-ups
+
+None were executed. Recorded so the next session doesn't re-derive this:
+
+| # | Follow-up | Status |
+|---|---|---|
+| 0 | Collect baseline, change nothing | **Done** — see table above; prediction falsified |
+| 1 | HWE kernel 6.11+ | **Not done.** Still on the GA series; `6.8.0-136` → `6.8.0-137` was a routine `unattended-upgrade`, not the HWE jump |
+| 2 | `memtester 8G 1` | Not done |
+| 3 | BIOS update | **Not done.** Still v1.04 / 2024-09-06 |
+| 4 | Physical inspection | Not done |
+| 5 | `idle=nomwait` | Not done (correctly ranked below hardware work) |
+| 6 | RMA | Not opened; the ~2-week deadline that entry set has now passed |
+
+### Collateral damage assessment
+
+The cluster is absorbing the resets far better than the crash count suggests, which is why this went unnoticed for 16 days:
+
+- **Longhorn**: 13/13 volumes `attached` + `healthy`, no degraded replicas, after 88 hard resets.
+- **Certificates**: 34/34 `Ready`.
+- **Backups intact**: all five CNPG clusters have daily `ScheduledBackups` completing to the MinIO `barmanObjectStore` (unbroken daily chain through 2026-08-18), plus Longhorn `backup-daily`, `snapshot-daily` and `filesystem-trim-weekly`.
+- **Pod restart counts are a crash odometer, not app bugs.** Roughly 145–149 restarts appear across many unrelated pods on `master-1` (`nginx-ingress-controller`, `metallb-speaker`, `porkbun-webhook`, the `lulo-demo-landings` sites…), tracking the node reset count rather than any per-app fault.
+- **One genuine outlier**: `umami` at 591 restarts on a pod created 2026-05-04, terminating with `exitCode 1` three seconds after start — it crash-loops on every boot until its Postgres becomes reachable, so it burns several restarts per reset instead of one. Worth fixing with a proper wait-for-DB gate independently of the hardware problem. (`external-dns` looks like a 290-restart outlier in `kubectl get pods` output, but that is one pod summing two containers at 146 + 144, both in the normal reset range.)
+
+**etcd snapshots exist but are single-point-of-failure.** k3s is taking them on schedule (12 h interval, `retention=5`, ~2.5 days of history) but every `ETCDSnapshotFile.spec.location` is `file:///var/lib/rancher/k3s/server/db/snapshots/…`. There is no `--etcd-s3` in the k3s unit, so the only copies of the control-plane state live on the NVMe of the node that has hard-reset 88 times in 16 days. On a single-server `--cluster-init` setup, losing that disk means rebuilding the cluster from the Git repo by hand.
+
+### Update — 2026-08-20: MTBF tracks the kernel version. The IPv6 fix regressed. EDAC was never measuring anything.
+
+Triggered by four Discord `NodeRecentlyRebooted` alerts overnight. The four messages are **two** resets (each fires a FIRING plus a RESOLVED once the 10 min window in the alert expression closes), at 22:09:04 and 00:10:33 UTC. Both carry the usual signature and add nothing new on their own:
+
+- Journal of boot `-2` ends mid-stream on a repeating kubelet `secondaryNodeIP` error, boot `-1` on a routine etcd `finished scheduled compaction`. No `Stopping…`, no panic, no oops, no `BUG:`, no MCE, no thermal, no watchdog entry in either.
+- `last -x shutdown` still records no clean shutdown since 2026-08-02 19:39, so both were hard resets.
+- `hwmon` samples 30–45 s before each cut: `tctl=53.0/55.8 nvme=32.9 load=0.50/2.84`, memory and swap unremarkable.
+- Recovery 60–75 s each.
+
+Measured over the 421.2 h since the 2026-08-02 20:10 revert boot:
+
+| Metric | Value |
+|---|---|
+| Hard resets | **90** |
+| MTBF | **4.68 h** |
+| Median uptime | **47 min** |
+| Mean uptime | 4.58 h |
+| Shortest / longest uptime | 4 min / 51.7 h |
+| Uptime `< 1 h` / `1–6 h` / `6–24 h` / `> 24 h` | **51** / 24 / 8 / 7 |
+
+Consistent with the 2026-08-18 reading and still the worst era on record. Nothing about the host configuration has drifted: `/proc/cmdline` is `ro iomem=relaxed`, `max_cstate=unlimited` on every `[BOOT]` marker, `r8169-fix.service` `enabled` + `active`, `kernel.panic=10` and `panic_on_oops=1` still set, and `unattended-upgrades` has `Automatic-Reboot` commented out (so no reset in the series was a package-driven reboot).
+
+#### New finding — crash rate tracks the GA kernel version
+
+The 2026-08-18 entry dismissed `6.8.0-136 → 6.8.0-137` as "a routine `unattended-upgrade`, not the HWE jump" and never checked whether the fault rate moved with it. It did. Segmenting the post-revert window by the kernel that was actually booted:
+
+| Kernel era | Window | Resets | MTBF | Median uptime |
+|---|---|---|---|---|
+| `6.8.0-136` (post-revert) | Aug 2 20:10 → Aug 6 18:01, 93.8 h | 4 | **23.46 h** | 14.98 h |
+| `6.8.0-137` — storm | Aug 6 18:01 → Aug 9 00:00, 54.0 h | 60 | **0.90 h** | 0.53 h |
+| `6.8.0-137` — excl. storm | Aug 9 → Aug 19 22:09, 262.1 h | 22 | 11.92 h | 2.58 h |
+| `6.8.0-138` | Aug 19 22:09 → Aug 20 09:22, 11.2 h | 1 | 11.23 h | 2.02 h |
+
+`unattended-upgrade` installed `linux-image-generic 6.8.0-137.137` on **2026-08-06 06:13**; the first boot on `-137` was **18:01:21 the same day**. The Aug 6–8 storm — 60 of the 90 resets in this window — starts at that boot.
+
+**Calibration.** This is suggestive, not established. The storm dominates the `-137` figure, and excluding it the degradation shrinks to roughly 2× (11.92 h vs 23.46 h) on small samples; the `-136` post-revert era is only four days and four events. A stochastic, bimodal fault can produce a cluster like this by chance, and the earlier eras in this document show it has done so before (the 51.6 h stable stretch on Aug 11–13 arrived with no intervention). What makes it worth acting on anyway is that it is the **first software variable in this investigation that shows any signal at all** — IPv6 churn, C-state policy, thermals, time of day and post-reboot load have all now been measured and come back flat.
+
+It is also cheap to test in both directions. `linux-image-6.8.0-136-generic 6.8.0-136.136` is still in `noble-updates` and `noble-security`, so a rollback is an `apt install` plus a GRUB default; and the never-executed follow-up #1 is available as `linux-generic-hwe-24.04` at candidate `7.0.0-29.29~24.04.2`. Only `-137` and `-138` images are installed on the host right now.
+
+#### Correction — the 2026-07-30 IPv6 SLAAC fix regressed and was aimed at the wrong layer
+
+`eno1` has a global SLAAC address again, and `NodeIPs changed` is back at its pre-fix rate: **311 events in the 9.2 h of the current boot (~34/h)**.
+
+```
+$ ip -6 addr show eno1
+    inet6 2003:eb:5f3d:9cd2:5a47:caff:fe79:adf6/64 scope global dynamic mngtmpaddr noprefixroute
+       valid_lft 172781sec preferred_lft 86381sec
+
+$ sysctl net.ipv6.conf.eno1.accept_ra net.ipv6.conf.eno1.autoconf
+net.ipv6.conf.eno1.accept_ra = 0
+net.ipv6.conf.eno1.autoconf = 0
+```
+
+Both sysctls from `/etc/sysctl.d/98-disable-ipv6-slaac-eno1.conf` are applied and both read `0`, yet the address exists and its lifetime was refreshed 19 s before the check. The prefix has also moved again (`9c29` earlier the same night → `9cd2`), so the upstream Fritzbox prefix churn is unchanged.
+
+The reason the fix never worked: **`eno1` is managed by `systemd-networkd`**, which implements the Router Advertisement client in *userspace*. It sets the kernel's `accept_ra` to `0` itself and then performs SLAAC on its own, so a kernel sysctl cannot switch it off. The July 30 verification looked positive only because `ip -6 addr flush` genuinely cleared the address and the 3-minute observation window closed before networkd re-acquired it.
+
+```
+$ networkctl status eno1
+        Network File: /run/systemd/network/10-netplan-eno1.network
+$ systemctl is-active systemd-networkd NetworkManager
+active
+inactive
+$ cat /etc/netplan/50-cloud-init.yaml
+network:
+  version: 2
+  ethernets:
+    eno1:
+      dhcp4: true
+```
+
+The correct place to disable it is netplan (`accept-ra: false`, optionally `link-local: [ ipv4 ]`), which renders into the networkd link file. Note that `net.ipv6.conf.all.autoconf` is still `1`, so the sysctl file is not even internally consistent.
+
+**This does not make IPv6 the trigger — the opposite.** Counting churn per boot against that boot's uptime shows no relationship: the rate is a near-constant ~34/h whenever IPv6 is up, independent of how long the boot survived, and the boots that recorded **zero** churn were the *shortest* ones.
+
+| Boot | Uptime | `NodeIPs changed` | Rate |
+|---|---|---|---|
+| Aug 11 10:38 → Aug 13 14:17 | **51.6 h** | 1744 | 33.8/h |
+| Aug 18 07:46 → Aug 19 22:08 | 38.4 h | 475 | 12.4/h |
+| Aug 20 00:10 → (running) | 9.2 h | 311 | 33.8/h |
+| Aug 14 20:23 → 20:35 | 0.20 h | **0** | 0 |
+| Aug 15 03:12 → 05:06 | 1.90 h | **0** | 0 |
+| Aug 16 04:08 → 06:02 | 1.90 h | **0** | 0 |
+
+So the 2026-08-02 conclusion ("IPv6 SLAAC churn was noise, not the trigger") holds and is now supported by a second, independent measurement — but it was reached for the wrong reason, because the mitigation it was based on had already stopped working. Fix the churn for cluster hygiene (it re-registers the node and rewrites kube-proxy NAT rules ~34 times an hour, and it is what filled boot `-2`'s journal with `failed to validate secondaryNodeIP` every 10 s), not as a crash fix.
+
+#### Correction — "EDAC reports zero correctable errors" was a vacuous claim
+
+The 2026-08-02 entry cited clean EDAC counters as evidence for RAM health. There are no counters. No memory controller is registered at all:
+
+```
+$ ls /sys/devices/system/edac/mc/
+power  subsystem  uevent      # no mc0/, so no ce_count / ue_count anywhere
+```
+
+`amd64_edac` does not bind on this Rembrandt/DDR5 platform, so **memory errors on this host have never been observable by any means**. "Zero errors" meant "zero measurement". This removes the only piece of evidence that had been demoting RAM in the suspect list.
+
+`smartmontools` and `nvme-cli` are also both absent, so there is no NVMe health, wear or `Unsafe Shutdowns` data either — on a disk that has taken 90 hard resets. `lm-sensors` works and is the only hardware telemetry the host actually has (`Tctl 55.6 °C`, GPU edge `48 °C`, NVMe composite `32.9 °C` against a `87.8 °C` critical, GPU `PPT 25.25 W`).
+
+#### Ruled out this session
+
+- **Hardware watchdog.** A watchdog timeout is the textbook explanation for an instantaneous reset with no logs, and it had never been checked. It is not this: no `sp5100_tco`/`*_wdt` module is loaded, `/dev/watchdog*` does not exist, and systemd's `RuntimeWatchdogUSec` is `0`. (`RebootWatchdogUSec=600000000` is the 10-minute guard that only arms during a reboot transaction.) `hardlockup_panic` and `softlockup_panic` are both `0`.
+- **Ambient temperature.** There is a real seasonal drift — daily idle `Tctl` minimum climbed from ~43–46 °C in late July to ~50–51 °C in August — but it does not track the resets. Aug 7 had **37** resets at an idle floor of 49.8 °C, Aug 5 had **2** at 51.1 °C (the joint highest), and Aug 12 had **0** at 49.5 °C.
+- **Time of day.** The 90 reset timestamps spread across all 24 hours (0–7 per hour, only 16:00 UTC empty). No evening or night concentration, which argues against both an ambient cycle and household mains load as the disparador.
+- **Post-reboot recovery load as a cascade trigger.** The 2026-08-02 entry raised "startup-churn confound" as a possible explanation for reset clusters. Extracting the last `hwmon` sample before every cut in the Aug 7–8 storm shows load between **0.28 and 1.81** — the storm resets happened at idle, exactly like the isolated ones. Longhorn re-attach and pod recreation are not driving the cascade.
+
+#### Still not done, and still blocking
+
+- **Secure Boot is still enabled**, so the kernel remains in `integrity` lockdown, `/dev/mem` is still refused and `rst_status=NA` on every `[BOOT]` marker including the two overnight resets. The 2026-08-18 entry identified this as "the highest-value cheap action available" — a BIOS toggle that converts the next reset from a guess into a bitmap. Two days and two resets later it is untouched.
+- **BIOS still v1.04 / 2024-09-06.** Unchanged in every entry of this document. Worth noting that `fwupdmgr get-devices` now *does* enumerate the CPU microcode (`0x0a404108`), the AMD Secure Processor (`00.28.00.70`) and the SMU, unlike the "0 local devices supported" recorded on 2026-08-02 — but no UEFI update path was confirmed, so the manual USB utility from Minisforum is still the assumption.
+- Follow-ups 1–6 from 2026-08-02 all remain in the state the 2026-08-18 entry recorded.
+
+#### New suspect worth ranking — `amd-pstate-epp`
+
+Not previously considered in this document. The host runs:
+
+```
+$ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver   # amd-pstate-epp
+$ cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor # powersave
+```
+
+`amd_pstate` in EPP mode on Zen 3+ mobile silicon has a documented history of instability, and it sits in the same SMU/power-management path already implicated. `amd_pstate=disable` (falling back to `acpi-cpufreq`) is a one-parameter, instantly reversible test. Ranked **below** the kernel-version work, because the `processor.max_cstate=1` episode on 2026-08-02 established that this host can get measurably worse from cpuidle/cpufreq parameter changes, and because a kernel change subsumes it (the HWE series carries substantial `amd_pstate` work).
+
+#### Collateral damage — unchanged and still absorbing it
+
+Both nodes `Ready` (`v1.34.6+k3s1`), 13/13 Longhorn volumes `attached` + `healthy`, and zero pods outside `Running`/`Succeeded`. Restart counters (148–155 across `metallb-speaker`, `porkbun-webhook`, `csi-attacher`, `system-upgrade-controller`, `public-status-api`, `ebay-kleinanzeigen-api`…) continue to be a reset odometer rather than app faults. The two genuine items are unchanged from 2026-08-18: `umami` now at **599** restarts for want of a wait-for-Postgres gate, and etcd snapshots still local-only on the NVMe of the node that has now hard-reset 90 times.
+
+#### Follow-ups (2026-08-20)
+
+Ordered by expected information gained per unit of effort. The first two are the ones that actually move the diagnosis.
+
+**1. Disable Secure Boot in the UM690 BIOS.** Third time this document asks for it. Drops lockdown to `none`, makes `iomem=relaxed` effective, and makes `busybox devmem 0xFED803C0 32` return the reset-cause bitmap that `hwmon-log.sh` already tries to record on every boot. At ~5 resets/day the answer arrives within hours. Interpretation table is in the 2026-08-02 §"Additional change" entry. Nothing else on this list can distinguish a data-fabric sync flood from an external reset.
+
+**2. Change the kernel, and judge it over at least a week.** Two options, do not do both at once:
+
+```bash
+# Option A — roll back to the era that measured 23.5 h MTBF
+sudo apt install linux-image-6.8.0-136-generic linux-headers-6.8.0-136-generic
+# then pin it as GRUB default and reboot; verify with uname -r
+
+# Option B — the never-executed follow-up #1, jumps to 7.0.0-29
+sudo apt install linux-generic-hwe-24.04
+# reboot; GRUB keeps 6.8.0-138 for instant rollback
+```
+
+Option B is the better bet on merit (whole tested component, carries the upstream AMD `cpuidle`/`amd_pmc`/`amd_pstate` work) but it moves several variables at once. Option A is the cleaner experiment against the table above. **Either way, hold `unattended-upgrades` off the kernel for the duration**, or the next GA bump will silently invalidate the test:
+
+```bash
+sudo apt-mark hold linux-generic linux-image-generic linux-headers-generic
+```
+
+Judgement window is **7 days minimum**. This document has a 51.6 h no-intervention stable stretch on record, so a quiet weekend proves nothing.
+
+**3. Make RAM and disk observable.** Both are currently unmeasurable, which is why the suspect list cannot shrink:
+
+```bash
+sudo apt install smartmontools           # NVMe wear, Unsafe Shutdowns, media errors
+modinfo amd64_edac && sudo modprobe amd64_edac   # confirm whether it can bind at all
+```
+
+If `amd64_edac` will not bind on Rembrandt, then `memtester`/`memtest86+` (follow-ups #2 and the overnight USB run) are the *only* way to say anything about the RAM, which raises their priority relative to how this document has been ranking them.
+
+**4. Fix the IPv6 churn properly, in netplan.** Hygiene, explicitly not a crash fix. Edit `/etc/netplan/50-cloud-init.yaml`:
+
+```yaml
+network:
+  version: 2
+  ethernets:
+    eno1:
+      dhcp4: true
+      accept-ra: false
+      link-local: [ ipv4 ]
+```
+
+Then `sudo netplan apply`, confirm `ip -6 addr show eno1` has only `fe80::`, and confirm the count stays at 0 across a **reboot** — the failure mode of the last attempt was surviving the check but not the boot. Also delete or correct `/etc/sysctl.d/98-disable-ipv6-slaac-eno1.conf`, which is misleading as written. Kubelet will keep the stale IPv6 in `.status.addresses` until it re-registers.
+
+**5. Do not apply `amd_pstate=disable` yet.** Recorded as a candidate above; it is subsumed by (2) and this host has already demonstrated it can degrade from cpufreq/cpuidle parameter changes.
+
+**6. RMA.** The 2026-08-02 entry's ~2-week deadline expired on 2026-08-16 and the 2026-08-18 entry noted it had passed. 90 resets in 17.5 days with thermals, load, network, C-states, IPv6 and watchdog all measured clean is a complete evidence package. If (1) returns bit 27 or (2) does not extend the MTBF materially, open the ticket rather than continuing to iterate remotely.
+
+**7. Get the etcd snapshots off this node.** Independent of the hardware fault and steadily more urgent: add `--etcd-s3` to the k3s unit pointing at the in-cluster MinIO, so the control-plane state stops living exclusively on the NVMe of a machine that hard-resets five times a day.
+
+### Update — 2026-08-20, later: mains supply ruled out, DC rail promoted to prime suspect, clock cap applied as the discriminating test
+
+This entry supersedes the ranking above. A user recollection reframed the case, and two measurements taken to check it moved the DC power path from "one of five hardware suspects" to the leading hypothesis.
+
+#### The user observation that reframed it
+
+The **original** PSU brick made the box power off **and stay off** until someone pressed the button. The **replacement** brick makes it power off and come back on its own.
+
+This is a hardware deduction, not an impression. A brick only stops delivering power because its own output protection tripped, and a brick that requires AC removal to recover is latching (latch-off OCP) rather than retrying (hiccup mode). So in the pre-swap era the board was genuinely **losing its 19 V source**, which is the only circumstance under which the BIOS `AC Power Loss` setting is even consulted. A kernel fault cannot produce that: a panic leaves the rails up, gives ~10 s of grace and writes a message. Nothing in 90 resets ever did.
+
+The two bricks differ only in protection *style*, so the behaviour change between them says nothing about the cause. Both readings converge on the same mechanism: **the 19 V rail disappears and comes back.**
+
+#### Mains supply is ruled out
+
+This is the question the whole "brownout / PSU trip / bad outlet" branch of this document has never actually tested, and there were two free witnesses on the same power strip (user confirmed: mini PC, Pi and switch all share one strip).
+
+| Witness | Measurement | Reading |
+|---|---|---|
+| `worker` (Pi 5) | `uptime` | **107 d 17 h**, unbroken since 2026-05-04 |
+| `worker` firmware | `vcgencmd get_throttled` | **`0x0`** |
+| Network switch | `worker:/sys/class/net/eth0/carrier_changes` | **1** |
+
+The Pi's `get_throttled` register **latches** its undervoltage bit: a single mains sag in 107 days would leave it set permanently. It is clean. `carrier_changes = 1` is the initial link-up from May and no transition since, so the unmanaged switch — which has a tiny PSU and almost no hold-up capacitance — has never lost power either. Over that same 107 days `master-1` hard-reset well over 200 times.
+
+A mains event capable of resetting the UM690 200+ times while leaving both a Raspberry Pi and a switch on the same strip completely untouched is not credible. **Mains quality, the outlet and the strip are eliminated.** The fault is downstream of the wall: brick, DC barrel jack, or board-side power delivery.
+
+#### Why the reset signature fits a rail collapse
+
+Everything measured across this document reads as textbook DC power loss rather than a software fault:
+
+- **Zero logging latency.** A panic writes something; a rail collapse gives the kernel no cycles at all. 90 resets, no panic, no oops, no MCE, no thermal, journal always ending mid-stream on an unremarkable line.
+- **Always at idle, always cool.** This looks backwards but is the tell. The host spends ~70 % of wall time in C3, and cores leaving deep idle all ramp toward 4935 MHz simultaneously — the largest current *step* the rail ever sees. Under sustained load current is high but *steady*. Idle is the worst case for marginal delivery, not the safest.
+- **Immune to every software mitigation.** `r8169` offloads, IPv6 SLAAC and `processor.max_cstate` all changed nothing, because none of them touch power delivery.
+- **No correlation with anything measurable**: uniform across all 24 hours, flat against idle temperature, flat against IPv6 churn, and at idle load even during the Aug 6–8 storm.
+- **Sustained overload is impossible**, which narrows it to transients or a genuine board fault: the SoC idles at ~7–26 W against a 120 W brick rating.
+
+Note on the current brick: `KFD Q130-190006320`, 19 V / 6.32 A / 120 W, 5.5×2.5 mm barrel, made by Shenzhen Huikeyuan. The **specification is correct** for a UM690 (the vendor listing names the model explicitly), so this is not a compatibility problem. But it is a generic aftermarket unit, and transient response is exactly where these differ from a Delta/FSP/Chicony — not in the nameplate rating.
+
+#### Measurement — the SoC draws 53 W spikes while idle
+
+Added SoC package power to the logger (`amdgpu` `power1_input`, which reports the whole APU rail) and ran a controlled A/B at 2 s sampling with the box otherwise idle:
+
+| State | Mean | Peak | Range |
+|---|---|---|---|
+| Capped to 2.0 GHz | 7.10 W | 9.2 W | 3.1 W |
+| **Uncapped (control)** | 26.18 W | **53.1 W** | **37.9 W** |
+| Capped again | 7.09 W | 10.1 W | 4.0 W |
+
+The mean matters less than the spread. Uncapped and *idle*, the SoC swings between 15 W and 53 W inside single 2-second windows. Those excursions are the di/dt events the hypothesis predicts, and the cap removes them: peak-to-trough collapses from 37.9 W to 3.1 W, a factor of 12. Reproducible in both directions across three phases.
+
+#### Change — CPU clock ceiling capped at 2.0 GHz, EPP set to `power`
+
+Host-level on `master-1`, nothing committed to GitOps. Chosen as the next step because it is the only test available that is remote, free, instantly reversible, requires **no reboot** and therefore does not contaminate the measurement window with post-reboot churn — the confound that made the 2026-08-02 `processor.max_cstate=1` result uninterpretable.
+
+Baseline for comparison: `4935000` kHz ceiling with `energy_performance_preference=performance` (the amd-pstate-epp default this host had been running on), `amd_pstate` in `active` mode, `prefcore` enabled.
+
+New files:
+
+- `/usr/local/bin/cpu-powercap.sh` — writes `scaling_max_freq=2000000` and `energy_performance_preference=power` to all 16 CPUs. Accepts `--restore` to put back `cpuinfo_max_freq` + `performance`. Logs the result to the journal under tag `cpu-powercap`.
+- `/etc/systemd/system/cpu-powercap.service` — `Type=oneshot`, `RemainAfterExit=yes`, `WantedBy=multi-user.target`, enabled. **Persistence is mandatory here**: the host resets ~5×/day and a sysfs-only change would silently evaporate on the first reset, leaving the experiment measuring nothing.
+
+`/usr/local/bin/hwmon-log.sh` extended (backup at `/usr/local/bin/hwmon-log.sh.bak.1787220227`):
+
+- `[BOOT]` marker gained `maxfreq_khz=` and `epp=`, so every future reset records whether the cap was actually in force — the same reason `max_cstate=` and `iomem=` were added on 2026-08-02.
+- Sample lines gained `soc_w=` and `cur_khz=`, appended at the end so existing parsers keep working.
+
+Deliberately **not** touched: the cpuidle policy. `processor.max_cstate=1` is still reverted and must stay that way.
+
+#### Verification
+
+```
+$ for c in /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq; do cat $c; done | sort | uniq -c
+     16 2000000
+$ for c in /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference; do cat $c; done | sort | uniq -c
+     16 power
+$ grep BOOT /var/log/hwmon.log | tail -1
+2026-08-20T10:03:49+00:00 [BOOT] uptime_s=35598.20 kernel=6.8.0-138-generic max_cstate=unlimited iomem=relaxed rst_status=NA maxfreq_khz=2000000 epp=power
+$ tail -1 /var/log/hwmon.log
+… c3_s=24931 soc_w=7.1 cur_khz=1976055
+$ journalctl -t cpu-powercap | tail -1
+cpu-powercap[…]: requested max_khz=2000000 epp=power; applied to 16 cpus; cpu0 now max=2000000 epp=power
+```
+
+Live clocks confirmed pinned at ~1.976 GHz across all threads. Functional cost is negligible on this workload: 16 threads at load 0.5–1.0, and etcd is disk-bound rather than clock-bound.
+
+#### How to read the result
+
+Baseline to beat is **MTBF 4.68 h** (90 resets / 421 h). Judge over **7 days minimum** — this document has a 51.6 h no-intervention stable stretch on record, so a quiet weekend proves nothing.
+
+- **MTBF improves materially** → power delivery is implicated. Escalate to the physical layer in this order: swap to a genuine Minisforum or quality-brand 120 W brick; inline DC meter on the barrel; reseat/wiggle-test the DC jack; open the chassis and inspect the CPU VRM capacitors. The cap is a diagnosis, not a fix — leaving an 8-core host pinned at 2 GHz forever is not the endgame.
+- **No improvement** → power delivery loses most of its weight, and the SoC and RAM move up. That makes the `PMx3C0` read (Secure Boot toggle) and `memtest86+` the next actions, and strengthens the RMA case.
+
+Daily check from the Mac:
+
+```bash
+ssh yeye@192.168.2.108 "uptime && grep BOOT /var/log/hwmon.log | tail -5"
+```
+
+Every `[BOOT]` line must show `maxfreq_khz=2000000 epp=power`. If a line shows `4935000`, `cpu-powercap.service` failed to run that boot and that interval must be excluded from the comparison.
+
+#### Caveat on a confound left in place
+
+`unattended-upgrades` is still free to bump the GA kernel, and the entry above measured MTBF moving from 23.46 h on `6.8.0-136` to 3.76 h on `-137`. If `-139` lands mid-window the two variables become inseparable. Recommended before the window closes:
+
+```bash
+sudo apt-mark hold linux-generic linux-image-generic linux-headers-generic
+```
+
+Not applied yet — flagged so the next session can decide rather than re-derive it.
