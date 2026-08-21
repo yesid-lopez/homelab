@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: cults3d-mcp
   namespace: cults3d-mcp
+  annotations:
+    metallb.io/loadBalancerIPs: "192.168.2.102"
 spec:
   selector:
     app: cults3d-mcp

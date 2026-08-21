@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: thingiverse-mcp
   namespace: thingiverse-mcp
+  annotations:
+    metallb.io/loadBalancerIPs: "192.168.2.103"
 spec:
   selector:
     app: thingiverse-mcp
