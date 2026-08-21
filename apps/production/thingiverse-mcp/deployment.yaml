@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thingiverse-mcp
+  namespace: thingiverse-mcp
+  labels:
+    app: thingiverse-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thingiverse-mcp
+  template:
+    metadata:
+      labels:
+        app: thingiverse-mcp
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      containers:
+        - name: mcp
+          image: registry.yesidlopez.de/thingiverse-mcp:v0.1.0 # {"$imagepolicy": "thingiverse-mcp:thingiverse-mcp"}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MCP_TRANSPORT
+              value: "streamable-http"
+            - name: THINGIVERSE_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: thingiverse-mcp-secrets
+                  key: THINGIVERSE_APP_TOKEN
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30

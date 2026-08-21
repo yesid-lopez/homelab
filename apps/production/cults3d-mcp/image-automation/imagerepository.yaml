@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: cults3d-mcp
+  namespace: cults3d-mcp
+spec:
+  image: registry.yesidlopez.de/cults3d-mcp
+  interval: 1m
+  secretRef:
+    name: registry-secret

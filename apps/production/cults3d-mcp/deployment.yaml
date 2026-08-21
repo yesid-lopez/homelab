@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cults3d-mcp
+  namespace: cults3d-mcp
+  labels:
+    app: cults3d-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cults3d-mcp
+  template:
+    metadata:
+      labels:
+        app: cults3d-mcp
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      containers:
+        - name: mcp
+          image: registry.yesidlopez.de/cults3d-mcp:v0.1.0 # {"$imagepolicy": "cults3d-mcp:cults3d-mcp"}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MCP_TRANSPORT
+              value: "streamable-http"
+            - name: CULTS3D_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: cults3d-mcp-secrets
+                  key: CULTS3D_USERNAME
+            - name: CULTS3D_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cults3d-mcp-secrets
+                  key: CULTS3D_API_KEY
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30

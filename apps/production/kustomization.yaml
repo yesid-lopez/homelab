@@ -17,3 +17,5 @@ resources:
 - client-sites
 - medidocs-api
 - medidocs-ui
+- thingiverse-mcp
+- cults3d-mcp
