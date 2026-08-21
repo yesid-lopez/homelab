@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - sealed-registry-secret.yaml
+  - thingiverse-mcp-deployment.yaml
+  - thingiverse-mcp-service.yaml
+  - thingiverse-mcp-sealed-secrets.yaml
+  - cults3d-mcp-deployment.yaml
+  - cults3d-mcp-service.yaml
+  - cults3d-mcp-sealed-secrets.yaml
+  - image-automation/

@@ -1,10 +1,10 @@
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
 metadata:
-  name: thingiverse-mcp
-  namespace: thingiverse-mcp
+  name: cults3d-mcp
+  namespace: print3d-mcp
 spec:
-  image: registry.yesidlopez.de/thingiverse-mcp
+  image: registry.yesidlopez.de/cults3d-mcp
   interval: 1m
   secretRef:
     name: registry-secret

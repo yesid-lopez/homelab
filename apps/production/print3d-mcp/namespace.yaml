@@ -1,4 +1,4 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: thingiverse-mcp
+  name: print3d-mcp

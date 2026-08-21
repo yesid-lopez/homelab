@@ -2,7 +2,7 @@ apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
   name: thingiverse-mcp
-  namespace: thingiverse-mcp
+  namespace: print3d-mcp
 spec:
   imageRepositoryRef:
     name: thingiverse-mcp

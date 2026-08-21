@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cults3d-mcp
-  namespace: cults3d-mcp
+  name: thingiverse-mcp
+  namespace: print3d-mcp
   annotations:
-    metallb.io/loadBalancerIPs: "192.168.2.102"
+    metallb.io/loadBalancerIPs: "192.168.2.103"
 spec:
   selector:
-    app: cults3d-mcp
+    app: thingiverse-mcp
   type: LoadBalancer
   ports:
     - name: http
