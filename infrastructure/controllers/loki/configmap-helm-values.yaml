@@ -91,3 +91,17 @@ data:
           cpu: 10m
         limits:
           memory: 128Mi
+
+    # The chart's sidecar.rules.enabled default (true) injects an unbounded
+    # kiwigrid/k8s-sidecar container into the single-binary pod to watch for
+    # loki_rule ConfigMaps. 30d Prometheus history shows it peaking at ~90Mi
+    # (currently ~75Mi live) — same order of magnitude as the other
+    # components this PR bounds, and otherwise the one unbounded consumer
+    # left in this pod.
+    sidecar:
+      resources:
+        requests:
+          memory: 128Mi
+          cpu: 10m
+        limits:
+          memory: 384Mi
