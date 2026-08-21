@@ -5,4 +5,6 @@ resources:
   - cluster-health-rules.yaml
   - alertmanager-discord.yaml
   - alertmanager-cluster.yaml
+  - alertmanager-openclaw.yaml
   - sealed-discord-homelab-webhook.yaml
+  - sealed-openclaw-hook-token.yaml

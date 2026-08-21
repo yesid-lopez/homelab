@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: openclaw-hook-token
+  namespace: prometheus
+spec:
+  encryptedData:
+    token: AgA7LK3VNRVPkvThZLGYIj1Kc4FHj84Zzj/SemsOopPijA4sri5DvL2uoMob60EpiHwpu6ee59n/iBTKpHXA8pDU4DeqMj1TgUMfQ5y8p6QggsW6nxQYf6l6w0WC9B0ZCplyB5MSHfg4rKcYcFmWvWEYtFbXX8eOuDtesQvU3zsuoTBuhjWw0Ry/6G+jvyoS7RvT4yqNRZgszs3wOQ3rvYg07gJ2G97CSI+it91DfPe9t/PxNHM9CrxONb7xapLy2xd4jRBDWqza/GaXG6pBrui7Q3MVCg0H/yklR0v9a/htlx/WMeKe1Pd9tCW6BgILSSig9CBfYkunlm9uhPds6trQhBiUIfUSY46SGgkg6+jJTGGHDI9nSQgOrwSQf7bwG+xpx7JJXVB8+zAqgJwMSX4+YBKhYkibZfrLa18YRsQWAfpd0911dHMipnJPETyB1cdLyxsk0ixL/0gszNZlyC64ERvgV+iam4VVBeXLnGslp34D4yJKipmfdSi/E+PCF47raLfOgajsagkNwxZ23+PBGue9jRP/Dtf+L6r0/QFseEGIzD88qhlEo4y6S8ozvdeRa7R/jKwtR03b2jPqIxzgihQJgtKtgl5GQd6rzQigSMeAoPD63K4mbcVdweoVxk6Mnejm2euaga6f1o8ZbkXe4gd3wo+/1PkpkWrRIyg6Ocvvhb8W6QW5SSQUmhTRtMcH0n5S9vgEOfdtxi5s+DXnixKq0iQheBwVtosTjLBUT5WkftbIEiXMouMeRiDTMGPobiiw7qKKcG5jGWz73CMR
+  template:
+    metadata:
+      name: openclaw-hook-token
+      namespace: prometheus
+    type: Opaque

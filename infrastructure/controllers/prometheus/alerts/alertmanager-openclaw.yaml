@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: homelab-openclaw
+  namespace: prometheus
+  labels:
+    scope: cluster
+spec:
+  route:
+    receiver: openclaw
+    groupBy:
+      - alertname
+      - instance
+      - node
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    matchers:
+      - name: alertname
+        matchType: "=~"
+        value: "NodeRecentlyRebooted|NodeExporterDown|KubeNodeNotReady"
+  receivers:
+    - name: openclaw
+      webhookConfigs:
+        - url: http://192.168.2.194:18789/hooks/homelab-alerts
+          sendResolved: true
+          httpConfig:
+            authorization:
+              type: Bearer
+              credentials:
+                name: openclaw-hook-token
+                key: token
