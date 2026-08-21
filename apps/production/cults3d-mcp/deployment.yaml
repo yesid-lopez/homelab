@@ -21,7 +21,7 @@ spec:
         - name: registry-secret
       containers:
         - name: mcp
-          image: registry.yesidlopez.de/cults3d-mcp:v0.1.0 # {"$imagepolicy": "cults3d-mcp:cults3d-mcp"}
+          image: registry.yesidlopez.de/cults3d-mcp:v0.1.1 # {"$imagepolicy": "cults3d-mcp:cults3d-mcp"}
           ports:
             - containerPort: 8000
           env:
