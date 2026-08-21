@@ -21,7 +21,7 @@ spec:
         - name: registry-secret
       containers:
         - name: mcp
-          image: registry.yesidlopez.de/thingiverse-mcp:v0.1.0 # {"$imagepolicy": "thingiverse-mcp:thingiverse-mcp"}
+          image: registry.yesidlopez.de/thingiverse-mcp:v0.1.1 # {"$imagepolicy": "thingiverse-mcp:thingiverse-mcp"}
           ports:
             - containerPort: 8000
           env:
