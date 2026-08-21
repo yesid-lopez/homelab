@@ -15,6 +15,8 @@ spec:
       labels:
         app: cults3d-mcp
     spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
       imagePullSecrets:
         - name: registry-secret
       containers:
