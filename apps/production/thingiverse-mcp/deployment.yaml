@@ -15,8 +15,6 @@ spec:
       labels:
         app: thingiverse-mcp
     spec:
-      nodeSelector:
-        kubernetes.io/arch: amd64
       imagePullSecrets:
         - name: registry-secret
       containers:
