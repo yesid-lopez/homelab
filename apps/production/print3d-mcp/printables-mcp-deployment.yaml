@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: printables-mcp
+  namespace: print3d-mcp
+  labels:
+    app: printables-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: printables-mcp
+  template:
+    metadata:
+      labels:
+        app: printables-mcp
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      containers:
+        - name: mcp
+          image: registry.yesidlopez.de/printables-mcp:v0.1.0 # {"$imagepolicy": "print3d-mcp:printables-mcp"}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MCP_TRANSPORT
+              value: "streamable-http"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30

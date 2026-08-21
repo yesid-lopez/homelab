@@ -9,4 +9,6 @@ resources:
   - cults3d-mcp-deployment.yaml
   - cults3d-mcp-service.yaml
   - cults3d-mcp-sealed-secrets.yaml
+  - printables-mcp-deployment.yaml
+  - printables-mcp-service.yaml
   - image-automation/

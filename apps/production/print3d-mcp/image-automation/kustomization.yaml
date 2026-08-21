@@ -5,4 +5,6 @@ resources:
   - thingiverse-mcp-imagepolicy.yaml
   - cults3d-mcp-imagerepository.yaml
   - cults3d-mcp-imagepolicy.yaml
+  - printables-mcp-imagerepository.yaml
+  - printables-mcp-imagepolicy.yaml
   - imageupdateautomation.yaml

@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: printables-mcp
+  namespace: print3d-mcp
+spec:
+  image: registry.yesidlopez.de/printables-mcp
+  interval: 1m
+  secretRef:
+    name: registry-secret
