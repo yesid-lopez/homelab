@@ -5,22 +5,18 @@ Currently, due to my current router does not support setting up ips but only dev
 
 Once my new Fritzbox Router has arrived, I am planning to change the service as a `LoadBalancer` and map that ip in my router.
 
-## Multica uploads bucket is public
+## ~~Multica uploads bucket is public~~ (resolved)
 
-`multica-uploads` is set to `policy: download` (public read) in `infrastructure/controllers/minio/configmap-helm-values.yaml`, fronted by the `media.multica.yesidlopez.de` ingress.
+Was: `multica-uploads` set to `policy: download` (public read), fronted by a dedicated `media.multica.yesidlopez.de` ingress straight at MinIO's S3 API, because the backend had no way to serve S3-backed attachments without a public URL.
 
-This is the only viable shape today because Multica's S3-backed storage upstream has no presigned-URL or backend-proxy path: `server/cmd/server/router.go` only registers `/uploads/*` for `LocalStorage`, and `S3Storage.uploadedURL()` writes an absolute URL pointing at whatever `CLOUDFRONT_DOMAIN` (or `AWS_ENDPOINT_URL`) resolves to. Anonymous reads against the public ingress are the only way to make the URLs load in a browser.
+The original note assumed this needed an upstream fix (`multica-ai/multica#2804`, PR `#2740`) to land. Both `#2740` and its successor `#3070` were closed without merging. Turns out the capability shipped separately: the backend already supports `ATTACHMENT_DOWNLOAD_MODE=proxy`, which streams attachments through the API (`Storage.GetReader`) for any storage backend including S3/MinIO — confirmed present and working at the image tag already pinned in this repo (`v0.4.30`), no version bump required.
 
-Protection right now relies on UUID-only key shape (`workspaces/<uuid-v4>/<uuid-v7>.png`) — anyone with the URL can fetch the file, but URLs are not enumerable.
+Fixed by:
+1. `apps/production/multica/configmap-helm-values.yaml`: replaced `CLOUDFRONT_DOMAIN` with `ATTACHMENT_DOWNLOAD_MODE=proxy`.
+2. `infrastructure/controllers/minio/configmap-helm-values.yaml`: `multica-uploads` back to `policy: none`.
+3. Dropped `infrastructure/controllers/minio/ingress-multica-uploads.yaml` and its `kustomization.yaml` entry.
 
-**To resolve:** wait for [`multica-ai/multica#2740`](https://github.com/multica-ai/multica/pull/2740) to merge and ship in a release (and ideally a follow-up that makes `uploadedURL` return relative `/uploads/<key>` when no CDN is set). Then:
-1. Bump the Multica image tag past the release containing the fix.
-2. Remove `CLOUDFRONT_DOMAIN` from `apps/production/multica/configmap-helm-values.yaml`.
-3. Flip `multica-uploads` back to `policy: none` in the MinIO chart values.
-4. Drop `infrastructure/controllers/minio/ingress-multica-uploads.yaml` and its entry in `kustomization.yaml`.
-5. Update existing attachment URLs in the Multica DB to the new same-origin `/uploads/<key>` shape (one-shot UPDATE).
-
-Tracking: [`multica-ai/multica#2804`](https://github.com/multica-ai/multica/issues/2804) (issue), [`#2740`](https://github.com/multica-ai/multica/pull/2740) (PR).
+No DB migration was needed: the attachment API's `download_url` field is always the stable `/api/attachments/<id>/download` endpoint (resolved server-side via `KeyFromURL`), independent of whatever shape is stored in the legacy `url` column — see the separate "Multica DB has stale attachment URLs" item below for the handful of rows where the *raw* stored URL is wrong.
 
 ## MinIO root credentials shared across apps
 

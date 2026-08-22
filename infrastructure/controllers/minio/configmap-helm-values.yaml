@@ -44,12 +44,12 @@ data:
       - name: postgres-backups
         policy: none
         purge: false
-      # multica-uploads is fronted by the media.multica.yesidlopez.de ingress.
-      # Public because Multica's S3-backed storage has no presigned-URL or
-      # backend-proxy path upstream yet (multica-ai/multica#2804, PR #2740);
-      # protection relies on UUID-only keys (workspaces/<uuid>/<uuid>.png).
+      # multica-uploads is private again now that Multica proxies attachment
+      # downloads through its own backend (ATTACHMENT_DOWNLOAD_MODE=proxy in
+      # apps/production/multica/configmap-helm-values.yaml) instead of
+      # writing public S3 URLs.
       - name: multica-uploads
-        policy: download
+        policy: none
         purge: false
     metrics:
       serviceMonitor:
