@@ -26,6 +26,16 @@ data:
             secretKeyRef:
               name: multica-app-secrets
               key: githubWebhookSecret
+        - name: GITHUB_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: multica-app-secrets
+              key: githubAppId
+        - name: GITHUB_APP_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: multica-app-secrets
+              key: githubAppPrivateKey
         - name: S3_BUCKET
           value: "multica-uploads"
         - name: S3_REGION
