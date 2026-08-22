@@ -59,6 +59,15 @@ data:
         # media.multica.yesidlopez.de).
         - name: ATTACHMENT_DOWNLOAD_MODE
           value: "proxy"
+        # Absolute base URL used by buildMarkdownURL for persisted attachment
+        # references. Without it the backend falls back to a site-relative
+        # path (/api/attachments/<id>/download), which only resolves
+        # same-origin on the web app and breaks for links surfaced off-origin
+        # (GitHub/Slack/Telegram/webhook payloads, future non-web clients).
+        # Same value as config.appUrl; no chart-native field, so it rides
+        # extraEnv like ATTACHMENT_DOWNLOAD_MODE.
+        - name: MULTICA_PUBLIC_URL
+          value: "https://multica.yesidlopez.de"
 
     frontend:
       replicaCount: 1
