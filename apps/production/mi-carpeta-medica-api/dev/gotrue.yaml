@@ -71,6 +71,13 @@ spec:
             # ingress hostname of their own.
             - name: GOTRUE_SITE_URL
               value: "http://localhost:3000"
+            # Required by GoTrue at startup (used to build links in emails —
+            # irrelevant here since MAILER_AUTOCONFIRM is on, but it still
+            # fails config validation without it). Not publicly reachable
+            # yet: this Service has no Ingress in this PR, so the in-cluster
+            # DNS name is the only thing that's actually true right now.
+            - name: API_EXTERNAL_URL
+              value: "http://mi-carpeta-medica-api-gotrue.mi-carpeta-medica-api-dev.svc.cluster.local:9999"
           resources:
             requests: {memory: "128Mi", cpu: "50m"}
             limits: {memory: "256Mi", cpu: "250m"}
