@@ -97,12 +97,8 @@ spec:
               valueFrom: {secretKeyRef: {name: minio-credentials, key: rootUser}}
             - name: S3_SECRET_ACCESS_KEY
               valueFrom: {secretKeyRef: {name: minio-credentials, key: rootPassword}}
-            # Same bucket as the medidocs-api namespace on purpose: MinIO is a
-            # shared cluster-wide service (its own `minio` namespace), not
-            # namespaced per app, so there is no bucket to migrate — the
-            # existing files stay reachable as-is once Postgres is migrated.
             - name: S3_BUCKET_NAME
-              value: "medidocs-api"
+              value: "mi-carpeta-medica-api"
             - name: ZILLIZ_URI
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_URI}}
             - name: ZILLIZ_TOKEN
@@ -247,7 +243,7 @@ spec:
             - name: S3_SECRET_ACCESS_KEY
               valueFrom: {secretKeyRef: {name: minio-credentials, key: rootPassword}}
             - name: S3_BUCKET_NAME
-              value: "medidocs-api"
+              value: "mi-carpeta-medica-api"
             - name: ZILLIZ_URI
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_URI}}
             - name: ZILLIZ_TOKEN
