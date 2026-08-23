@@ -12,6 +12,12 @@ data:
       storageClass: longhorn
       accessMode: ReadWriteOnce
       size: 20Gi
+    resources:
+      requests:
+        memory: 96Mi
+        cpu: 25m
+      limits:
+        memory: 512Mi
     service:
       type: ClusterIP
     ingress:
