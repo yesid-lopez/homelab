@@ -15,7 +15,6 @@ resources:
 - public-status-api
 - n8n
 - client-sites
-- medidocs-api
 - medidocs-ui
 - mi-carpeta-medica-api
 - print3d-mcp
