@@ -34,12 +34,17 @@ comes from, and which Postgres it points at, differs per environment.
   `registry-secret`) resolves by **name alone** — dev and prod each just
   need a same-named secret/cluster in their own namespace. No per-overlay
   env patches required beyond the namespace and ingress host.
-- `SUPABASE_JWT_SECRET` (backend code merged in `medical-docs`) is wired
-  from `mi-carpeta-medica-api-supabase-secrets` / key `JWT_SECRET` in both
-  overlays:
-  - **dev**: that key is GoTrue's own signing secret — the same self-hosted
-    service issues and verifies the tokens.
-  - **prod**: ⚠️ **that key does not exist yet.** See below.
+- Auth verification (`medical-docs` backend) picks its mode from which env
+  var actually resolves to a value — both `secretKeyRef`s are `optional:
+  true`, so a namespace only needs the key it actually has:
+  - **dev**: `mi-carpeta-medica-api-supabase-secrets` has `JWT_SECRET`
+    (GoTrue's own signing secret) but no `SUPABASE_URL` → static HS256
+    verification, self-hosted GoTrue issues and verifies.
+  - **prod**: that secret has `SUPABASE_URL`/`SUPABASE_ANON_KEY` but no
+    `JWT_SECRET` → JWKS verification against the real Supabase Cloud
+    project. Discovered along the way: that project's active signing key
+    is asymmetric (ECC/P-256), not the legacy HS256 secret, which is why
+    the backend supports both modes now (see `medical-docs`#8).
 - dev's MinIO bucket (`mi-carpeta-medica-api`) and Zilliz collection
   (`medical_documents`) are the *same* ones prod uses — safe to share
   because every row/chunk is scoped by `owner_id`, and dev/prod issue
@@ -48,20 +53,20 @@ comes from, and which Postgres it points at, differs per environment.
 - dev data isn't backed up (no barman/ObjectStore plugin on its CNPG
   cluster) — disposable test data by design.
 
-## ⚠️ Before cutting any new release
+## Release safety
 
-`base/deployment.yaml` now requires `mi-carpeta-medica-api-supabase-secrets`
-to have a `JWT_SECRET` key in **every** namespace it's deployed to — the
-pod fails to start without it (not just 401s, the container itself won't
-come up). `prod/sealed-supabase-secrets.yaml` only carries `SUPABASE_URL` /
-`SUPABASE_ANON_KEY` today (non-secret, fetched via the Supabase MCP). Before
-the next `mi-carpeta-medica-api` release ships:
+Both `SUPABASE_URL` and `SUPABASE_JWT_SECRET` are wired via `optional:
+true` `secretKeyRef`s, and both are optional at the Settings level too —
+a namespace missing one just resolves to `None` for that value, it never
+fails to mount or crashes on boot. prod (`SUPABASE_URL` only, no
+`JWT_SECRET`) uses JWKS; dev (`JWT_SECRET` only) uses the static secret.
+Cutting a release is safe for both today.
 
-1. Pull the real JWT secret and a Postgres connection string from the
-   Supabase dashboard (Project Settings → API / → Database) — not exposed
-   through MCP tools by design.
-2. Add `JWT_SECRET` (and, once the Postgres cutover happens, connection
-   details) to `prod/sealed-supabase-secrets.yaml` and re-seal.
+Postgres is the one prod cutover still pending: prod's CNPG cluster is
+untouched, still serving from the old (pre-multi-user) schema state until
+someone pulls a connection string from the Supabase dashboard and does the
+parallel-then-cutover migration described in `prod/MIGRATION.md`'s
+pattern.
 
 ## Verifying dev
 
