@@ -1,0 +1,269 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mi-carpeta-medica-api
+  namespace: mi-carpeta-medica-api
+  labels:
+    app: mi-carpeta-medica-api
+spec:
+  replicas: 1
+  # maxUnavailable: 0 keeps the currently-serving pod up until the new one is
+  # Ready. If the `migrate` initContainer below fails, the new pod never
+  # becomes Ready, the rollout stalls, and the old pod keeps serving —
+  # `progressDeadlineSeconds` surfaces the failure to Flux.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels:
+      app: mi-carpeta-medica-api
+  template:
+    metadata:
+      labels:
+        app: mi-carpeta-medica-api
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      initContainers:
+        - name: migrate
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.6.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
+          command: ["uv", "run", "alembic", "upgrade", "head"]
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            # `alembic upgrade head` runs env.py, which imports medical_docs
+            # (api.py -> routers -> config.py), instantiating the full
+            # Settings object. These fields have no defaults, so the import
+            # fails even though the migration itself never uses them.
+            - name: API_KEY
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: API_KEY}}
+            - name: OPENAI_API_KEY
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
+            - name: ZILLIZ_URI
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_URI}}
+            - name: ZILLIZ_TOKEN
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_TOKEN}}
+          resources:
+            requests: {memory: "128Mi", cpu: "100m"}
+            limits: {memory: "512Mi", cpu: "500m"}
+      containers:
+        - name: api
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.6.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            - name: REDIS_URL
+              value: "redis://mi-carpeta-medica-api-redis:6379/0"
+            - name: API_KEY
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: API_KEY}}
+            - name: OPENAI_API_KEY
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
+            - name: OPENAI_MODEL
+              value: "gpt-4o"
+            - name: UPLOAD_DIR
+              value: "/app/uploads"
+            - name: THUMBNAIL_DIR
+              value: "/app/thumbnails"
+            - name: S3_ENDPOINT_URL
+              value: "http://minio.minio.svc.cluster.local:9000"
+            - name: S3_PUBLIC_URL
+              value: "https://media.luloai.com"
+            - name: S3_ACCESS_KEY_ID
+              valueFrom: {secretKeyRef: {name: minio-credentials, key: rootUser}}
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom: {secretKeyRef: {name: minio-credentials, key: rootPassword}}
+            # Same bucket as the medidocs-api namespace on purpose: MinIO is a
+            # shared cluster-wide service (its own `minio` namespace), not
+            # namespaced per app, so there is no bucket to migrate — the
+            # existing files stay reachable as-is once Postgres is migrated.
+            - name: S3_BUCKET_NAME
+              value: "medidocs-api"
+            - name: ZILLIZ_URI
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_URI}}
+            - name: ZILLIZ_TOKEN
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_TOKEN}}
+            # Same collection as medidocs-api for the same reason as the S3
+            # bucket above: Zilliz is an external managed service, shared
+            # across namespaces, not something namespace-scoped to migrate.
+            - name: ZILLIZ_COLLECTION_NAME
+              value: "medical_documents"
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+            - name: thumbnails
+              mountPath: /app/thumbnails
+          resources:
+            requests: {memory: "256Mi", cpu: "250m"}
+            limits: {memory: "1Gi", cpu: "1000m"}
+          readinessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+      volumes:
+        - name: uploads
+          emptyDir: {}
+        - name: thumbnails
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mi-carpeta-medica-api-worker
+  namespace: mi-carpeta-medica-api
+  labels:
+    app: mi-carpeta-medica-api-worker
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels:
+      app: mi-carpeta-medica-api-worker
+  template:
+    metadata:
+      labels:
+        app: mi-carpeta-medica-api-worker
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      # Block the worker until the DB is at the exact Alembic head this
+      # image expects. Reads the expected revision from the image's own
+      # alembic/versions/ (no DB access) via `alembic heads`, then polls
+      # Postgres until `alembic_version.version_num` matches. This catches
+      # the case where a prior rollout already populated `alembic_version`
+      # but the current image ships a new migration — the API's `migrate`
+      # initContainer must complete before this loop exits. libpq reads
+      # the PG* env vars directly (no DSN string), and psql is in the image
+      # via the Dockerfile's `postgresql-client` apt package.
+      initContainers:
+        - name: wait-for-migrations
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.6.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              EXPECTED=$(uv run alembic heads 2>/dev/null | awk 'NR==1{print $1}')
+              if [ -z "$EXPECTED" ]; then
+                echo "could not resolve expected alembic head from image" >&2
+                exit 1
+              fi
+              echo "expecting DB at alembic revision $EXPECTED"
+              while :; do
+                CURRENT=$(psql -tA -c "SELECT version_num FROM alembic_version" 2>/dev/null | tr -d '[:space:]' || true)
+                if [ "$CURRENT" = "$EXPECTED" ]; then
+                  echo "DB at $EXPECTED; starting worker."
+                  break
+                fi
+                echo "waiting: DB at '${CURRENT:-<none>}', want $EXPECTED..."
+                sleep 3
+              done
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            - name: API_KEY
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: API_KEY}}
+          resources:
+            requests: {memory: "128Mi", cpu: "100m"}
+            limits: {memory: "512Mi", cpu: "500m"}
+      containers:
+        - name: worker
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.6.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
+          command: ["uv", "run", "taskiq", "worker", "medical_docs.workers.document_processor:broker"]
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            - name: REDIS_URL
+              value: "redis://mi-carpeta-medica-api-redis:6379/0"
+            - name: API_KEY
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: API_KEY}}
+            - name: OPENAI_API_KEY
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
+            - name: OPENAI_MODEL
+              value: "gpt-4o"
+            - name: UPLOAD_DIR
+              value: "/app/uploads"
+            - name: THUMBNAIL_DIR
+              value: "/app/thumbnails"
+            - name: S3_ENDPOINT_URL
+              value: "http://minio.minio.svc.cluster.local:9000"
+            - name: S3_PUBLIC_URL
+              value: "https://media.luloai.com"
+            - name: S3_ACCESS_KEY_ID
+              valueFrom: {secretKeyRef: {name: minio-credentials, key: rootUser}}
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom: {secretKeyRef: {name: minio-credentials, key: rootPassword}}
+            - name: S3_BUCKET_NAME
+              value: "medidocs-api"
+            - name: ZILLIZ_URI
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_URI}}
+            - name: ZILLIZ_TOKEN
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_TOKEN}}
+            - name: ZILLIZ_COLLECTION_NAME
+              value: "medical_documents"
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+            - name: thumbnails
+              mountPath: /app/thumbnails
+          resources:
+            requests: {memory: "256Mi", cpu: "250m"}
+            limits: {memory: "1Gi", cpu: "1000m"}
+      volumes:
+        - name: uploads
+          emptyDir: {}
+        - name: thumbnails
+          emptyDir: {}
