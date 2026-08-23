@@ -41,12 +41,8 @@ spec:
               value: "3000"
             - name: HOSTNAME
               value: "0.0.0.0"
-            # Still pointing at the old medidocs-api namespace on purpose:
-            # its Postgres data hasn't been migrated to mi-carpeta-medica-api
-            # yet (see apps/production/mi-carpeta-medica-api/MIGRATION.md).
-            # Switch this once that migration is done and cut over.
             - name: API_INTERNAL_URL
-              value: "http://medidocs-api.medidocs-api.svc.cluster.local"
+              value: "http://mi-carpeta-medica-api.mi-carpeta-medica-api.svc.cluster.local"
             - name: API_KEY
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-ui-secrets, key: API_KEY}}
           resources:
