@@ -1061,3 +1061,33 @@ the single points of failure it carried were addressed first: etcd snapshots and
 the k3s server token now leave the node nightly (#197), and the MinIO mirror
 discovers buckets instead of using a stale hardcoded list. Both were one-node-loss
 away from being unrecoverable while this experiment was running.
+
+### Update — 2026-08-23, later: AC socket contact raised as an untested variable
+
+The 2026-08-20 "mains supply ruled out" analysis only tested whether the strip's
+*incoming mains quality* was bad, using the worker Pi and the network switch on
+the same power strip as witnesses (both clean over 107 days). It does not rule
+out a **socket-specific** fault: one worn or loose contact (or a degrading
+strip-internal switch) on the specific outlet the brick uses, which would not
+show up on the Pi or switch if they sit in different physical sockets on the
+same strip housing.
+
+New detail from the user: the brick's AC connection point — an IKEA power strip
+— has been unchanged across both the original brick and its 2026-07-20
+replacement. Both bricks reset while sharing that same socket. That is weak
+evidence for something specific to that connection (or something fully
+downstream of it, which is already the leading hypothesis), and against "the
+new brick alone" ever being sufficient to explain the fix.
+
+#### Follow-up — cheapest untested test, moved ahead of the physical-layer work
+
+Move the brick to a different power strip or directly to a wall outlet — not
+just a different socket on the same IKEA strip, to fully isolate the strip unit
+itself as a variable — and watch the reset rate for a few days against the
+4.68 h baseline MTBF. Zero cost, no chassis opening, no BIOS access, reversible
+immediately. Ranked ahead of Secure Boot/`PMx3C0` and `memtest86+` in the list
+above precisely because it needs no tools and no downtime.
+
+If the rate is unchanged, this returns to "downstream of the wall" as before
+and the existing plan (Secure Boot + `PMx3C0`, `memtest86+`, physical
+inspection) stands unmodified.
