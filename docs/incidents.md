@@ -1091,3 +1091,60 @@ above precisely because it needs no tools and no downtime.
 If the rate is unchanged, this returns to "downstream of the wall" as before
 and the existing plan (Secure Boot + `PMx3C0`, `memtest86+`, physical
 inspection) stands unmodified.
+
+### Update — 2026-08-23, later still: Secure Boot disabled; first successful `PMx3C0` read doesn't match either predicted signature; AC socket test started
+
+Two actions taken the same day, both in progress:
+
+**1. Secure Boot disabled in BIOS setup** (`Security` → `Secure Boot` → set to
+`Disabled`; `Secure Boot Mode` left at `Standard`, which is inert once the
+master toggle is off). Saved & exited, reboot at 15:10:03 UTC. Confirmed on the
+new boot:
+
+```
+$ mokutil --sb-state
+SecureBoot disabled
+$ cat /sys/kernel/security/lockdown
+[none] integrity confidentiality
+```
+
+Lockdown dropped from `integrity` to `none`, as the 2026-08-18 entry predicted.
+
+**2. First non-`NA` `rst_status` ever recorded** (previous 100+ boots all read
+`NA`), but for a boot whose cause is not in question — the BIOS Setup exit
+above, not a crash:
+
+```
+2026-08-23T15:10:03+00:00 [BOOT] uptime_s=9.52 kernel=6.8.0-138-generic max_cstate=unlimited iomem=relaxed rst_status=0x00080800 maxfreq_khz=4935000 epp=performance
+```
+
+`0x00080800` decodes as **bit 11 (`SYNC_FLOOD`, per the existing bit table) +
+bit 19 (not in that table — no reference for it in this document)**. This
+matches *neither* predicted pattern from the 2026-08-02 interpretation table:
+not `0x00200800` (bit 21, clean ACPI transition — what a deliberate reboot was
+expected to show) and not `0x08000800` (bit 27, uncorrected hardware error).
+
+**Calibration — this changes how the next real crash's reading should be
+read.** This boot's cause is unambiguous (the user saved BIOS settings and
+exited); there is no fault here. That it nonetheless sets the bit this
+document has been calling `SYNC_FLOOD` means **bit 11 cannot be treated as
+confirmation of a data-fabric fault on its own** — it appears on a reset that
+is definitely not one. Bit 19's meaning is unknown; a plausible but unconfirmed
+guess is that a BIOS Setup "Save & Exit" triggers a different reset vector
+(e.g. a keyboard-controller/warm-reset path) than an OS-initiated ACPI reboot,
+and bit 19 marks that path specifically. Do not rely on this guess.
+
+Practical consequence: when the next real crash's `[BOOT]` marker has a
+`rst_status`, don't treat "bit 11 is set" as sufficient evidence of a sync
+flood — bit 27 (uncorrected hardware error) is the more specific signal to
+look for, and a value that matches neither this boot's pattern (`…80800`) nor
+the ACPI one (`…200800`) is the interesting case. Also still unverified:
+whether the register self-clears per-boot or accumulates across boots without
+a power cycle. A plain `sudo reboot` from the OS (as opposed to a BIOS Setup
+exit) would make a useful second control sample for comparison, but has not
+been captured yet.
+
+**3. AC socket/strip test started.** The brick was moved off the IKEA strip
+(see the entry above) to a different strip/outlet today. Too early to read
+anything — watching the reset rate against the 4.68 h baseline MTBF for the
+rest of the day and longer if it looks promising.
