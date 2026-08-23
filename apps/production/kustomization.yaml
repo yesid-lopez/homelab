@@ -17,4 +17,5 @@ resources:
 - client-sites
 - medidocs-ui
 - mi-carpeta-medica-api
+- mi-carpeta-medica-ui
 - print3d-mcp

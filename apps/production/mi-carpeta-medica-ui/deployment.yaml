@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mi-carpeta-medica-ui
+  namespace: mi-carpeta-medica-ui
+  labels:
+    app: mi-carpeta-medica-ui
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  progressDeadlineSeconds: 300
+  selector:
+    matchLabels:
+      app: mi-carpeta-medica-ui
+  template:
+    metadata:
+      labels:
+        app: mi-carpeta-medica-ui
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      # Pin to amd64 until arm64 is back in the CI build (see medidocs-web
+      # release workflow) — the image is amd64-only for now, and this
+      # cluster's worker node is arm64, so an unconstrained pod would land
+      # there and fail with an exec format error.
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+        - name: mi-carpeta-medica-ui
+          image: registry.yesidlopez.de/mi-carpeta-medica-ui:v0.0.3 # {"$imagepolicy": "mi-carpeta-medica-ui:mi-carpeta-medica-ui"}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            # Still pointing at the old medidocs-api namespace on purpose:
+            # its Postgres data hasn't been migrated to mi-carpeta-medica-api
+            # yet (see apps/production/mi-carpeta-medica-api/MIGRATION.md).
+            # Switch this once that migration is done and cut over.
+            - name: API_INTERNAL_URL
+              value: "http://medidocs-api.medidocs-api.svc.cluster.local"
+            - name: API_KEY
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-ui-secrets, key: API_KEY}}
+          resources:
+            requests: {memory: "128Mi", cpu: "50m"}
+            limits: {memory: "256Mi", cpu: "300m"}
+          readinessProbe:
+            httpGet: {path: /, port: 3000}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /, port: 3000}
+            initialDelaySeconds: 15
+            periodSeconds: 20
