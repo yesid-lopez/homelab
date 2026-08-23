@@ -997,3 +997,67 @@ sudo apt-mark hold linux-generic linux-image-generic linux-headers-generic
 ```
 
 Not applied yet — flagged so the next session can decide rather than re-derive it.
+
+### Update — 2026-08-23: the clock cap failed. MTBF halved instead of improving, and the decay is accelerating
+
+The cap ran from 2026-08-20 10:03 to 2026-08-23 13:01 UTC — 75 h, cut short of the
+7-day window because the result stopped being ambiguous.
+
+```
+window with cap (Aug 20 10:03 → Aug 23 13:01):  33 resets / 75.0 h  →  MTBF 2.27 h
+baseline the cap had to beat:                   90 resets / 421 h   →  MTBF 4.68 h
+kernel -138 in the 11.9 h right before the cap:  2 resets / 11.9 h  →  MTBF 5.95 h
+```
+
+Per-day inside the window, the trend is the opposite of a fix:
+
+| day | resets | MTBF |
+| --- | --- | --- |
+| Aug 20 | 6 | 4.00 h |
+| Aug 21 | 4 | 6.00 h |
+| Aug 22 | 8 | 3.00 h |
+| Aug 23 | 16 | 1.50 h |
+
+Worst stretch on record for this host: **14 resets between 11:19 and 12:58 on
+Aug 23, one every 8 minutes.** At that cadence the node cannot finish a k3s
+startup and settle before the next reset.
+
+The kernel confound did not materialise — `unattended-upgrades` never shipped
+`-139`, so the whole window ran on `6.8.0-138-generic` and the comparison is
+clean. The `apt-mark hold` was never applied and turned out not to be needed.
+
+Every `[BOOT]` line in the window carried `maxfreq_khz=2000000 epp=power`, and
+`journalctl -u cpu-powercap` confirms the unit applied the cap on each of the 33
+boots, so no interval needs excluding. The cap was genuinely in force and the
+resets got worse anyway.
+
+The cap has been lifted: `cpu-powercap.service` is `disabled`/`inactive` and all
+16 threads are back at `4935000`. Leaving an 8-core host at 2 GHz was never the
+endgame, and it bought nothing.
+
+#### What this rules out, and what is next
+
+This is the "no improvement" branch of the decision rule written above.
+Current-transient-driven rail sag loses most of its weight: clamping peak SoC
+draw from 15–53 W excursions down to a steady 7.1 W did not buy a single hour of
+MTBF. That does not clear the 19 V path itself — a failing VRM, a degraded barrel
+jack or a dying brick sags under *any* load, not just peaks — but it does mean
+the fault is not the CPU asking for too much current too fast.
+
+Remaining actions, unchanged in order but now without a competing hypothesis:
+
+1. **Disable Secure Boot in the BIOS** and read `PMx3C0`. Bit 27 separates a sync
+   flood from an external reset, which splits SoC/fabric fault from power. This is
+   the only cheap test left that produces a definitive answer.
+2. **`memtest86+` overnight.** EDAC never bound a memory controller on this
+   platform, so RAM is still completely unmeasured.
+3. **Physical layer:** reseat RAM, inspect the CPU VRM capacitors, wiggle-test the
+   DC jack, try a different 120 W brick, check for a BIOS newer than v1.04.
+
+#### Collateral work triggered by this entry
+
+At an 8-minute cadence the node stopped being something to debug at leisure, so
+the single points of failure it carried were addressed first: etcd snapshots and
+the k3s server token now leave the node nightly (#197), and the MinIO mirror
+discovers buckets instead of using a stale hardcoded list. Both were one-node-loss
+away from being unrecoverable while this experiment was running.
