@@ -48,8 +48,12 @@ spec:
             # (api.py -> routers -> config.py), instantiating the full
             # Settings object. These fields have no defaults, so the import
             # fails even though the migration itself never uses them.
+            # Optional: prod's secret has no JWT_SECRET key (it uses
+            # SUPABASE_URL/JWKS instead, see the api container below) — this
+            # only resolves to a real value for dev's self-hosted GoTrue.
             - name: SUPABASE_JWT_SECRET
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
+              valueFrom:
+                secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET, optional: true}
             - name: OPENAI_API_KEY
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
             - name: ZILLIZ_URI
@@ -79,8 +83,20 @@ spec:
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             - name: REDIS_URL
               value: "redis://mi-carpeta-medica-api-redis:6379/0"
+            # Auth: two mutually exclusive modes (see auth.py). SUPABASE_URL
+            # present (prod) switches to JWKS verification against that
+            # Supabase Cloud project; absent (dev) falls back to the static
+            # SUPABASE_JWT_SECRET below (dev's secret has no SUPABASE_URL
+            # key, so this always resolves to unset there).
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: SUPABASE_URL, optional: true}
+            # Optional: prod's secret has no JWT_SECRET key (it uses
+            # SUPABASE_URL/JWKS above instead) — this only resolves to a
+            # real value for dev's self-hosted GoTrue.
             - name: SUPABASE_JWT_SECRET
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
+              valueFrom:
+                secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET, optional: true}
             - name: OPENAI_API_KEY
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
             - name: OPENAI_MODEL
@@ -200,8 +216,12 @@ spec:
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            # Optional: prod's secret has no JWT_SECRET key (it uses
+            # SUPABASE_URL/JWKS instead, see the api container below) — this
+            # only resolves to a real value for dev's self-hosted GoTrue.
             - name: SUPABASE_JWT_SECRET
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
+              valueFrom:
+                secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET, optional: true}
           resources:
             requests: {memory: "128Mi", cpu: "100m"}
             limits: {memory: "512Mi", cpu: "500m"}
@@ -224,8 +244,12 @@ spec:
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             - name: REDIS_URL
               value: "redis://mi-carpeta-medica-api-redis:6379/0"
+            # Optional: prod's secret has no JWT_SECRET key (it uses
+            # SUPABASE_URL/JWKS instead, see the api container below) — this
+            # only resolves to a real value for dev's self-hosted GoTrue.
             - name: SUPABASE_JWT_SECRET
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
+              valueFrom:
+                secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET, optional: true}
             - name: OPENAI_API_KEY
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
             - name: OPENAI_MODEL
