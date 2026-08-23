@@ -1,0 +1,103 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-snapshot-offsite
+  namespace: etcd-backup
+spec:
+  # k3s writes its own snapshots at 00:00 and 12:00 UTC; run just after the
+  # first one so the copy is at most 30 minutes old.
+  schedule: "30 0 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          # The snapshots only exist on the control-plane node's local disk, so
+          # this can only ever run there.
+          nodeSelector:
+            kubernetes.io/hostname: master-1
+          containers:
+            - name: copy
+              image: busybox:1.37.0
+              # Everything under /var/lib/rancher/k3s/server is mode 0600 owned
+              # by root; there is no way to read it unprivileged.
+              securityContext:
+                runAsUser: 0
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              env:
+                - name: RETENTION_DAYS
+                  value: "14"
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+                  DEST=/mnt/etcd
+                  OUT="${DEST}/$(date -u +%Y-%m-%d)"
+
+                  # Ignore anything touched in the last 5 minutes: k3s may still
+                  # be flushing it, and a half-written snapshot restores to
+                  # nothing.
+                  SNAP=""
+                  for f in $(find /snapshots -maxdepth 1 -type f -name 'etcd-snapshot-*' -mmin +5); do
+                    if [ -z "$SNAP" ] || [ "$f" -nt "$SNAP" ]; then
+                      SNAP="$f"
+                    fi
+                  done
+
+                  if [ -z "$SNAP" ]; then
+                    echo "[$(date -u +%FT%TZ)] no settled snapshot found in /snapshots"
+                    exit 1
+                  fi
+
+                  mkdir -p "$OUT"
+                  echo "[$(date -u +%FT%TZ)] copying $(basename "$SNAP")"
+                  cp "$SNAP" "${OUT}/$(basename "$SNAP")"
+
+                  # The snapshot on its own cannot rebuild the cluster: k3s needs
+                  # the matching server token to decrypt the bootstrap data, so
+                  # the two have to travel together.
+                  cp /token "${OUT}/server-token"
+
+                  sync
+                  ls -l "$OUT"
+
+                  echo "[$(date -u +%FT%TZ)] pruning backups older than ${RETENTION_DAYS} days"
+                  find "$DEST" -mindepth 1 -maxdepth 1 -type d -mtime "+${RETENTION_DAYS}" \
+                    -exec rm -rf {} \;
+
+                  echo "[$(date -u +%FT%TZ)] done"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              volumeMounts:
+                - name: snapshots
+                  mountPath: /snapshots
+                  readOnly: true
+                - name: token
+                  mountPath: /token
+                  readOnly: true
+                - name: nfs
+                  mountPath: /mnt
+          volumes:
+            - name: snapshots
+              hostPath:
+                path: /var/lib/rancher/k3s/server/db/snapshots
+                type: Directory
+            - name: token
+              hostPath:
+                path: /var/lib/rancher/k3s/server/token
+                type: File
+            - name: nfs
+              nfs:
+                server: 192.168.2.10
+                path: /ssd-pool/longhorn-backups

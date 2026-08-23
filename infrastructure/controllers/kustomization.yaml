@@ -18,3 +18,4 @@ resources:
 - alloy
 - prometheus
 - flux-operator-mcp
+- etcd-backup
