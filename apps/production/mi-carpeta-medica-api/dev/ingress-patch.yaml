@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mi-carpeta-medica-api
+  namespace: mi-carpeta-medica-api-dev
+spec:
+  tls:
+    - hosts:
+        - mi-carpeta-medica-api-dev.luloai.com
+      secretName: mi-carpeta-medica-api-dev-tls
+  rules:
+    - host: mi-carpeta-medica-api-dev.luloai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mi-carpeta-medica-api
+                port:
+                  number: 80
