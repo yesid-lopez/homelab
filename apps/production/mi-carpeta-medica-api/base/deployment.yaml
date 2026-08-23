@@ -48,8 +48,8 @@ spec:
             # (api.py -> routers -> config.py), instantiating the full
             # Settings object. These fields have no defaults, so the import
             # fails even though the migration itself never uses them.
-            - name: API_KEY
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: API_KEY}}
+            - name: SUPABASE_JWT_SECRET
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
             - name: OPENAI_API_KEY
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
             - name: ZILLIZ_URI
@@ -79,8 +79,8 @@ spec:
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             - name: REDIS_URL
               value: "redis://mi-carpeta-medica-api-redis:6379/0"
-            - name: API_KEY
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: API_KEY}}
+            - name: SUPABASE_JWT_SECRET
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
             - name: OPENAI_API_KEY
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
             - name: OPENAI_MODEL
@@ -200,8 +200,8 @@ spec:
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
-            - name: API_KEY
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: API_KEY}}
+            - name: SUPABASE_JWT_SECRET
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
           resources:
             requests: {memory: "128Mi", cpu: "100m"}
             limits: {memory: "512Mi", cpu: "500m"}
@@ -224,8 +224,8 @@ spec:
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             - name: REDIS_URL
               value: "redis://mi-carpeta-medica-api-redis:6379/0"
-            - name: API_KEY
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: API_KEY}}
+            - name: SUPABASE_JWT_SECRET
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
             - name: OPENAI_API_KEY
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: OPENAI_API_KEY}}
             - name: OPENAI_MODEL

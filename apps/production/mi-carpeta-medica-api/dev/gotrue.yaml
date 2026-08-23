@@ -9,8 +9,9 @@
 # base/deployment.yaml. GoTrue creates and manages its own "auth" schema
 # inside that same database.
 #
-# First pass — not yet smoke-tested end to end. Before relying on it:
-# confirm the pod reaches Ready, then hit GET /health on the service.
+# Smoke-tested: pod reaches Ready and GET /health on the service returns
+# {"name":"GoTrue",...}. Not yet exercised through the FastAPI app's own
+# JWT verification — that's what deploying base/deployment.yaml here tests.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -79,7 +80,7 @@ spec:
             - name: DATABASE_URL
               value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             - name: GOTRUE_JWT_SECRET
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-gotrue-secrets, key: JWT_SECRET}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-secrets, key: JWT_SECRET}}
             - name: GOTRUE_JWT_EXP
               value: "3600"
             - name: GOTRUE_JWT_AUD
@@ -97,9 +98,9 @@ spec:
               value: "http://localhost:3000"
             # Required by GoTrue at startup (used to build links in emails —
             # irrelevant here since MAILER_AUTOCONFIRM is on, but it still
-            # fails config validation without it). Not publicly reachable
-            # yet: this Service has no Ingress in this PR, so the in-cluster
-            # DNS name is the only thing that's actually true right now.
+            # fails config validation without it). This service itself has
+            # no Ingress (only the FastAPI app does), so this stays the
+            # in-cluster DNS name rather than a public URL.
             - name: API_EXTERNAL_URL
               value: "http://mi-carpeta-medica-api-gotrue.mi-carpeta-medica-api-dev.svc.cluster.local:9999"
           resources:
