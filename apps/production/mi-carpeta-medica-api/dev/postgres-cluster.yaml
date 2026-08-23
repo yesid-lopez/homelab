@@ -1,0 +1,28 @@
+# Dev's own CNPG cluster — isolated from prod, same bootstrap shape as
+# prod/postgres-cluster.yaml. No barman backup plugin here: dev data is
+# disposable test data, not worth backing up (see decision log in
+# apps/production/mi-carpeta-medica-api/dev/README.md).
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mi-carpeta-medica-api-postgres
+  namespace: mi-carpeta-medica-api-dev
+spec:
+  instances: 1
+
+  bootstrap:
+    initdb:
+      database: mi_carpeta_medica
+      owner: mi_carpeta_medica
+
+  storage:
+    size: 2Gi
+    storageClass: longhorn
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"

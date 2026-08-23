@@ -39,5 +39,9 @@ spec:
     push:
       branch: main
   update:
-    path: ./apps/production/mi-carpeta-medica-api
+    # The "$imagepolicy" setter markers live in base/deployment.yaml, shared
+    # by both the dev and prod overlays — scanning ../base (not this prod/
+    # dir) keeps a single automation bumping the one image tag both
+    # overlays build from.
+    path: ./apps/production/mi-carpeta-medica-api/base
     strategy: Setters
