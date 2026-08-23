@@ -30,6 +30,30 @@ spec:
       labels:
         app: mi-carpeta-medica-api-gotrue
     spec:
+      # GoTrue's own migrations create tables inside the "auth" schema but
+      # never the schema itself — it has to exist first. Idempotent, so
+      # safe to run on every rollout.
+      initContainers:
+        - name: create-auth-schema
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - psql -c "CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION $(PGUSER);"
+          env:
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+          resources:
+            requests: {memory: "32Mi", cpu: "25m"}
+            limits: {memory: "64Mi", cpu: "100m"}
       containers:
         - name: gotrue
           image: supabase/gotrue:v2.187.0
