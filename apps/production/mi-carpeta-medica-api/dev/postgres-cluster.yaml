@@ -1,7 +1,6 @@
 # Dev's own CNPG cluster — isolated from prod, same bootstrap shape as
 # prod/postgres-cluster.yaml. No barman backup plugin here: dev data is
-# disposable test data, not worth backing up (see decision log in
-# apps/production/mi-carpeta-medica-api/dev/README.md).
+# disposable test data, not worth backing up (see ../ENVIRONMENTS.md).
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -14,6 +13,13 @@ spec:
     initdb:
       database: mi_carpeta_medica
       owner: mi_carpeta_medica
+      # GoTrue (self-hosted Supabase Auth, see gotrue.yaml) expects the
+      # "auth" schema to already exist — it only manages objects inside it,
+      # it never creates the schema itself. This only runs on a *fresh*
+      # initdb; gotrue.yaml's initContainer creates it too, idempotently,
+      # so this cluster (already bootstrapped without it) still gets fixed.
+      postInitApplicationSQL:
+        - "CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION mi_carpeta_medica;"
 
   storage:
     size: 2Gi
