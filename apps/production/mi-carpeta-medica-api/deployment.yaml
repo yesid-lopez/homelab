@@ -29,7 +29,7 @@ spec:
         - name: registry-secret
       initContainers:
         - name: migrate
-          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.6.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.7.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
           command: ["uv", "run", "alembic", "upgrade", "head"]
           env:
             - name: PGUSER
@@ -44,7 +44,7 @@ spec:
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
-            # `alembic upgrade head` runs env.py, which imports medical_docs
+            # `alembic upgrade head` runs env.py, which imports mi_carpeta_medica
             # (api.py -> routers -> config.py), instantiating the full
             # Settings object. These fields have no defaults, so the import
             # fails even though the migration itself never uses them.
@@ -61,7 +61,7 @@ spec:
             limits: {memory: "512Mi", cpu: "500m"}
       containers:
         - name: api
-          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.6.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.7.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
           ports:
             - containerPort: 8000
           env:
@@ -166,7 +166,7 @@ spec:
       # via the Dockerfile's `postgresql-client` apt package.
       initContainers:
         - name: wait-for-migrations
-          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.6.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.7.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
           command:
             - /bin/sh
             - -c
@@ -207,8 +207,8 @@ spec:
             limits: {memory: "512Mi", cpu: "500m"}
       containers:
         - name: worker
-          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.6.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
-          command: ["uv", "run", "taskiq", "worker", "medical_docs.workers.document_processor:broker"]
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:v0.7.0 # {"$imagepolicy": "mi-carpeta-medica-api:mi-carpeta-medica-api"}
+          command: ["uv", "run", "taskiq", "worker", "mi_carpeta_medica.workers.document_processor:broker"]
           env:
             - name: PGUSER
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
