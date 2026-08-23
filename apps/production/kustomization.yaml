@@ -15,6 +15,7 @@ resources:
 - public-status-api
 - n8n
 - client-sites
-- mi-carpeta-medica-api
-- mi-carpeta-medica-ui
+- mi-carpeta-medica-api/dev
+- mi-carpeta-medica-api/prod
+- mi-carpeta-medica-ui/prod
 - print3d-mcp

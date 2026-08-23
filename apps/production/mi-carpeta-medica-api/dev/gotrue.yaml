@@ -1,0 +1,96 @@
+# Self-hosted Supabase Auth (GoTrue) for the dev environment. Prod uses a
+# real Supabase Cloud project instead (see prod/sealed-supabase-secrets.yaml)
+# — dev stays fully inside the homelab so iterating doesn't depend on the
+# internet or a second cloud project. Same JWT-verification code in FastAPI
+# works against either: only SUPABASE_URL/JWT secret differ per environment.
+#
+# Talks to the dev CNPG cluster's auto-generated "-app" secret (owner of the
+# mi_carpeta_medica database), the same way the API/worker containers do in
+# base/deployment.yaml. GoTrue creates and manages its own "auth" schema
+# inside that same database.
+#
+# First pass — not yet smoke-tested end to end. Before relying on it:
+# confirm the pod reaches Ready, then hit GET /health on the service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mi-carpeta-medica-api-gotrue
+  namespace: mi-carpeta-medica-api-dev
+  labels:
+    app: mi-carpeta-medica-api-gotrue
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mi-carpeta-medica-api-gotrue
+  template:
+    metadata:
+      labels:
+        app: mi-carpeta-medica-api-gotrue
+    spec:
+      containers:
+        - name: gotrue
+          image: supabase/gotrue:v2.187.0
+          ports:
+            - containerPort: 9999
+          env:
+            - name: GOTRUE_API_HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "9999"
+            - name: GOTRUE_DB_DRIVER
+              value: "postgres"
+            - name: PGUSER
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+            - name: PGPASSWORD
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+            - name: PGHOST
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+            - name: PGPORT
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+            - name: PGDATABASE
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+            - name: DATABASE_URL
+              value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            - name: GOTRUE_JWT_SECRET
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-gotrue-secrets, key: JWT_SECRET}}
+            - name: GOTRUE_JWT_EXP
+              value: "3600"
+            - name: GOTRUE_JWT_AUD
+              value: "authenticated"
+            # Closed group, invite-only: no public signup, no SMTP configured
+            # so auto-confirm the (manually created) accounts instead of
+            # emailing a confirmation link.
+            - name: GOTRUE_DISABLE_SIGNUP
+              value: "true"
+            - name: GOTRUE_MAILER_AUTOCONFIRM
+              value: "true"
+            # Placeholder — update once medidocs-ui/medical get a dev
+            # ingress hostname of their own.
+            - name: GOTRUE_SITE_URL
+              value: "http://localhost:3000"
+          resources:
+            requests: {memory: "128Mi", cpu: "50m"}
+            limits: {memory: "256Mi", cpu: "250m"}
+          readinessProbe:
+            httpGet: {path: /health, port: 9999}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet: {path: /health, port: 9999}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mi-carpeta-medica-api-gotrue
+  namespace: mi-carpeta-medica-api-dev
+spec:
+  selector:
+    app: mi-carpeta-medica-api-gotrue
+  ports:
+    - port: 9999
+      targetPort: 9999
