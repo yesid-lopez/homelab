@@ -1144,7 +1144,51 @@ a power cycle. A plain `sudo reboot` from the OS (as opposed to a BIOS Setup
 exit) would make a useful second control sample for comparison, but has not
 been captured yet.
 
-**3. AC socket/strip test started.** The brick was moved off the IKEA strip
-(see the entry above) to a different strip/outlet today. Too early to read
-anything — watching the reset rate against the 4.68 h baseline MTBF for the
-rest of the day and longer if it looks promising.
+**3. AC socket/strip test correction — not actually started.** The previous
+paragraph in this entry stated the brick had already been moved off the IKEA
+strip. That was wrong: as of this same day, the brick is still on the original
+IKEA strip socket. Only the Secure Boot change above was applied. The move is
+still a planned, not-yet-executed follow-up.
+
+### Update — 2026-08-23, later still: first real crash with Secure Boot off — `rst_status=0x08000800`, the predicted hardware-fault signature
+
+A real, unplanned reset happened at **16:53:53 UTC**, 1 h 43 m after the
+Secure Boot boot above (15:10:03 → 16:53:53). At the time of this crash the
+brick was still on the original IKEA strip socket — the AC socket test (item 3
+above) had not started yet, so this reading is uncontaminated by that
+variable.
+
+```
+2026-08-23T16:53:53+00:00 [BOOT] uptime_s=22.49 kernel=6.8.0-138-generic max_cstate=unlimited iomem=relaxed rst_status=0x08000800 maxfreq_khz=4935000 epp=performance
+```
+
+`0x08000800` is **bit 27 (uncorrected hardware error) + bit 11 (`SYNC_FLOOD`)**
+— exactly the "smoking gun" pattern the 2026-08-02 entry defined: an
+uncorrected hardware error inside the SoC triggered a data-fabric sync flood.
+This is the first time this document has a real crash paired with a
+non-ambiguous register read, and it's cleanly distinguishable from the same-day
+control sample: the clean BIOS-exit reboot read `0x00080800` (bit 19 + bit 11,
+**no bit 27**), this crash reads bit 27 **+** bit 11. The register is doing
+useful, discriminating work.
+
+Pre-crash `hwmon` samples (previous boot, 16:49:20–16:52:50) show `load`
+0.37–1.16 (idle, consistent with every prior era's signature) and `tctl`
+climbing from ~48 °C to a 59.5 °C bump at 16:51:20 — not thermally alarming on
+its own. One new observation: `swap_used_mb` jumped from 3 → 61 → 107 → 112 MB
+between 16:51:20 and 16:52:50, the only unusual telemetry in the window.
+Not enough on its own to implicate memory pressure as a trigger — flagging it
+for the next few reads rather than concluding anything now.
+
+**What this confirms:** the fault is real, internal, and hardware-level —
+consistent with (though bit 27 alone can't fully separate) the RAM, VRM, or
+SoC-silicon suspects already on the list. It does not yet say anything about
+the AC socket/strip hypothesis, since that test hasn't started. Once the brick
+is moved and a crash happens afterward, compare its `rst_status` against this
+entry's `0x08000800` baseline.
+
+#### Follow-up
+
+Move the brick off the IKEA strip (still pending) and keep watching
+`rst_status` on every subsequent crash — bit 27 present again would keep
+pointing at RAM/VRM/SoC regardless of the socket; its absence, replaced by
+something else, would be a new pattern worth re-opening this analysis for.
