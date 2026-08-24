@@ -119,7 +119,7 @@ spec:
             - name: S3_SECRET_ACCESS_KEY
               valueFrom: {secretKeyRef: {name: minio-credentials, key: rootPassword}}
             - name: S3_BUCKET_NAME
-              value: "mi-carpeta-medica-api"
+              value: "mi-carpeta-medica-prod"
             - name: ZILLIZ_URI
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_URI}}
             - name: ZILLIZ_TOKEN
@@ -272,7 +272,7 @@ spec:
             - name: S3_SECRET_ACCESS_KEY
               valueFrom: {secretKeyRef: {name: minio-credentials, key: rootPassword}}
             - name: S3_BUCKET_NAME
-              value: "mi-carpeta-medica-api"
+              value: "mi-carpeta-medica-prod"
             - name: ZILLIZ_URI
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_URI}}
             - name: ZILLIZ_TOKEN
