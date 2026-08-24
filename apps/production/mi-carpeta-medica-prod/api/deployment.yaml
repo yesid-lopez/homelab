@@ -128,7 +128,7 @@ spec:
             # bucket above: Zilliz is an external managed service, shared
             # across namespaces, not something namespace-scoped to migrate.
             - name: ZILLIZ_COLLECTION_NAME
-              value: "medical_documents"
+              value: "medical_documents_prod"
           volumeMounts:
             - name: uploads
               mountPath: /app/uploads
@@ -278,7 +278,7 @@ spec:
             - name: ZILLIZ_TOKEN
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-secrets, key: ZILLIZ_TOKEN}}
             - name: ZILLIZ_COLLECTION_NAME
-              value: "medical_documents"
+              value: "medical_documents_prod"
           volumeMounts:
             - name: uploads
               mountPath: /app/uploads
