@@ -8,9 +8,7 @@ app yet).
 
 MinIO (documents/thumbnails) and Zilliz (vector search) are **not**
 namespace-scoped — they're shared external services referenced by bucket
-name / collection name, unaffected by this move. Postgres backups now write
-to a separate destination
-(`s3://postgres-backups/mi-carpeta-medica-prod-postgres`).
+name / collection name, unaffected by this move.
 
 Secrets (`SealedSecret`s under `api/sealed-secrets/` and `ui/sealed-secrets/`)
 were re-sealed for real, using the sealed-secrets controller's private key
@@ -23,3 +21,15 @@ shredded after use — no plaintext was committed or left on disk.
 kubectl -n mi-carpeta-medica-prod get pods
 curl -s https://mi-carpeta-medica-api.luloai.com/health
 ```
+
+## Update: self-hosted Postgres → Supabase's managed Postgres
+
+The CNPG `Cluster`/`ObjectStore`/`ScheduledBackup` (self-hosted Postgres +
+barman backups to MinIO) has been removed. The API/worker now connect to the
+same Supabase Cloud project already used for Auth (see
+`sealed-supabase-secrets.yaml`'s `SUPABASE_URL`) via its direct Postgres
+connection, credentials in the new `mi-carpeta-medica-api-supabase-db`
+`SealedSecret`. This was a fresh, empty CNPG cluster with no real users yet,
+so there was nothing to migrate — `alembic upgrade head` just creates the
+schema in Supabase's `public` schema on first rollout. Supabase manages its
+own backups; the MinIO/barman backup path no longer applies.
