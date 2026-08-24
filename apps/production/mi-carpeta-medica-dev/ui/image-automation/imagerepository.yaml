@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: mi-carpeta-medica-ui
+  namespace: mi-carpeta-medica-dev
+spec:
+  image: registry.yesidlopez.de/mi-carpeta-medica-ui
+  interval: 1m
+  secretRef:
+    name: registry-secret

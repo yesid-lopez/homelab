@@ -4,3 +4,4 @@ namespace: mi-carpeta-medica-dev
 resources:
   - namespace.yaml
   - api
+  - ui
