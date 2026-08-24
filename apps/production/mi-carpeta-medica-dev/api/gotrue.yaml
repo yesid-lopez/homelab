@@ -34,13 +34,23 @@ spec:
       # GoTrue's own migrations create tables inside the "auth" schema but
       # never the schema itself — it has to exist first. Idempotent, so
       # safe to run on every rollout.
+      #
+      # GoTrue's queries reference tables unqualified (e.g. "users", not
+      # "auth.users") and rely on the connection's search_path to resolve
+      # them — without this, every admin/API call that touches the DB fails
+      # with "relation \"users\" does not exist" even though migrations ran
+      # fine. Scoped to this one role+database; no collision with the app's
+      # own tables (documents, consultations, ...), so safe for the shared
+      # PGUSER the API/worker also use.
       initContainers:
         - name: create-auth-schema
           image: postgres:16-alpine
           command:
             - sh
             - -c
-            - psql -c "CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION $(PGUSER);"
+            - |
+              psql -c "CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION $(PGUSER);"
+              psql -c "ALTER ROLE $(PGUSER) IN DATABASE $(PGDATABASE) SET search_path TO auth, public;"
           env:
             - name: PGUSER
               valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
