@@ -31,7 +31,7 @@ spec:
         kubernetes.io/arch: amd64
       containers:
         - name: mi-carpeta-medica-ui
-          image: registry.yesidlopez.de/mi-carpeta-medica-ui:dev-2 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-ui"}
+          image: registry.yesidlopez.de/mi-carpeta-medica-ui:dev-3 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-ui"}
           ports:
             - containerPort: 3000
           env:
