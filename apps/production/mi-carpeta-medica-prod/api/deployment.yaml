@@ -33,15 +33,15 @@ spec:
           command: ["uv", "run", "alembic", "upgrade", "head"]
           env:
             - name: PGUSER
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: user}}
             - name: PGPASSWORD
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: password}}
             - name: PGHOST
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: host}}
             - name: PGPORT
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: port}}
             - name: PGDATABASE
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: dbname}}
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             # `alembic upgrade head` runs env.py, which imports mi_carpeta_medica
@@ -70,15 +70,15 @@ spec:
             - containerPort: 8000
           env:
             - name: PGUSER
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: user}}
             - name: PGPASSWORD
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: password}}
             - name: PGHOST
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: host}}
             - name: PGPORT
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: port}}
             - name: PGDATABASE
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: dbname}}
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             - name: REDIS_URL
@@ -210,15 +210,15 @@ spec:
               done
           env:
             - name: PGUSER
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: user}}
             - name: PGPASSWORD
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: password}}
             - name: PGHOST
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: host}}
             - name: PGPORT
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: port}}
             - name: PGDATABASE
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: dbname}}
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             # Optional: prod's secret has no JWT_SECRET key (it uses
@@ -236,15 +236,15 @@ spec:
           command: ["uv", "run", "taskiq", "worker", "mi_carpeta_medica.workers.document_processor:broker"]
           env:
             - name: PGUSER
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: user}}
             - name: PGPASSWORD
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: password}}
             - name: PGHOST
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: host}}
             - name: PGPORT
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: port}}
             - name: PGDATABASE
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-supabase-db, key: dbname}}
             - name: DATABASE_URL
               value: "postgresql+asyncpg://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             - name: REDIS_URL

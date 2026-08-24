@@ -5,6 +5,5 @@ resources:
   - service.yaml
   - ingress.yaml
   - redis.yaml
-  - postgres-cluster.yaml
   - sealed-secrets
   - image-automation
