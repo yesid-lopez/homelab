@@ -11,11 +11,9 @@ spec:
       recurring-job.longhorn.io/source: enabled
       recurring-job-group.longhorn.io/backup: enabled
 
-  # Starts empty (fresh initdb). This is deliberate: applying this manifest
-  # must not touch the still-live mi-carpeta-medica-api-postgres cluster in
-  # the mi-carpeta-medica-api namespace. The actual document/consultation
-  # data is copied over as a separate, manual step — see MIGRATION.md —
-  # before cutting the app/ingress over to this namespace.
+  # Starts empty (fresh initdb) — see MIGRATION.md: the old cluster's data
+  # was deliberately discarded rather than migrated, nobody was using the
+  # app yet.
   bootstrap:
     initdb:
       database: mi_carpeta_medica
