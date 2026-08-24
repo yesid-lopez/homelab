@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mi-carpeta-medica-ui
+  namespace: mi-carpeta-medica-prod
+  annotations:
+    cert-manager.io/cluster-issuer: luloai-issuer
+    external-dns.alpha.kubernetes.io/target: homelab.luloai.com
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [mi-carpeta-medica.luloai.com]
+      secretName: mi-carpeta-medica-ui-tls
+  rules:
+    - host: mi-carpeta-medica.luloai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: mi-carpeta-medica-ui, port: {number: 80}}
