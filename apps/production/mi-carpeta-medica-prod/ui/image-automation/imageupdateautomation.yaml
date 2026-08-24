@@ -1,0 +1,46 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: mi-carpeta-medica-ui
+  namespace: mi-carpeta-medica-prod
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        Automated image update for mi-carpeta-medica-ui
+
+        Automation name: {{ .AutomationObject }}
+
+        Files:
+        {{ range $filename, $_ := .Changed.FileChanges -}}
+        - {{ $filename }}
+        {{ end -}}
+
+        Objects:
+        {{ range $resource, $_ := .Changed.Objects -}}
+        - {{ $resource.Kind }} {{ $resource.Name }}
+        {{ end -}}
+
+        Images:
+        {{ range .Changed.Changes -}}
+        - {{.NewValue}}
+        {{ end -}}
+    push:
+      branch: main
+  update:
+    # This namespace is a standalone copy (not a kustomize base/overlay of
+    # mi-carpeta-medica-ui), so it gets its own automation bumping its own
+    # deployment.yaml's "$imagepolicy" setter marker.
+    path: ./apps/production/mi-carpeta-medica-prod/ui
+    strategy: Setters

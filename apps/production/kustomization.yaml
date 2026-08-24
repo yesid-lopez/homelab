@@ -18,4 +18,6 @@ resources:
 - mi-carpeta-medica-api/dev
 - mi-carpeta-medica-api/prod
 - mi-carpeta-medica-ui/prod
+- mi-carpeta-medica-dev
+- mi-carpeta-medica-prod
 - print3d-mcp

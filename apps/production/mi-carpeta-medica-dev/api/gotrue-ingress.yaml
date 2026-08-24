@@ -1,0 +1,31 @@
+# Public Ingress for the dev GoTrue instance (apps/production/mi-carpeta-medica-api/dev/gotrue.yaml).
+# It was internal-only (reachable via port-forward) so the mobile app in
+# debug mode couldn't log in against dev without a host machine attached.
+# Signup is already disabled (GOTRUE_DISABLE_SIGNUP=true, invite-only), so
+# the only public surface is the /token grant endpoints — rate-limited below
+# to blunt credential-stuffing/brute-force attempts.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mi-carpeta-medica-api-gotrue
+  namespace: mi-carpeta-medica-dev
+  annotations:
+    cert-manager.io/cluster-issuer: luloai-issuer
+    external-dns.alpha.kubernetes.io/target: homelab.luloai.com
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "2"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [mi-carpeta-medica-auth-dev.luloai.com]
+      secretName: mi-carpeta-medica-auth-dev-tls
+  rules:
+    - host: mi-carpeta-medica-auth-dev.luloai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: mi-carpeta-medica-api-gotrue, port: {number: 9999}}

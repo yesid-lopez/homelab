@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # registry-secret is defined once in ../../api/sealed-secrets — both
+  # deployments' imagePullSecrets reference it by name, and they now share
+  # this namespace, so a second copy would collide.
+  - sealed-app-secrets.yaml
