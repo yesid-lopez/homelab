@@ -4,14 +4,10 @@
 # internet or a second cloud project. Same JWT-verification code in FastAPI
 # works against either: only SUPABASE_URL/JWT secret differ per environment.
 #
-# Talks to the dev CNPG cluster's auto-generated "-app" secret (owner of the
-# mi_carpeta_medica database), the same way the API/worker containers do in
-# base/deployment.yaml. GoTrue creates and manages its own "auth" schema
-# inside that same database.
-#
-# Smoke-tested: pod reaches Ready and GET /health on the service returns
-# {"name":"GoTrue",...}. Not yet exercised through the FastAPI app's own
-# JWT verification — that's what deploying base/deployment.yaml here tests.
+# Talks to its own dedicated CNPG cluster (auth-postgres-cluster.yaml), not
+# the app's — split out so resetting one database's PVC never takes the
+# other down. Uses that cluster's auto-generated "-app" secret. GoTrue
+# creates and manages its own "auth" schema inside that database.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -39,9 +35,7 @@ spec:
       # "auth.users") and rely on the connection's search_path to resolve
       # them — without this, every admin/API call that touches the DB fails
       # with "relation \"users\" does not exist" even though migrations ran
-      # fine. Scoped to this one role+database; no collision with the app's
-      # own tables (documents, consultations, ...), so safe for the shared
-      # PGUSER the API/worker also use.
+      # fine.
       initContainers:
         - name: create-auth-schema
           image: postgres:16-alpine
@@ -53,15 +47,15 @@ spec:
               psql -c "ALTER ROLE $(PGUSER) IN DATABASE $(PGDATABASE) SET search_path TO auth, public;"
           env:
             - name: PGUSER
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: user}}
             - name: PGPASSWORD
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: password}}
             - name: PGHOST
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: host}}
             - name: PGPORT
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: port}}
             - name: PGDATABASE
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: dbname}}
           resources:
             requests: {memory: "32Mi", cpu: "25m"}
             limits: {memory: "64Mi", cpu: "100m"}
@@ -78,15 +72,15 @@ spec:
             - name: GOTRUE_DB_DRIVER
               value: "postgres"
             - name: PGUSER
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: user}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: user}}
             - name: PGPASSWORD
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: password}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: password}}
             - name: PGHOST
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: host}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: host}}
             - name: PGPORT
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: port}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: port}}
             - name: PGDATABASE
-              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-api-postgres-app, key: dbname}}
+              valueFrom: {secretKeyRef: {name: mi-carpeta-medica-auth-postgres-app, key: dbname}}
             - name: DATABASE_URL
               value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
             - name: GOTRUE_JWT_SECRET

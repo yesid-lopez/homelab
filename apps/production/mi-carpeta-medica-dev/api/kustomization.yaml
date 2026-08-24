@@ -6,6 +6,7 @@ resources:
   - ingress.yaml
   - redis.yaml
   - postgres-cluster.yaml
+  - auth-postgres-cluster.yaml
   - gotrue.yaml
   - gotrue-ingress.yaml
   - sealed-secrets

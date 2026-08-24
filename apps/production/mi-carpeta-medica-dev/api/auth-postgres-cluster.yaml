@@ -1,0 +1,35 @@
+# Dedicated CNPG cluster for dev's self-hosted GoTrue (see gotrue.yaml) —
+# split out from mi-carpeta-medica-api-postgres so that resetting one
+# database (e.g. wiping app data during iteration) never takes auth/login
+# down with it, and vice versa. Own PVC, own instance; disposable test
+# data, same as the app's own cluster (see ../ENVIRONMENTS.md).
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mi-carpeta-medica-auth-postgres
+  namespace: mi-carpeta-medica-dev
+spec:
+  instances: 1
+
+  bootstrap:
+    initdb:
+      database: mi_carpeta_medica_auth
+      owner: mi_carpeta_medica_auth
+      # GoTrue expects the "auth" schema to already exist — it only manages
+      # objects inside it, never creates the schema itself. This only runs
+      # on a *fresh* initdb; gotrue.yaml's initContainer creates it too,
+      # idempotently, as a backstop.
+      postInitApplicationSQL:
+        - "CREATE SCHEMA IF NOT EXISTS auth AUTHORIZATION mi_carpeta_medica_auth;"
+
+  storage:
+    size: 1Gi
+    storageClass: longhorn
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "150m"
