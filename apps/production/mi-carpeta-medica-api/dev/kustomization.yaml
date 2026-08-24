@@ -4,6 +4,7 @@ resources:
   - ../base
   - postgres-cluster.yaml
   - gotrue.yaml
+  - gotrue-ingress.yaml
   - sealed-secrets
 
 namespace: mi-carpeta-medica-api-dev

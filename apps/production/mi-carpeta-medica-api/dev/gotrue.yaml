@@ -98,11 +98,11 @@ spec:
               value: "http://localhost:3000"
             # Required by GoTrue at startup (used to build links in emails —
             # irrelevant here since MAILER_AUTOCONFIRM is on, but it still
-            # fails config validation without it). This service itself has
-            # no Ingress (only the FastAPI app does), so this stays the
-            # in-cluster DNS name rather than a public URL.
+            # fails config validation without it). Now has a public Ingress
+            # (gotrue-ingress.yaml), so this points there instead of the
+            # in-cluster DNS name.
             - name: API_EXTERNAL_URL
-              value: "http://mi-carpeta-medica-api-gotrue.mi-carpeta-medica-api-dev.svc.cluster.local:9999"
+              value: "https://mi-carpeta-medica-auth-dev.luloai.com"
           resources:
             requests: {memory: "128Mi", cpu: "50m"}
             limits: {memory: "256Mi", cpu: "250m"}

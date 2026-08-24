@@ -75,9 +75,11 @@ kubectl -n mi-carpeta-medica-api-dev get pods
 curl https://mi-carpeta-medica-api-dev.luloai.com/health
 ```
 
-GoTrue itself has no Ingress (internal-only) — reach it via
-`kubectl -n mi-carpeta-medica-api-dev port-forward svc/mi-carpeta-medica-api-gotrue 9999:9999`
-then `curl localhost:9999/health`.
+GoTrue now has its own public Ingress (`dev/gotrue-ingress.yaml`), rate-limited
+and TLS-only, since signup is disabled/invite-only:
+`curl https://mi-carpeta-medica-auth-dev.luloai.com/health`. It's still also
+reachable in-cluster via
+`kubectl -n mi-carpeta-medica-api-dev port-forward svc/mi-carpeta-medica-api-gotrue 9999:9999`.
 
 `mi-carpeta-medica-ui` still needs its own `dev/` overlay before the web
 client can point at this environment — not done here.
