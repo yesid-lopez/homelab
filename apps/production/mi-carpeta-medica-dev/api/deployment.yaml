@@ -29,7 +29,7 @@ spec:
         - name: registry-secret
       initContainers:
         - name: migrate
-          image: registry.yesidlopez.de/mi-carpeta-medica-api:dev-9 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-api"}
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:dev-10 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-api"}
           command: ["uv", "run", "alembic", "upgrade", "head"]
           env:
             - name: PGUSER
@@ -65,7 +65,7 @@ spec:
             limits: {memory: "512Mi", cpu: "500m"}
       containers:
         - name: api
-          image: registry.yesidlopez.de/mi-carpeta-medica-api:dev-9 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-api"}
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:dev-10 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-api"}
           ports:
             - containerPort: 8000
           env:
@@ -187,7 +187,7 @@ spec:
       # via the Dockerfile's `postgresql-client` apt package.
       initContainers:
         - name: wait-for-migrations
-          image: registry.yesidlopez.de/mi-carpeta-medica-api:dev-9 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-api"}
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:dev-10 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-api"}
           command:
             - /bin/sh
             - -c
@@ -232,7 +232,7 @@ spec:
             limits: {memory: "512Mi", cpu: "500m"}
       containers:
         - name: worker
-          image: registry.yesidlopez.de/mi-carpeta-medica-api:dev-9 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-api"}
+          image: registry.yesidlopez.de/mi-carpeta-medica-api:dev-10 # {"$imagepolicy": "mi-carpeta-medica-dev:mi-carpeta-medica-api"}
           command: ["uv", "run", "taskiq", "worker", "mi_carpeta_medica.workers.document_processor:broker"]
           env:
             - name: PGUSER
