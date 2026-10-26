@@ -27,12 +27,16 @@ data:
                   storage: 50Gi
         retention: 14d
         retentionSize: 24GB
+        # Prometheus can take longer than the operator default 15 minutes to
+        # replay the WAL after an unclean restart. Give it enough time to
+        # recover instead of repeatedly killing it via the startup probe.
+        maximumStartupDurationSeconds: 14400
         replicas: 1
         shards: 1
         resources:
           limits:
-            memory: 2Gi
-            cpu: 1000m
+            memory: 3Gi
+            cpu: 2000m
           requests:
             memory: 1Gi
             cpu: 500m
