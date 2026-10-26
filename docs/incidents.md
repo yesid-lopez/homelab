@@ -14,6 +14,55 @@ Every entry follows the same shape:
 
 ---
 
+## 2026-10-26 — Longhorn `backup-daily` failing since 2026-10-05 (public status "degraded") + `master-1` running hot
+
+### Symptoms
+
+- `lab.yesidlopez.de` showed **degraded**: `status.yesidlopez.de/status` reported `backups.status=stale`.
+- `cronjob/backup-daily` (longhorn-system) last succeeded **2026-10-05 02:01 UTC**; every run since ended in `BackoffLimitExceeded` (`KubeJobFailed` alerts). Each of the 4 retries re-backed up the healthy volumes, so 13/14 volumes still got daily backups — **only the MinIO volume had no Longhorn backup since 2026-10-05**.
+- Separately, a `NodeHighTemperature` alert: `master-1` Tctl ~92 °C (sent by the `luloclaw` Pi at 192.168.2.243, not master-1 itself).
+
+### Root cause
+
+**Backups:** the MinIO volume (`pvc-153992dd…`) and `lulo-cms-postgres-1` (`pvc-49dff3a9…`) were created on 2026-05-10, when the global `snapshotMaxCount` was briefly `4` (commit `0d74458`). Longhorn copies that value into the volume spec at creation, so raising the global setting to 12 later did not affect them. MinIO held 4 snapshots (2× `snapshot-daily`, 1 previous backup snapshot, 1 manual `minio-premaint-202608231348` from 2026-08-23), so the next backup snapshot was rejected:
+
+```
+snapshot count usage 4 is equal or larger than snapshotMaxCount 4
+```
+
+The manual snapshot existed since August but failures only started after the Longhorn 1.12.1 → 1.13.0 upgrade (Renovate PR #228, merged 2026-10-04 09:19 UTC). Likely 1.13 changed snapshot counting/pruning order; not confirmed.
+
+**Temperature:** from `/var/log/hwmon.log` daily averages — ~75 °C at 35 W until 2026-10-03; step to ~84 °C / 40 W right after the 2026-10-04 upgrade batch (Longhorn, CNPG, barman-cloud, alloy, kube-prometheus-stack; load 1.6 → 3.0, mostly inside `k3s-server` at ~1.2 cores); then a slow climb to ~92 °C over three weeks **at constant power** → cooling degradation (dust / fan / paste), not workload. CPU runs with EPP `performance` and max freq 4.935 GHz.
+
+### Changes
+
+- **Cluster-level (not in git — Longhorn Volume CRs are created dynamically):**
+  ```bash
+  kubectl -n longhorn-system patch volumes.longhorn.io pvc-153992dd-15d7-4a4a-a146-aacaafe4915c --type merge -p '{"spec":{"snapshotMaxCount":12}}'
+  kubectl -n longhorn-system patch volumes.longhorn.io pvc-49dff3a9-58a0-4ef3-bf2a-fc213962ce85 --type merge -p '{"spec":{"snapshotMaxCount":12}}'
+  kubectl -n longhorn-system create job --from=cronjob/backup-daily backup-daily-manual-1026   # Complete in 2m, MinIO backup created
+  ```
+- No repo changes; global `snapshotMaxCount: 12` in `infrastructure/controllers/longhorn/configmap-helm-values.yaml` was already correct.
+
+### Verification
+
+```bash
+kubectl -n longhorn-system get volumes.longhorn.io -o 'custom-columns=PVC:.status.kubernetesStatus.pvcName,MAX:.spec.snapshotMaxCount'
+kubectl -n longhorn-system get cronjob backup-daily -o jsonpath='{.status.lastSuccessfulTime}'
+curl -s https://status.yesidlopez.de/status   # status=operational, backups.status=ok
+```
+
+After the fix the status endpoint returned `operational`, 0 alerts.
+
+### Follow-ups
+
+- `master-1` cooling: clean dust / check fan / repaste. Optional mitigation: EPP `balance_power` and cap `scaling_max_freq` to 3.3 GHz (`/sys/devices/system/cpu/cpufreq/policy*/`) — not applied.
+- Volumes with per-volume `snapshotMaxCount: 2` (prometheus, alertmanager, loki) are not in the backup group; fine as long as they stay out of it.
+- Consider splitting Longhorn out of Renovate's grouped "infrastructure charts" PR so storage upgrades are reviewed on their own.
+- Loki only ingests resumelo/umami namespaces, so Longhorn job logs were not available after pod cleanup.
+
+---
+
 ## 2026-07-18 — `master-1` (Minisforum UM690) random hard resets
 
 ### Symptoms
