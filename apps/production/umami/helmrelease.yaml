@@ -21,12 +21,12 @@ spec:
   - kind: Secret
     name: umami-postgres-app
     valuesKey: password
-    targetPath: externalDatabase.auth.password
+    targetPath: externalDatabase.password
   - kind: Secret
     name: umami-postgres-app
     valuesKey: username
-    targetPath: externalDatabase.auth.username
+    targetPath: externalDatabase.username
   - kind: Secret
     name: umami-postgres-app
     valuesKey: dbname
-    targetPath: externalDatabase.auth.database
+    targetPath: externalDatabase.database
