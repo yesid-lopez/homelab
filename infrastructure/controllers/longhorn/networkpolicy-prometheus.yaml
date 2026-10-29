@@ -1,0 +1,28 @@
+---
+# Since Longhorn 1.12.1 the chart ships a `longhorn-manager` NetworkPolicy
+# that only admits Longhorn's own components, so Prometheus gets
+# "connection refused" on :9500 and every Longhorn metric is missing
+# (TargetDown on longhorn-backend). NetworkPolicies are additive: this one
+# lets the kube-prometheus-stack Prometheus scrape the manager metrics port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: longhorn-manager-allow-prometheus
+  namespace: longhorn-system
+spec:
+  podSelector:
+    matchLabels:
+      app: longhorn-manager
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 9500
