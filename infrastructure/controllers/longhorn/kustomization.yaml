@@ -6,3 +6,4 @@ resources:
   - helmrepository.yaml
   - configmap-helm-values.yaml
   - servicemonitor.yaml
+  - networkpolicy-prometheus.yaml
