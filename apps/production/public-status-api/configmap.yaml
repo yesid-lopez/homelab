@@ -15,11 +15,14 @@ data:
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     # Each entry: (namespace, cronjob name, max age in seconds before "stale").
-    # Max age = schedule period * 2, so one missed run is tolerated.
+    # Daily jobs get 26h (one day plus runtime slack), so "ok" means "ran today".
+    # The 6-hourly MinIO mirror tolerates one missed run.
     WATCHED_BACKUPS = [
-        ("longhorn-system", "backup-daily", 48 * 3600),
-        ("longhorn-system", "snapshot-daily", 48 * 3600),
+        ("longhorn-system", "backup-daily", 26 * 3600),
+        ("longhorn-system", "snapshot-daily", 26 * 3600),
         ("minio", "minio-mirror-backup", 12 * 3600),
+        ("etcd-backup", "etcd-snapshot-offsite", 26 * 3600),
+        ("etcd-backup", "sealed-secrets-keys-offsite", 26 * 3600),
     ]
 
     PORT = int(os.environ.get("PORT", "8080"))
@@ -87,14 +90,30 @@ data:
         except (ValueError, TypeError):
             return None
 
+    def epoch_to_iso(value):
+        if value is None:
+            return None
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(value))
+
     def backup_summary():
+        # Job names stay server-side; only counts and timestamps are published.
         now = time.time()
         status = "ok"
         oldest_epoch = None
+        ok_count = 0
+        overdue_count = 0
+        oldest_overdue_epoch = None
+        cronjobs_by_namespace = {}
         for namespace, name, max_age in WATCHED_BACKUPS:
-            try:
-                cronjobs = kube_get(f"/apis/batch/v1/namespaces/{namespace}/cronjobs")
-            except Exception:
+            if namespace not in cronjobs_by_namespace:
+                try:
+                    cronjobs_by_namespace[namespace] = kube_get(
+                        f"/apis/batch/v1/namespaces/{namespace}/cronjobs"
+                    )
+                except Exception:
+                    cronjobs_by_namespace[namespace] = None
+            cronjobs = cronjobs_by_namespace[namespace]
+            if cronjobs is None:
                 if status == "ok":
                     status = "unknown"
                 continue
@@ -102,21 +121,27 @@ data:
                 (cj for cj in cronjobs.get("items", []) if cj.get("metadata", {}).get("name") == name),
                 None,
             )
-            if match is None:
-                status = "stale"
-                continue
-            last_epoch = iso_to_epoch(match.get("status", {}).get("lastSuccessfulTime"))
+            last_epoch = (
+                iso_to_epoch(match.get("status", {}).get("lastSuccessfulTime")) if match else None
+            )
             if last_epoch is None or (now - last_epoch) > max_age:
                 status = "stale"
+                overdue_count += 1
+                if last_epoch is not None and (
+                    oldest_overdue_epoch is None or last_epoch < oldest_overdue_epoch
+                ):
+                    oldest_overdue_epoch = last_epoch
                 continue
+            ok_count += 1
             if oldest_epoch is None or last_epoch < oldest_epoch:
                 oldest_epoch = last_epoch
-        last_at = (
-            time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(oldest_epoch))
-            if oldest_epoch is not None
-            else None
-        )
-        return status, last_at
+        checks = {
+            "okToday": ok_count,
+            "total": len(WATCHED_BACKUPS),
+            "overdue": overdue_count,
+            "oldestOverdueSuccessAt": epoch_to_iso(oldest_overdue_epoch),
+        }
+        return status, epoch_to_iso(oldest_epoch), checks
 
     def build_payload():
         nodes = kube_get("/api/v1/nodes")
@@ -144,7 +169,7 @@ data:
         helmrelease_total, helmrelease_not_ready = flux_ready_summary(helmreleases)
         flux_not_ready = kustomization_not_ready + helmrelease_not_ready
 
-        backups_status, backups_last_success = backup_summary()
+        backups_status, backups_last_success, backup_checks = backup_summary()
         backups_alert = 1 if backups_status == "stale" else 0
         alert_count = (
             unavailable_workloads
@@ -175,6 +200,14 @@ data:
                 "lastSuccessAt": backups_last_success,
             },
             "alerts": alert_count,
+            "checks": {
+                "flux": {
+                    "ready": kustomization_total + helmrelease_total - flux_not_ready,
+                    "total": kustomization_total + helmrelease_total,
+                },
+                "backups": backup_checks,
+                "nodes": {"ready": ready_nodes, "total": node_count},
+            },
             "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
 
