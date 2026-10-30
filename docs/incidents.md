@@ -61,6 +61,14 @@ After the fix the status endpoint returned `operational`, 0 alerts.
 - Consider splitting Longhorn out of Renovate's grouped "infrastructure charts" PR so storage upgrades are reviewed on their own.
 - Loki only ingests resumelo/umami namespaces, so Longhorn job logs were not available after pod cleanup.
 
+### Update 2026-10-30 — thermal mitigation applied
+
+- Dust cleaned and `master-1` rebooted on **2026-10-29 14:30 UTC**.
+- Tctl since the reboot (~18 h of data): **54.6–69.1 °C, avg ~58 °C** at load ~1, vs. the ~92 °C pre-cleaning peak. Even the post-cleaning max under load stays well under the 85 °C thermal threshold.
+- The cooling follow-up ("clean dust / check fan / repaste") is **done and verified**. EPP `balance_power` / `scaling_max_freq` cap remain unapplied (not needed at current temps).
+- No `NodeHighTemperature` alert firing.
+- Note: Prometheus lost its pre-reboot TSDB history (it runs on `master-1`), so only post-reboot samples are available for comparison.
+
 ---
 
 ## 2026-07-18 — `master-1` (Minisforum UM690) random hard resets
