@@ -7,6 +7,9 @@ metadata:
     reconcile.fluxcd.io/watch: "Enabled"
 data:
   values.yaml: |-
+    # RWO Longhorn volume: RollingUpdate deadlocks on Multi-Attach.
+    updateStrategy:
+      type: Recreate
     persistence:
       enabled: true
       storageClass: longhorn
