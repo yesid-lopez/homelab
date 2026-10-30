@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+# The page is a single static file; the generated name hash rolls the
+# deployment whenever index.html changes.
+configMapGenerator:
+  - name: sticker-maker-html
+    namespace: sticker-maker
+    files:
+      - index.html

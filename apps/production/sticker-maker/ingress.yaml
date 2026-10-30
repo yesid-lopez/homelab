@@ -1,0 +1,17 @@
+# Private: served only inside the tailnet by the Tailscale operator at
+# https://stickers.<tailnet>.ts.net (no public DNS, no nginx-ingress).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sticker-maker
+  namespace: sticker-maker
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: sticker-maker
+      port:
+        number: 80
+  tls:
+    - hosts:
+        - stickers

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tailscale-operator-helm-chart-value-overrides
+  namespace: tailscale
+  labels:
+    reconcile.fluxcd.io/watch: "Enabled"
+data:
+  values.yaml: |-
+    # OAuth credentials come from the SealedSecret `operator-oauth`
+    # (keys client_id / client_secret), so oauth.* stays unset here.
+
+    operatorConfig:
+      # Name of the operator device in the tailnet.
+      hostname: bramble-operator
