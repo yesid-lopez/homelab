@@ -207,6 +207,7 @@ data:
                 },
                 "backups": backup_checks,
                 "nodes": {"ready": ready_nodes, "total": node_count},
+                "workloads": {"unavailable": unavailable_workloads, "total": workload_total},
             },
             "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
