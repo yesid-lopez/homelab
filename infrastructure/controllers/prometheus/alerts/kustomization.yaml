@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - volume-usage-rules.yaml
   - cluster-health-rules.yaml
+  - backup-freshness-rules.yaml
   - alertmanager-discord.yaml
   - alertmanager-cluster.yaml
   - alertmanager-openclaw.yaml

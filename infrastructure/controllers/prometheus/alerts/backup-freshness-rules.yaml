@@ -1,0 +1,69 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: backup-freshness-alerts
+  namespace: prometheus
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    # ------------------------------------------------------------------
+    # Backup freshness — alert on "no successful backup in X hours"
+    # instead of on individual job failures. In Oct 2026 backup-daily
+    # failed for 3 weeks unnoticed: KubeJobFailed has no `scope` label,
+    # so Alertmanager routed it to the "null" receiver (see
+    # docs/incidents.md 2026-10-26). Everything here carries
+    # scope=storage so it reaches Discord.
+    # ------------------------------------------------------------------
+    - name: backup.freshness
+      rules:
+        - alert: BackupCronJobStale
+          expr: |
+            (time() - kube_cronjob_status_last_successful_time{cronjob=~"backup-daily|etcd-snapshot-offsite|sealed-secrets-keys-offsite"}) > 26 * 3600
+            or
+            (time() - kube_cronjob_status_last_successful_time{cronjob="minio-mirror-backup"}) > 13 * 3600
+          for: 15m
+          labels:
+            severity: critical
+            scope: storage
+          annotations:
+            summary: "Backup {{ $labels.namespace }}/{{ $labels.cronjob }} sin éxito desde hace {{ $value | humanizeDuration }}"
+            description: "El CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} no ha terminado bien en su ventana esperada (diario: 26h, minio-mirror cada 6h: 13h). Revisar kubectl -n {{ $labels.namespace }} get jobs y los logs del último job."
+
+        - alert: BackupCronJobMissing
+          expr: |
+            absent(kube_cronjob_status_last_successful_time{cronjob="backup-daily"})
+            or absent(kube_cronjob_status_last_successful_time{cronjob="etcd-snapshot-offsite"})
+            or absent(kube_cronjob_status_last_successful_time{cronjob="sealed-secrets-keys-offsite"})
+            or absent(kube_cronjob_status_last_successful_time{cronjob="minio-mirror-backup"})
+          for: 1h
+          labels:
+            severity: warning
+            scope: storage
+          annotations:
+            summary: "Falta la métrica de un CronJob de backup"
+            description: "kube-state-metrics no reporta last_successful_time de algún CronJob de backup: o el CronJob se borró/renombró, o nunca ha tenido un run exitoso. Actualizar este PrometheusRule si se renombró."
+
+        - alert: LonghornVolumeBackupStale
+          # Volumes with last_backup_at == 0 are not in the backup group on
+          # purpose (prometheus, loki, alertmanager, n8n data) — skip them.
+          expr: |
+            (time() - longhorn_volume_last_backup_at > 26 * 3600)
+            and longhorn_volume_last_backup_at > 0
+          for: 15m
+          labels:
+            severity: critical
+            scope: storage
+          annotations:
+            summary: "Volumen Longhorn {{ $labels.pvc_namespace }}/{{ $labels.pvc }} sin backup desde hace {{ $value | humanizeDuration }}"
+            description: "El último backup de {{ $labels.volume }} tiene más de 26h, aunque el CronJob backup-daily termine bien (sus reintentos pueden tapar un volumen que falla siempre, como MinIO en oct-2026). Revisar snapshotMaxCount del volumen y kubectl -n longhorn-system get backups."
+
+        - alert: LonghornBackupTargetUnavailable
+          expr: longhorn_backup_target_status{condition="unavailable"} == 1
+          for: 15m
+          labels:
+            severity: critical
+            scope: storage
+          annotations:
+            summary: "Backup target de Longhorn no disponible"
+            description: "Longhorn no alcanza el backup target {{ $labels.backup_target }} (NFS 192.168.2.10:/ssd-pool/longhorn-backups) desde hace 15m. Ningún backup se va a completar hasta que vuelva."
