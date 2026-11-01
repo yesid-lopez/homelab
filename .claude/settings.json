@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(kubectl delete persistentvolume:*)",
+      "Bash(kubectl delete persistentvolumeclaim:*)",
+      "Bash(kubectl delete pv:*)",
+      "Bash(kubectl delete pvc:*)"
+    ]
+  }
+}

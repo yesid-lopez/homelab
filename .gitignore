@@ -4,3 +4,4 @@
 *docker-config.json
 private-key.pem
 private.key
+.claude/settings.local.json
