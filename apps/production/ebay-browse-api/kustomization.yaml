@@ -4,7 +4,6 @@ resources:
   - namespace.yaml
   - deployment.yaml
   - service.yaml
-  # TODO(secrets): seal and uncomment before registering in apps/production/kustomization.yaml
-  # - sealed-registry-secret.yaml       # registry-secret (dockerconfigjson) for registry.yesidlopez.de
-  # - sealed-ebay-credentials.yaml      # ebay-browse-api-credentials: appId, certId
+  - sealed-registry-secret.yaml
+  - sealed-ebay-credentials.yaml
   - image-automation/
