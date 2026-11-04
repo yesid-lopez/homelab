@@ -11,6 +11,7 @@ resources:
 # - macondo
 - lulo-cms
 - ebay-kleinanzeigen-api
+- ebay-browse-api
 - multica
 - public-status-api
 - n8n

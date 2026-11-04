@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ebay-browse-api
+  namespace: ebay-browse-api
+  labels:
+    app: ebay-browse-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ebay-browse-api
+  template:
+    metadata:
+      labels:
+        app: ebay-browse-api
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      containers:
+        - name: api
+          image: registry.yesidlopez.de/ebay-browse-api:v0.0.1 # {"$imagepolicy": "ebay-browse-api:ebay-browse-api"}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: EBAY_MARKETPLACE_ID
+              value: EBAY_DE
+            - name: EBAY_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ebay-browse-api-credentials
+                  key: appId
+                  optional: true
+            - name: EBAY_CERT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ebay-browse-api-credentials
+                  key: certId
+                  optional: true
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
