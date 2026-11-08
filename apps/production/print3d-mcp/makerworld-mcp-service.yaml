@@ -4,7 +4,7 @@ metadata:
   name: makerworld-mcp
   namespace: print3d-mcp
   annotations:
-    metallb.io/loadBalancerIPs: "192.168.2.105"
+    metallb.io/loadBalancerIPs: "192.168.2.106"
 spec:
   selector:
     app: makerworld-mcp
