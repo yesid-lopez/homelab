@@ -7,4 +7,6 @@ resources:
   - cults3d-mcp-imagepolicy.yaml
   - printables-mcp-imagerepository.yaml
   - printables-mcp-imagepolicy.yaml
+  - makerworld-mcp-imagerepository.yaml
+  - makerworld-mcp-imagepolicy.yaml
   - imageupdateautomation.yaml

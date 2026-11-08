@@ -11,4 +11,6 @@ resources:
   - cults3d-mcp-sealed-secrets.yaml
   - printables-mcp-deployment.yaml
   - printables-mcp-service.yaml
+  - makerworld-mcp-deployment.yaml
+  - makerworld-mcp-service.yaml
   - image-automation/

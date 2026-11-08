@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: makerworld-mcp
+  namespace: print3d-mcp
+  labels:
+    app: makerworld-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: makerworld-mcp
+  template:
+    metadata:
+      labels:
+        app: makerworld-mcp
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      containers:
+        - name: mcp
+          image: registry.yesidlopez.de/makerworld-mcp:v0.1.0 # {"$imagepolicy": "print3d-mcp:makerworld-mcp"}
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              # Node + sharp (image resizing) needs more headroom than the Python servers.
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
