@@ -14,6 +14,8 @@ spec:
       labels:
         app: ddns-updater
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: worker
       containers:
         - name: ddns
           image: qmcgaw/ddns-updater:v2.10.0
