@@ -1,0 +1,10 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: dibs-landing
+  namespace: dibs
+spec:
+  image: registry.yesidlopez.de/dibs-landing
+  interval: 1m
+  secretRef:
+    name: registry-secret

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dibs-landing
+  namespace: dibs
+  labels:
+    app: dibs-landing
+spec:
+  type: ClusterIP
+  selector:
+    app: dibs-landing
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

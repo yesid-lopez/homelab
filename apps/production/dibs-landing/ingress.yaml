@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dibs-landing
+  namespace: dibs
+  annotations:
+    cert-manager.io/cluster-issuer: luloai-issuer
+    external-dns.alpha.kubernetes.io/target: homelab.luloai.com
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - dibs.luloai.com
+      secretName: dibs-landing-tls
+  rules:
+    - host: dibs.luloai.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dibs-landing
+                port:
+                  number: 3000
