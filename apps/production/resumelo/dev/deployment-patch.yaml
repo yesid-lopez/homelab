@@ -7,7 +7,7 @@ spec:
   template:
     spec:
       nodeSelector:
-        kubernetes.io/arch: amd64
+        kubernetes.io/hostname: worker
       containers:
         - name: resumelo
           image: "registry.yesidlopez.de/resumelo-dev:v20260430.194929.5d624db" # {"$imagepolicy": "resumelo-dev:resumelo-dev"} 
