@@ -161,7 +161,7 @@ data:
             bounce_rate = f"{round(bounces / visits * 100)}%" if visits > 0 else "N/A"
 
             print("Fetching metrics...")
-            pages = fetch_metrics(site_id, start_ms, end_ms, 'url', token)
+            pages = fetch_metrics(site_id, start_ms, end_ms, 'path', token)
             events = fetch_metrics(site_id, start_ms, end_ms, 'event', token)
             referrers = fetch_metrics(site_id, start_ms, end_ms, 'referrer', token)
             countries = fetch_metrics(site_id, start_ms, end_ms, 'country', token)
